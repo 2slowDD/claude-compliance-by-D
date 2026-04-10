@@ -2,12 +2,13 @@
 
 Personal Claude Code compliance rules and skills for WordPress plugin development and safe AI-assisted coding workflows.
 
-Two tools are included:
+Three tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
-| `skills/wp-compliance` | Claude Code skill | Enforces 18 WordPress security rules before any WP coding task |
+| `skills/wp-compliance` | Claude Code skill | Enforces 19 WordPress security rules before any WP coding task |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
+| `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list files to manually deploy after every code change |
 
 ---
 
@@ -24,7 +25,7 @@ A rigid Claude Code skill based on official WordPress security guidance and Plug
 - Plugin Check / PHPCS compliance expectations
 
 Each time the skill is applied, Claude outputs a visible confirmation line:
-> `[WP Code Compliance applied — 18 rules active]`
+> `[WP Code Compliance applied — 19 rules active]`
 
 The skill is designed to grow: when you find a new issue, ask Claude to append it and it will slot into the right category automatically.
 
@@ -69,6 +70,18 @@ See [`claude-rules/github-push-warning.md`](claude-rules/github-push-warning.md)
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/github-push-warning.md`, replacing `YOURNAME` with your GitHub username.
+
+---
+
+## 3 — Deploy Reminder Rule
+
+A CLAUDE.md instruction that forces Claude to list every file needing manual server deployment at the end of any response that changes code.
+
+See [`claude-rules/deploy-reminder.md`](claude-rules/deploy-reminder.md) for the full rule text and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/deploy-reminder.md`, adjusting the server name and plugin path to match your setup.
 
 ---
 

@@ -4,7 +4,7 @@ description: WordPress plugin security compliance. Invoke before writing, editin
 type: rigid
 ---
 
-> **[WP Code Compliance applied — 18 rules active]**
+> **[WP Code Compliance applied — 19 rules active]**
 
 This skill is rigid. Follow every rule exactly. Do not skip or relax any item.
 
@@ -15,6 +15,8 @@ Invoke this skill before:
 - Editing existing plugin/theme files (`.php`, `functions.php`, REST handlers, AJAX handlers)
 - Reviewing WordPress code for security issues
 - Adding shortcodes, REST routes, AJAX endpoints, settings pages, file upload handlers
+
+**No exceptions for simple or single-line fixes.** A one-line change can introduce a SQL injection, missing escape, or auth bypass just as easily as a large feature. Simplicity of the change is not a reason to skip this skill.
 
 ## Pre-Code Checklist
 
@@ -74,6 +76,20 @@ Do not concatenate untrusted values into SQL — including `WHERE`, `ORDER BY`, 
 
 **7. Do not accept "sanitized enough" SQL fragments.**
 Do not pass around a prebuilt `$where_clause`, `$orderby`, or `$limit` string assembled from request values. Even if parts look cleaned, they are easy to get wrong. Build query parts from fixed templates and strict allowlists. This includes fragments individually pre-escaped with `$wpdb->prepare()` — the correct pattern is to keep SQL templates and values in separate arrays, then call `$wpdb->prepare()` once on the complete query with all values merged.
+
+**19. Do not build dynamic WHERE clauses for Plugin Check-compatible code.**
+Plugin Check's static analyzer cannot follow dynamically assembled `$where_sql` variables, even when properly prepared — it will flag `{$where_sql}` as `InterpolatedNotPrepared` and `UnescapedDBParameter` regardless. The correct pattern is static SQL templates with opt-out bypass conditions:
+```php
+// Instead of: $where_sql = implode(' AND ', $conditions); ... WHERE {$where_sql}
+// Use a static template with bypass per optional filter:
+$wpdb->prepare(
+    "WHERE (%s = '' OR r.match_type = %s) AND (%s = '' OR r.asset_type = %s) LIMIT %d",
+    $match_type, $match_type, $asset_type, $asset_type, $limit
+);
+// Pass '' for inactive filters ('' = '' is TRUE, condition bypassed).
+// Pass the real value twice for active filters (first arg fails, second filters).
+```
+This gives a fixed argument count, no interpolated variables, and full static verifiability. *(user flagged 2026-04-10)*
 
 ---
 
