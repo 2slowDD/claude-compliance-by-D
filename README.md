@@ -1,14 +1,15 @@
 # claude-compliance-by-D
 
-Personal Claude Code compliance rules and skills for WordPress plugin development and safe AI-assisted coding workflows.
+Personal Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Three tools are included:
+Four tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
 | `skills/wp-compliance` | Claude Code skill | Enforces 19 WordPress security rules before any WP coding task |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list files to manually deploy after every code change |
+| `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
 
 ---
 
@@ -82,6 +83,18 @@ See [`claude-rules/deploy-reminder.md`](claude-rules/deploy-reminder.md) for the
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/deploy-reminder.md`, adjusting the server name and plugin path to match your setup.
+
+---
+
+## 4 — Local-Only Default Rule
+
+A CLAUDE.md instruction that makes local work the default and blocks remote writes unless the user explicitly requests them in the current session.
+
+See [`claude-rules/local-only-default.md`](claude-rules/local-only-default.md) for the full rule text and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/local-only-default.md`.
 
 ---
 
