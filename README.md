@@ -8,7 +8,7 @@ Four tools are included:
 |------|------|---------|
 | `skills/wp-compliance` | Claude Code skill | Enforces 19 WordPress security rules before any WP coding task |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
-| `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list files to manually deploy after every code change |
+| `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
 | `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
 
 ---
@@ -76,7 +76,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/github-push-warn
 
 ## 3 — Deploy Reminder Rule
 
-A CLAUDE.md instruction that forces Claude to list every file needing manual server deployment at the end of any response that changes code.
+A CLAUDE.md instruction that forces Claude to list every file needing manual server deployment at the end of any response that changes deployable code. It omits the deploy section entirely for local-only artifacts with no server target.
 
 See [`claude-rules/deploy-reminder.md`](claude-rules/deploy-reminder.md) for the full rule text and install instructions.
 
