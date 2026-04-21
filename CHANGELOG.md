@@ -15,7 +15,8 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- `LICENSE` — MIT license file at repo root (previously only the "MIT" line in README).
 
 ---
 
