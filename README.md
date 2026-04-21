@@ -7,6 +7,7 @@ Four tools are included:
 | Item | Type | Purpose |
 |------|------|---------|
 | `skills/wp-compliance` | Claude Code skill | Enforces 19 WordPress security rules before any WP coding task |
+| `skills/d-review` | Claude Code skill | Staff-engineer review of a spec or design doc — flags gaps, inconsistencies, ambiguity, errors, risks, testability issues, and missing acceptance criteria, ending with a go/no-go verdict |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
 | `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
@@ -62,7 +63,48 @@ Start a new Claude Code session and ask it to write any WordPress PHP snippet. Y
 
 ---
 
-## 2 — GitHub Push Warning Rule
+## 2 — D-review Skill
+
+A Claude Code skill that reviews a spec or design doc as a **staff engineer** — pragmatic, rigorous, and honest about what it cannot know. Designed for the common case where the spec under review is one piece of a larger project and Claude has limited context.
+
+**What it covers:**
+- **Gaps** — missing requirements, unspecified behaviors, undefined edge cases
+- **Inconsistencies** — sections that contradict each other or drift from the architecture
+- **Ambiguity** — anything two competent readers would implement differently
+- **Errors** — factually wrong, logically impossible, or technically broken claims
+- **Improvements / Simplifications** — YAGNI cuts and cleaner alternatives
+- **Testability** — requirements that can't be objectively verified
+- **Risks / Unknowns** — external deps, perf cliffs, failure modes, security gaps
+- **Missing Acceptance Criteria** — "done" not defined for the deliverable
+
+Every run ends with a single verdict: `ready-to-plan`, `needs-revision`, or `blocked-on-context`. The skill writes a full review markdown file next to the spec and prints a compact severity-grouped summary inline.
+
+It does **not** judge scope/decomposition (that is a human call) and it does **not** rewrite the spec — it flags; the author fixes.
+
+### Install
+
+**Step 1 — Copy the skill file**
+
+```bash
+mkdir -p ~/.claude/skills/d-review
+cp skills/d-review/SKILL.md ~/.claude/skills/d-review/SKILL.md
+```
+
+On Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\d-review"
+Copy-Item "skills\d-review\SKILL.md" "$env:USERPROFILE\.claude\skills\d-review\SKILL.md"
+```
+
+**Step 2 — Verify**
+
+Start a new Claude Code session and say *"D-review this spec"* with a file path or pasted spec text. Claude should auto-detect the input, write the review file, and print the severity summary + verdict.
+
+No CLAUDE.md edit required — the skill auto-triggers on phrases like *"review this spec"*, *"check my spec"*, or *"D-review"*.
+
+---
+
+## 3 — GitHub Push Warning Rule
 
 A CLAUDE.md instruction that stops Claude before any push to your private GitHub repository and requires explicit "YES" confirmation.
 
@@ -74,7 +116,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/github-push-warn
 
 ---
 
-## 3 — Deploy Reminder Rule
+## 4 — Deploy Reminder Rule
 
 A CLAUDE.md instruction that forces Claude to list every file needing manual server deployment at the end of any response that changes deployable code. It omits the deploy section entirely for local-only artifacts with no server target.
 
@@ -86,7 +128,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/deploy-reminder.
 
 ---
 
-## 4 — Local-Only Default Rule
+## 5 — Local-Only Default Rule
 
 A CLAUDE.md instruction that makes local work the default and blocks remote writes unless the user explicitly requests them in the current session.
 
