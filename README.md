@@ -2,12 +2,13 @@
 
 Personal Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Four tools are included:
+Six tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
 | `skills/wp-compliance` | Claude Code skill | Enforces 19 WordPress security rules before any WP coding task |
 | `skills/d-review` | Claude Code skill | Staff-engineer review of a spec or design doc — flags gaps, inconsistencies, ambiguity, errors, risks, testability issues, and missing acceptance criteria, ending with a go/no-go verdict |
+| `skills/d-security` | Claude Code skill | Generic web-app security checklist — auth, API, DB, infra, code hygiene, plus OWASP Top 10 coverage for XSS, SSRF, IDOR, deserialization, and file upload |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
 | `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
@@ -104,7 +105,42 @@ No CLAUDE.md edit required — the skill auto-triggers on phrases like *"review 
 
 ---
 
-## 3 — GitHub Push Warning Rule
+## 3 — D-security Skill
+
+A Claude Code skill that acts as a **generic web-application security checklist** — the non-WordPress counterpart to `wp-compliance`. Auto-triggers when Claude is building, reviewing, or auditing any web app for security.
+
+**What it covers (~55 checks across 6 categories):**
+- **Authentication** — bcrypt/argon2 hashing, httpOnly cookies, JWT hygiene, token expiry/rotation, rate limits, lockout, server-side logout, email verification
+- **API Security** — auth on every route, authorization checks, schema-validated input, safe response bodies & error messages, rate limiting, CORS, HTTPS
+- **Database** — parameterized queries, least-privilege DB user, private network, tested backups, encryption at rest
+- **Infrastructure** — env-var secrets, `.env` not in git history, SSL, non-root server, port hygiene
+- **Code** — no production `console.log`, `npm audit` clean, no hardcoded credentials
+- **OWASP Top 10 common gaps** — IDOR (broken access control), XSS (context-aware escaping + CSP), deserialization/supply-chain (unsafe deserializers, lockfile integrity), SSRF (private-range blocking, DNS rebinding, scheme allowlist), and File Upload (magic-byte type check, sanitized filenames, re-encoded images)
+
+### Install
+
+**Step 1 — Copy the skill file**
+
+```bash
+mkdir -p ~/.claude/skills/d-security
+cp skills/d-security/SKILL.md ~/.claude/skills/d-security/SKILL.md
+```
+
+On Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\d-security"
+Copy-Item "skills\d-security\SKILL.md" "$env:USERPROFILE\.claude\skills\d-security\SKILL.md"
+```
+
+**Step 2 — Verify**
+
+Start a new Claude Code session and ask Claude to build or review any web-app feature that touches auth, an API route, file uploads, or outbound HTTP. The skill should auto-trigger from its `description:` field.
+
+No CLAUDE.md edit required (but you can add one if you want a hard trigger like `wp-compliance` has).
+
+---
+
+## 4 — GitHub Push Warning Rule
 
 A CLAUDE.md instruction that stops Claude before any push to your private GitHub repository and requires explicit "YES" confirmation.
 
@@ -116,7 +152,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/github-push-warn
 
 ---
 
-## 4 — Deploy Reminder Rule
+## 5 — Deploy Reminder Rule
 
 A CLAUDE.md instruction that forces Claude to list every file needing manual server deployment at the end of any response that changes deployable code. It omits the deploy section entirely for local-only artifacts with no server target.
 
@@ -128,7 +164,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/deploy-reminder.
 
 ---
 
-## 5 — Local-Only Default Rule
+## 6 — Local-Only Default Rule
 
 A CLAUDE.md instruction that makes local work the default and blocks remote writes unless the user explicitly requests them in the current session.
 
@@ -149,6 +185,12 @@ When you encounter a new WordPress security issue during a coding session, tell 
 Claude will append a new numbered rule under the correct category, update the checklists if needed, and note the date it was added.
 
 The skill file at `~/.claude/skills/wp-compliance/SKILL.md` is your local source of truth. Pull this repo and re-copy the skill file whenever you want to sync updates.
+
+---
+
+## Changelog
+
+See [`CHANGELOG.md`](CHANGELOG.md) for a version history.
 
 ---
 
