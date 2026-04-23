@@ -218,6 +218,8 @@ $wpdb->query(
 
 **7. Every suppression needs a per-instance justification.** `-- false positive` alone is not enough. Explain *why* the code is safe and how the static sniff is mis-reading it. Future reviewers need the justification to evaluate whether it still holds after refactors.
 
+**8. `phpcs:enable` is static — control-flow branches do not scope it.** An `enable` placed inside `if`/early-return closes the surrounding `disable` for every line below in the file, not just the branch. If you need to suppress through an early return, either (a) delete the in-branch `enable` and let the outer `enable` close the scope, or (b) split the code into two `disable`/`enable` brackets — one covering the pre-return statement, one covering the post-return statements. *(flagged 2026-04-23 after Plugin Check audit)*
+
 **21. Every plugin PHP file must abort when loaded directly.**
 Add `defined( 'ABSPATH' ) || exit;` (or `if ( ! defined( 'ABSPATH' ) ) exit;`) at the very top of every PHP file — main bootstrap, class files, REST handlers, AJAX handlers, template partials, trait files, autoloaded files, include-only helpers. No exceptions. Plugin Check reports `missing_direct_file_access_protection` as an ERROR. A misconfigured web server that serves raw `.php` files from the plugin directory (Apache without mod_php wired correctly, a misrouted nginx `location` block, a file copied to a debug path) will dump file contents to anyone — leaking class structure, SQL templates, and occasionally secrets from development. Cost: one line. Value: zero information disclosure when the server misbehaves. *(flagged 2026-04-22 after Plugin Check audit)*
 
