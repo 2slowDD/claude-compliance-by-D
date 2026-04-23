@@ -1,0 +1,20 @@
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+
+# Local scratch (reports, notes, drafts — not part of the distributed content)
+tasks/
+
+# Node (defensive — no JS in repo today)
+node_modules/
