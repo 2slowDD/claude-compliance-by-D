@@ -6,7 +6,7 @@ Six tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
-| `skills/wp-compliance` | Claude Code skill | Enforces 19 WordPress security rules before any WP coding task |
+| `skills/wp-compliance` | Claude Code skill | Enforces 25 WordPress security rules + Plugin Check review workflow + PHPCS suppression playbook before any WP coding task |
 | `skills/d-review` | Claude Code skill | Staff-engineer review of a spec or design doc — flags gaps, inconsistencies, ambiguity, errors, risks, testability issues, and missing acceptance criteria, ending with a go/no-go verdict |
 | `skills/d-security` | Claude Code skill | Generic web-app security checklist — auth, API, DB, infra, code hygiene, plus OWASP Top 10 coverage for XSS, SSRF, IDOR, deserialization, and file upload |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |

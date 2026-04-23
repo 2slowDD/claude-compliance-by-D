@@ -15,8 +15,30 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+---
+
+## [0.6.0] — 2026-04-23
+
+### Added — `wp-compliance` v2
+
+Driven by a real-world Plugin Check audit + 3-iteration `phpcs:ignore` iteration cycle.
+
+- **Rules 21–25:**
+  - **21** — ABSPATH guard required on every plugin PHP file (`defined( 'ABSPATH' ) || exit;`)
+  - **22** — LIKE wildcards parameterized via `$wpdb->esc_like() . '%'` as `%s`; never hardcode `LIKE 'prefix.%'` in prepared SQL
+  - **23** — `$_SERVER` (HTTP_*/REDIRECT_*/REMOTE_*) treated as untrusted input alongside `$_GET`/`$_POST`
+  - **24** — Sanitizer placement must be recognizable to the static sniff — flat + outermost a recognized WP function (no bare `(int)` casts, no nested `trim()`/`wp_unslash` wrappers outside the sanitizer)
+  - **25** — JSON input: `wp_unslash` → `json_decode` → sanitize per-value; do NOT `sanitize_text_field` before decode
+- **"When Reviewing a Plugin Check / PHPCS Report" workflow section** — 7-step process: triage → fix → meta-check against skill → bullet-list status → never-auto-apply → local-commit-default → sanitize-examples-before-publishing
+- **Rule 20 expansion: PHPCS suppression playbook** — placement mechanics learned the hard way:
+  - Fix-first principle (suppression is last resort)
+  - Directive-to-statement-shape table (`phpcs:ignore` vs `phpcs:disable`/`enable` vs collapse-to-single-line)
+  - Critical scope rule: `phpcs:ignore` covers the FIRST line of the next statement only — multi-line SQL strings with interpolated table names need `phpcs:disable`/`enable` blocks
+  - Common sniff-cluster reference (custom-table ops, DDL, spread-args, nonce variants)
+  - No-blank-line rule, 3+-sniffs-signal-refactor rule, verify-per-batch requirement
+
 ### Added
-- `LICENSE` — MIT license file at repo root (previously only the "MIT" line in README).
+- `LICENSE` — MIT license file at repo root (previously only the "MIT" line in README). *(carried from prior Unreleased)*
 
 ---
 
