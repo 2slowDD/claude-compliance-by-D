@@ -160,6 +160,8 @@ PHPCS cannot trace through helper methods, exception propagation paths, or inclu
 - `NonceVerification.Recommended` for token-based frontend endpoints where nonces are architecturally incompatible (e.g. headless browser requests)
 - `WordPress.PHP.DevelopmentFunctions.error_log_error_log` when `error_log()` is used for intentional production server-side logging of exception details that are explicitly withheld from the browser response (i.e. the paired `wp_send_json_error()` call uses a generic message, not `$e->getMessage()`)
 - `WordPress.DB.DirectDatabaseQuery.SchemaChange` (and the accompanying `DirectQuery` + `NoCaching`) for DDL statements (`ALTER TABLE … MODIFY COLUMN`, `CREATE TABLE`, `DROP TABLE`) inside a version-gated `maybe_upgrade()` migration block. `dbDelta()` cannot handle `MODIFY COLUMN` on ENUM or other structural changes; a direct `$wpdb->query()` is the only correct tool. Always gate with `version_compare()` to keep the block idempotent. *(flagged 2026-04-17)*
+- `WordPress.WP.AlternativeFunctions.file_system_operations_{fopen,fclose,fwrite}` when the target is a PHP stream wrapper (`php://memory`, `php://output`, `php://temp`, `php://input`). `WP_Filesystem` operates on real filesystem paths and has no equivalent for stream wrappers — patterns like buffering CSV into `php://memory` before `ZipArchive::addFromString()`, or streaming response bodies via `php://output`, cannot go through it. Justify each instance with the specific stream and purpose. *(flagged 2026-04-24 after Plugin Check audit)*
+- `WordPress.WP.AlternativeFunctions.file_system_operations_readfile` when streaming a server-generated temp file (from `wp_tempnam()` or similar) directly to the HTTP response body as a binary download. `readfile()` is the pragmatic choice for binary pass-through — loading via `file_get_contents()` would blow memory on large archives, and WP has no helper for this pattern. Justify with the source of the path and why memory-loading isn't viable. *(flagged 2026-04-24 after Plugin Check audit)*
 Always add a trailing comment explaining *why* it is safe: `// phpcs:ignore Sniff.Name -- reason.` *(flagged in audit 2026-04-11)*
 
 ### PHPCS suppression playbook — placement mechanics
@@ -324,6 +326,19 @@ foreach ( $decoded as $key => $value ) {
 ```
 
 This also applies to JSON bodies in REST handlers (`$request->get_json_params()` returns already-decoded values — but if you read raw body via `$request->get_body()`, same rule). *(flagged 2026-04-22 after Plugin Check audit)*
+
+**26. Prefer `wp_delete_file()` over bare or `@`-suppressed `unlink()` for file cleanup.**
+Plugin Check flags raw `unlink()` and `@unlink()` as `WordPress.WP.AlternativeFunctions.unlink_unlink`. `wp_delete_file()` is a thin core wrapper that runs `@unlink()` through the `wp_delete_file` filter, so it is a drop-in replacement that passes the sniff. Use it for any filesystem cleanup — temp files from `wp_tempnam()`, stale caches, uninstall residue.
+
+```php
+// Wrong — flagged by Plugin Check; forces a phpcs:ignore.
+@unlink( $tmp_path );
+
+// Right — WP-idiomatic, filter-aware, no suppression needed.
+wp_delete_file( $tmp_path );
+```
+
+**Caveat:** `wp_delete_file()` returns `void`. If you need to detect cleanup failure to log it (e.g. diagnosing temp-dir drift or permissions issues), you must keep `@unlink()` with a `phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- need return value for debug-only error_log on cleanup failure.` annotation. In practice this is rarely worth the extra suppression — silent cleanup plus occasional orphaned temp files is usually acceptable. *(flagged 2026-04-24 after Plugin Check audit)*
 
 ---
 
