@@ -17,6 +17,20 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ---
 
+## [0.7.0] — 2026-04-24
+
+### Added — `wp-compliance` Rule 26 + Rule 20 false-positive additions
+
+Driven by a real-world Plugin Check audit of a WordPress plugin that exports scan history as a ZIP download. The primary-path code uses `fopen('php://memory')` + `fputcsv` + `ZipArchive::addFromString` + `readfile($tmp)` + `@unlink($tmp)` — all semantically correct and necessary, but each flagged by Plugin Check against `WordPress.WP.AlternativeFunctions.*`. Triage surfaced two distinct patterns:
+
+- **New Rule 26** — `Prefer wp_delete_file() over bare or @-suppressed unlink() for file cleanup.` `wp_delete_file()` is a core WP wrapper around `@unlink()` that runs the value through the `wp_delete_file` filter; it's a drop-in replacement that passes the `unlink_unlink` sniff without any suppression. Includes a caveat for the rare case where you need `@unlink()`'s return value for debug-only error_log on cleanup failure.
+- **Rule 20 additions** — two new false-positive entries for `file_system_operations_*` sniffs when the target is a PHP stream wrapper (`php://memory`, `php://output`, `php://temp`, `php://input`) or when `readfile()` streams a server-generated temp file directly to the HTTP response body as binary pass-through. `WP_Filesystem` has no equivalent for either pattern; loading via `file_get_contents()` would blow memory on large archives.
+
+### Commits
+- `b5dcc0a` — `feat(wp-compliance): Rule 26 wp_delete_file + Rule 20 stream-wrapper false positives`
+
+---
+
 ## [0.6.1] — 2026-04-24
 
 ### Changed — `wp-compliance` Rule 20 SUPPRESSION PLAYBOOK
