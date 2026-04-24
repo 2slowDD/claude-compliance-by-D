@@ -199,6 +199,21 @@ $wpdb->query(
 // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 ```
 
+**Stacked `phpcs:ignore` directives don't chain — the second consumes the first's scope before the target statement is reached.** Two consecutive `phpcs:ignore` lines above a single statement apply only the SECOND one — the first's one-line scope is spent on the second `phpcs:ignore` line. Combine all sniffs into a comma-separated list on one annotation, or use `phpcs:disable`/`phpcs:enable` brackets if you want independent justifications per sniff cluster.
+
+```php
+// Wrong — first directive's scope is spent on the second directive line; DirectQuery/NoCaching NOT suppressed on the target.
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- custom plugin table.
+// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from constant.
+$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$t}`" );
+
+// Right — all three sniffs on one annotation line, single combined justification.
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom plugin table; table name from constant, not user input.
+$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$t}`" );
+```
+
+Two stacked annotations can look fine to `php -l` and to a human reviewer — the bug surfaces only in the next Plugin Check run, which still fires the first annotation's sniffs despite the visible directive. *(flagged 2026-04-24 after Plugin Check audit.)*
+
 **3. Name every sniff that can fire inside the suppressed scope.** Partial sniff lists leak warnings. Common clusters observed:
 
 | Pattern | Sniffs to list |
