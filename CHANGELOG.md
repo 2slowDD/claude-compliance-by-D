@@ -17,6 +17,18 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ---
 
+## [0.6.1] — 2026-04-24
+
+### Changed — `wp-compliance` Rule 20 SUPPRESSION PLAYBOOK
+
+- Documented the stacked-`phpcs:ignore` footgun: two consecutive `phpcs:ignore` lines above the same statement don't chain — the second consumes the first's one-line scope before the target statement, so only the second annotation's sniffs are suppressed. Surfaced during a real Plugin Check audit where the bug passed `php -l` + visual review but still failed the next Plugin Check run (first annotation's sniffs fired on the query line despite the visible directive). Fix: combine all sniffs into a comma-separated list on one annotation, or use `phpcs:disable`/`enable` brackets when you want independent justifications per sniff cluster.
+- Placement: inserted between SUPPRESSION PLAYBOOK items 2 (Critical scope rule) and 3 (Name every sniff) as a bolded sub-block with wrong/right examples. No renumbering — future citations of items 3–8 continue to resolve.
+
+### Commits
+- `8deb7a5` — `feat(wp-compliance): document stacked phpcs:ignore footgun`
+
+---
+
 ## [0.6.0] — 2026-04-23
 
 ### Added — `wp-compliance` v2
