@@ -17,6 +17,27 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ---
 
+## [0.8.0] — 2026-05-09
+
+### Added — `claude-rules/post-significant-push-audit.md`
+
+A new CLAUDE.md instruction rule that fires **immediately after** a significant remote push. Composes with rule 4 (`github-push-warning.md`, the pre-push P9 gate): pre-push gates the push itself; post-push gates the next step.
+
+**Significance gate fires if any of:** (a) multi-file refactor / subsystem rewrite / architectural change; (b) the push closed out a written plan (`tasks/todo.md`, `04-development/*-implementation-plan.md`, design or brainstorm spec); (c) push ships a kill-switch flip, default-on flip, or bake closure; (d) push adds or substantively changes a skill, rule, or shipped feature. **Does not fire** on single-file < 20 LOC hotfixes, typo / copy edits, version bumps, single-paragraph doc edits, or mechanical chores. Borderline → run anyway.
+
+When the gate triggers, Claude runs both steps in the same response that confirms the push:
+
+- **Step 1 — Doc-debt y/n gate.** Claude asks verbatim whether to ratify project docs/plans against what was just shipped. `y` → propose specific files + sections, wait for confirmation. `n` → proceed to Step 2 — declining Step 1 does **not** skip Step 2.
+- **Step 2 — Improvement-opportunity sweep (F-CHECK-EFF style).** Claude reviews the just-pushed change set and surfaces alternatives that could improve any project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated ≥ 10 %. One-line-per-item template: `- [one-liner] — F-METRIC, ~N% gain — bundle | defer (reason)`. Found items → offer as **next todo**. None → say so explicitly in one line. **Silence is itself the failure.**
+
+Modeled on the user's `F-CHECK-EFF` discipline floor in `success-failure-metrics.md`: silently passing on a ≥ 10 % gain is the failure, not the bundle-vs-defer judgement call.
+
+### Commits
+- `feat: post-significant-push-audit rule`
+- `chore: release v0.8.0`
+
+---
+
 ## [0.7.0] — 2026-04-24
 
 ### Added — `wp-compliance` Rule 26 + Rule 20 false-positive additions
