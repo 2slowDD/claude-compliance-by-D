@@ -2,7 +2,7 @@
 
 Personal Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Six tools are included:
+Seven tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -12,6 +12,7 @@ Six tools are included:
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
 | `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
+| `claude-rules/post-significant-push-audit.md` | CLAUDE.md rule | After a significant remote push: forces a y/n doc-debt ratification gate, then a F-CHECK-EFF style improvement-opportunity sweep |
 
 ---
 
@@ -173,6 +174,20 @@ See [`claude-rules/local-only-default.md`](claude-rules/local-only-default.md) f
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/local-only-default.md`.
+
+---
+
+## 7 — Post-Significant-Push Audit Rule
+
+A CLAUDE.md instruction that fires **after** any successful remote push of a significant change. Two gates: (1) y/n on whether to ratify project docs/plans against what was just shipped (close doc debt), then (2) a `F-CHECK-EFF`-style sweep for improvement opportunities (efficiency / security / gap-fill) of estimated ≥ 10 % gain that the work surfaced but did not act on. Found items are offered as next-todo follow-ups.
+
+Composes with rule 4 (pre-push warning): pre-push gates the push itself, post-push audit forces the doc-debt + improvement check immediately after.
+
+See [`claude-rules/post-significant-push-audit.md`](claude-rules/post-significant-push-audit.md) for the full rule text and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/post-significant-push-audit.md`.
 
 ---
 
