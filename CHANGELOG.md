@@ -17,6 +17,28 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ---
 
+## [0.9.1] — 2026-05-12
+
+### Changed — `claude-rules/d-focus-tasks.md`
+
+Added a **visible-confirmation clause** to the Rule Block + a matching Notes paragraph. Every ledger update must now print a one-line status to chat:
+
+```
+[focus-tasks-ledger updated — <trigger> — <ledger path>]
+```
+
+Where `<trigger>` is one of: `commit <short-sha>`, `plan approved`, `spec approved`, `architectural change`, `handover prep`, or `material followup`.
+
+**Why:** a rule that fires silently is operationally indistinguishable from a rule that never fired. Without a visible confirmation, operators can't verify the rule is active from the chat transcript alone — they'd have to grep diffs or open the ledger file to confirm anything happened. Format mirrors the existing `[WP Code Compliance applied — N rules active]` precedent.
+
+**Surfaced by** a live-session operator question after v0.9.0 install: "how would I know it has updated the ledger?" The implicit answer ("you'd see the diff in master-tasks.md") wasn't sufficient — operators monitoring a long-running session need an in-flow signal.
+
+### Commits
+- `feat(d-focus-tasks): add visible-confirmation clause`
+- `chore: release v0.9.1`
+
+---
+
 ## [0.9.0] — 2026-05-12
 
 ### Added
