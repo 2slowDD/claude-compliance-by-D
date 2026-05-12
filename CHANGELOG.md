@@ -15,6 +15,13 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added
+- **`skills/d-focus-tasks`** ? portable Codex / Claude Code skill for maintaining `docs/product-docs/master-tasks.md` as a lightweight project ledger across commits, remote-only reconciliation, handovers, approved plans/specs/architecture changes, and followups. Includes large-project scope calibration for multi-repo, multi-phase, sub-spec-heavy projects.
+- **`claude-rules/d-focus-tasks.md`** ? project/global instruction block that makes focus-ledger updates mandatory without waiting for manual skill invocation.
+
+### Changed
+- **`README.md`** ? adds d-focus-tasks to the tool table and install docs; renumbers later rule sections.
+
 ---
 
 ## [0.8.0] — 2026-05-09
