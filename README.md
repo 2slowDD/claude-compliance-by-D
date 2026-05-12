@@ -143,7 +143,29 @@ No CLAUDE.md edit required (but you can add one if you want a hard trigger like 
 
 ---
 
-## 4 — GitHub Push Warning Rule
+## 4 — Focus Tasks Ledger Skill
+
+A portable Codex / Claude Code skill for maintaining `docs/product-docs/master-tasks.md` as the current project ledger across commits, handovers, plans, specs, architecture changes, and followups.
+
+Use it when fresh agents need project bearings, after successful local commits, during remote-only commit reconciliation, after approved plans/specs/architecture changes, and before handovers.
+
+### Install
+
+Copy the skill into each agent you use:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills\d-focus-tasks"
+Copy-Item "skills\d-focus-tasks\SKILL.md" "$env:USERPROFILE\.codex\skills\d-focus-tasks\SKILL.md"
+
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\d-focus-tasks"
+Copy-Item "skills\d-focus-tasks\SKILL.md" "$env:USERPROFILE\.claude\skills\d-focus-tasks\SKILL.md"
+```
+
+Then add the rule block from [`claude-rules/d-focus-tasks.md`](claude-rules/d-focus-tasks.md) to project/global instructions so agents update the ledger automatically after commits and before handovers.
+
+---
+
+## 5 — GitHub Push Warning Rule
 
 A CLAUDE.md instruction that stops Claude before any push to your private GitHub repository and requires explicit "YES" confirmation.
 
@@ -155,7 +177,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/github-push-warn
 
 ---
 
-## 5 — Deploy Reminder Rule
+## 6 — Deploy Reminder Rule
 
 A CLAUDE.md instruction that forces Claude to list every file needing manual server deployment at the end of any response that changes deployable code. It omits the deploy section entirely for local-only artifacts with no server target.
 
@@ -167,7 +189,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/deploy-reminder.
 
 ---
 
-## 6 — Local-Only Default Rule
+## 7 — Local-Only Default Rule
 
 A CLAUDE.md instruction that makes local work the default and blocks remote writes unless the user explicitly requests them in the current session.
 
@@ -179,7 +201,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/local-only-defau
 
 ---
 
-## 7 — Post-Significant-Push Audit Rule
+## 8 — Post-Significant-Push Audit Rule
 
 A CLAUDE.md instruction that fires **after** any successful remote push of a significant change. Two gates: (1) y/n on whether to ratify project docs/plans against what was just shipped (close doc debt), then (2) a `F-CHECK-EFF`-style sweep for improvement opportunities (efficiency / security / gap-fill) of estimated ≥ 10 % gain that the work surfaced but did not act on. Found items are offered as next-todo follow-ups.
 
