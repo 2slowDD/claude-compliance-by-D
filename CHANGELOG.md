@@ -15,12 +15,22 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+---
+
+## [0.9.0] — 2026-05-12
+
 ### Added
-- **`skills/d-focus-tasks`** ? portable Codex / Claude Code skill for maintaining `docs/product-docs/master-tasks.md` as a lightweight project ledger across commits, remote-only reconciliation, handovers, approved plans/specs/architecture changes, and followups. Includes large-project scope calibration for multi-repo, multi-phase, sub-spec-heavy projects.
-- **`claude-rules/d-focus-tasks.md`** ? project/global instruction block that makes focus-ledger updates mandatory without waiting for manual skill invocation.
+- **`skills/d-focus-tasks`** — portable Codex / Claude Code skill for maintaining `docs/product-docs/master-tasks.md` as a lightweight project ledger across commits, remote-only reconciliation, handovers, approved plans/specs/architecture changes, and followups. Includes large-project scope calibration for multi-repo, multi-phase, sub-spec-heavy projects.
+- **`claude-rules/d-focus-tasks.md`** — project/global instruction block that makes focus-ledger updates mandatory without waiting for manual skill invocation. **Preserve-history clause** added during runtime install: split or update rows in place; never delete completed milestones; the Edit tool's red/green diff visualization on a row update is not content loss. Surfaced after a real-session incident where a row-split during ledger update produced alarming-looking red/green diffs that the operator initially read as deletions.
 
 ### Changed
-- **`README.md`** ? adds d-focus-tasks to the tool table and install docs; renumbers later rule sections.
+- **`README.md`** — adds d-focus-tasks to the tool table and install docs; renumbers later rule sections.
+
+### Commits
+- `Add d-focus-tasks ledger skill` (`abe762a`)
+- `docs: add d-focus install section` (`83a4d68`)
+- `feat(d-focus-tasks): add preserve-history clause` (this release)
+- `chore: release v0.9.0` (this release)
 
 ---
 
