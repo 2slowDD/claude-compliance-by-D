@@ -17,6 +17,7 @@ After every successful local commit, remote-only commit reconciliation, approved
 - For remote-only commits, check for the SHA first; add it only if it is not already logged.
 - For handovers without a commit, record uncommitted followups with `commit: none yet`, then update that same row when a commit lands.
 - Every handover prompt must point the fresh agent to `docs/product-docs/master-tasks.md` and name the current top active row.
+- **Preserve historical entries.** Split or update rows in place; never delete completed milestones from the ledger. Old / finished entries stay archived (status-marked) in the same file. If the operator sees red/green during a ledger Edit, that is the Edit tool's normal diff visualization for a row being updated or split — historical sections (completed milestones, plan registers, MVP / sub-spec ledgers, roadmaps) must not lose rows.
 ```
 
 ## Notes
@@ -24,3 +25,4 @@ After every successful local commit, remote-only commit reconciliation, approved
 - This rule only updates local project documentation.
 - It does not authorize pushes, deploys, PR creation, or any other remote write.
 - Git hooks can help with commits later, but they cannot catch handovers, so this instruction rule remains required.
+- The preserve-history clause exists because the Edit tool's diff visualization (old text in red, new text in green) on a row update can look alarming if the operator interprets red as deletion. The clause both prevents accidental deletions during row splits/updates AND documents the red/green visualization so future agents can reassure the operator without re-deriving the reasoning.
