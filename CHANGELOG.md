@@ -17,6 +17,54 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ---
 
+## [0.11.0] — 2026-05-13
+
+### Changed — `skills/d-focus-tasks/SKILL.md`
+
+Full rewrite around a session-state model (`unset` / `active(<path>)` / `off`). Replaces the prior model where the skill wrote to a hardcoded ledger path on every trigger.
+
+**New behaviour:**
+- **Session-start prompt** on first qualifying trigger: operator picks one of 3 options — select a different ledger / create a new one / no ledger for this session. Choice is anchored in chat via `[focus-tasks-session — ledger active: <path>]` or `[focus-tasks-session — ledger off]` so it survives compaction.
+- **Override commands**: `/d-focus-tasks -no-ledger` (deactivate), `/d-focus-tasks` (re-prompt), `/d-focus-tasks <path>` (switch). Free-text overrides honoured only when intent is unambiguous in context.
+- **No-ledger flag grammar**: CLI-arg-only matching (`(?:^|\s)--?no[-\s]ledger(?:$|\s)` against the invocation arg string, never broader text). Prevents false positives on file paths (`tests/no-ledger-helpers.test.js`), doc content, commit messages, or the spec text itself.
+- **Subagent inheritance tokens**: `ledger=<path>` (equals sign — avoids Windows `D:\…` colon collision) and dashed no-ledger flags. If both tokens present, no-ledger wins (safer default).
+- **State-recovery contract**: anchor lines are the load-bearing source of truth; the in-context variable is a cache. Anchor-wins-by-absence on conflict — if the anchor is lost in compaction but the variable persists, re-prompt rather than write to a stale ledger.
+- **Candidate discovery**: walks up from touched paths + cwd to find existing `master-tasks.md` files. No hardcoded project table inside the skill.
+- **History preservation rule preserved**: never delete completed milestones from a ledger on edit.
+
+**Why:** the prior model wrote to `docs/product-docs/master-tasks.md` relative to project root on every trigger, which polluted unrelated project ledgers when the agent worked across multiple project trees in one session (e.g., a CU Scanner work-track + a global skill design work-track using the project docs folder as a writing surface). The workaround was per-session operator directives like "do NOT invoke d-focus-tasks for this skill design work" — tedious, error-prone, and easy to forget. The session-gating model makes the choice explicit and durable across the session.
+
+**Surfaced by** the `d-handover` skill authoring session on 2026-05-13, where the operator had to manually suppress d-focus-tasks invocations to keep skill-design rows out of the CU Scanner ledger. The fix generalizes the suppression into the skill itself with operator-consent semantics.
+
+### Added — `skills/d-focus-tasks/specs/`
+
+Co-located design artifacts for the v0.11.0 rewrite:
+- `2026-05-13-session-gating-design.md` (R1 — d-review verdict: ready-to-plan).
+- `2026-05-13-session-gating-design-review.md` (d-review R0 verdict `needs-revision` + R1 verdict `ready-to-plan` with 5 nits suppressed).
+- `2026-05-13-session-gating-plan.md` (8-task implementation plan).
+
+### Changed — `skills/d-handover/SKILL.md`
+
+Added a `## Pre-flight: no-ledger flag check (gates Steps 5 + 10)` section between the Triggers and Execution Sequence sections. The section inspects the `d-handover` invocation arg string for any of `-no-ledger` / `-no ledger` / `--no-ledger` / `--no ledger` (case-insensitive, CLI-arg-only matching per the d-focus-tasks grammar). When matched, both Step 5 (d-focus-tasks pre-flight ledger update) and Step 10 (final ledger touch) are skipped entirely; Step 11 audit-footer fields `ledger pre-flight P11 line` and `ledger post-emit P11 line` read `skipped (no-ledger flag)`. The flag suppresses one invocation only and does not change d-focus-tasks session state.
+
+Implements the §12 ledger-interaction clause from the d-focus-tasks v0.11.0 design spec.
+
+### Changed — `claude-rules/d-focus-tasks.md`
+
+Rule Block rewritten to match the new session-gating model. Triggers list now includes "material followup" with an explicit definition (introduces a new spec/plan, materially shifts task graph, or changes risk profile — routine cleanup is NOT material). Rule Block describes the 3-option prompt, anchor-line contract, override commands, and the no-ledger flag grammar that participating skills must honour. Preserve-history and visible-confirmation behaviours retained but reframed under the new model — anchor lines (`[focus-tasks-session — …]`) are now the durable session-state record across compaction. Notes section documents the session-gating motivation and the no-ledger flag false-positive guard.
+
+### Changed — `README.md`
+
+§4 (Focus Tasks Ledger Skill) gains a one-paragraph session-gating summary pointing at the new 3-option prompt, override commands, participating-skill flag suppression, and the CLI-arg-only matching rule that protects against false positives on file paths.
+
+### Commits
+- `feat(d-focus-tasks): session-gated ledger tracking with operator consent`
+- `feat(d-handover): no-ledger flag pre-flight clause`
+- `feat(claude-rules/d-focus-tasks): rewrite rule block for session gating`
+- `chore: release v0.11.0`
+
+---
+
 ## [0.10.0] — 2026-05-13
 
 ### Added — `skills/d-handover`
