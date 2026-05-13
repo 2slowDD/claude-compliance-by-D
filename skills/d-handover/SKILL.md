@@ -199,3 +199,25 @@ A handover is **load-bearing** (writes a `.md` doc in addition to inline prompt)
 | 6 | Sanity-retest / evidence file is load-bearing | Operator's must-read list (Q4) includes a `debug-evidence/*.json` or `*-retest*.md` or `*-handoff*.md` file | Intake Q4 |
 
 Print the classifier result + which flags fired, so the operator can override (`force load-bearing` / `force inline-only`).
+
+## Step 9 — Render templates
+
+Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templates/handoff-doc.md`. Fill placeholders. Write outputs.
+
+### 9.1 Placeholder semantics (inline-prompt.md)
+
+- `{{LEAD_PARAGRAPH}}`: 1-3 sentences from intake Q2.
+- `{{NEXT_SKILL}}`: e.g. `superpowers:brainstorming`, `superpowers:executing-plans`, `d-review`. From intake Q3.
+- `{{FIRST_ACTION_VERB}}`: "start the Option 2 brainstorm", "execute Task 11", "review the spec", etc. Built from intake Q3.
+- `{{READ_FIRST_NUMBERED_LIST}}`: numbered list, ledger row first (auto-pre-filled), then operator's entries from Q4. Each entry is path + 1-line purpose.
+- `{{CARRY_OVER_FRAMING_OR_EMPTY}}`: for load-bearing handovers, a short bullet list summarising the framing (Options carried, F-* trade-offs noted) with a pointer to the `.md` doc for full text. Empty string for inline-only.
+- `{{HARD_CONSTRAINTS_BULLETS}}`: bullets from intake Q5.
+- `{{F_STAR_PRIORITY_INLINE}}`: the priority list itself, e.g. `F-SEC > F-DEG > F-MISS > F-COST$ > F-THRU > F-CHECK-EFF > F-OVERFIT > F-IMPOSSIBLE (source: memory/feedback_cu_scanner_failure_priority_anchor.md)`. If Step 6 returned nothing AND operator skipped, omit the entire `- F-priority: …` bullet line (strip that single line, not the whole hard-constraints section).
+- `{{HANDOFF_DOC_REF_PARENTHETICAL_OR_EMPTY}}`: ` (see handoff §5 for full list)` for load-bearing, empty string for inline-only.
+- `{{DO_NOT_LIST}}`: bullets from intake Q6.
+- `{{KICKOFF_INSTRUCTION}}`: 1-2 sentence kick-off, including which read-first item to start with and whether the first clarifying question is the fresh agent's to pick.
+
+### 9.2 Output writing
+
+- Inline prompt: emit in a single fenced code block in the chat. No narrative interruptions inside the block.
+- Handoff doc (load-bearing only): write to `<project_root>\docs\product-docs\04-development\<YYYY-MM-DD>-<slug>-handoff.md`. Use the native Write tool. Do NOT commit; operator commits.
