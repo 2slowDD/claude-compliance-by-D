@@ -141,3 +141,61 @@ Sources scanned, in order, until one returns a usable F-* priority list:
 **Fallback:** if no source returns a list, ask:
 
 > I couldn't auto-detect the F-* priority for this project. Paste the priority order (e.g. `F-SEC > F-DEG > F-MISS > F-COST$ > F-THRU > F-CHECK-EFF > F-OVERFIT > F-IMPOSSIBLE`) or skip to omit F-* from the handover.
+
+## Step 7 — Structured intake
+
+Ask one at a time. Multiple-choice where possible. Operator can answer "skip" on any non-mandatory question.
+
+1. **Topic slug** (mandatory) — kebab-case, used in filename + headings.
+   - Auto-suggestion: derived from ledger top active row leading phrase.
+   - **Collision check:** if `<date>-<slug>-handoff.md` already exists in `<project_root>\docs\product-docs\04-development\`, ask: overwrite / use `-r2` suffix / update in place / pick new slug. Default = `-r2`.
+2. **One-paragraph current-state summary** (mandatory) — 1-3 sentences. Do NOT infer; the operator writes this.
+3. **First action** (mandatory) — multi-choice, expanded enum + free-text fallback:
+   - **Process skills:** `superpowers:brainstorming` / `d-review` / `superpowers:writing-plans` / `superpowers:executing-plans` / `superpowers:systematic-debugging` / `superpowers:verification-before-completion` / `superpowers:requesting-code-review` / `superpowers:subagent-driven-development` / `superpowers:using-git-worktrees`
+   - **Project process:** `d-focus-tasks` (when fresh agent's job is to read+confirm ledger first), `d-handover` (chained handover)
+   - **Domain skills:** `wp-compliance` (any WP plugin work), `seo-*` (any SEO skill family)
+   - **Other (free text):** operator types the next-skill identifier and the action verb separately.
+
+   **Free-text rendering rule:** for "other", ask two follow-ups: (a) what `{{NEXT_SKILL}}` invocation string to put after "Invoke" in the inline prompt (e.g. `myplugin:custom-skill` or literal text `the operator's named playbook X`); (b) what `{{FIRST_ACTION_VERB}}` phrase to put after "and" (e.g. `run the Phase B coverage relaxation review`). Both are required for "other"; do not render the prompt otherwise.
+4. **Must-read sequence** (mandatory, ≥1 entry beyond the auto-pre-filled ledger row) — operator lists files in strict order. Top entry auto-pre-filled with the ledger row reference. Suggest candidates from:
+   - **Session-referenced spec** — the design doc with the highest mention-count across the last ~30 conversation turns. Fallback if nothing matches: most recently modified file in `<project_root>\docs\product-docs\04-development\`.
+   - **Session-referenced plan** — same logic against `tasks/` or `<project>\CU Scanner Railway\...\tasks\` folders.
+   - **Recent evidence** — newest folder under `<project_root>\debug-evidence\` and its largest log/memo file.
+   - **Project CLAUDE.md** — at the project root if present.
+
+   Validate each path exists; warn next to misses, do NOT block.
+5. **Hard constraints to carry** (multi-select, project-aware defaults — see Step 7.5).
+6. **Do-NOT list** (multi-line free-form) — gotchas, dead-ends, premature shortcuts.
+
+## Step 7.5 — Project-aware hard-constraint defaults
+
+Keyed off `profile_key` from Step 2 (not on raw path matching). Each profile pre-checks a default set; operator can add/remove from the full menu.
+
+| `profile_key` | Default-checked constraints |
+|---|---|
+| `CU` | P9; P11; no-Railway-state-changes; no-new-env-vars; HOLD-before-code-execution (chain below the table) |
+| `wpservice-saas` | P10 wp-compliance; SFTP-not-Railway deploy (manual); P9; P11 |
+| `AI-Assets-Scanner` | P10 wp-compliance; P9; P11; cache-bust on JS/CSS enqueue change |
+| `claude-skill-dev` | P11 if a project ledger applies; no auto-install of skill without operator YES |
+| `other` | No defaults pre-checked; operator picks from full menu |
+
+> **HOLD-before-code-execution chain:** brainstorm → spec → d-review → approval → writing-plans → operator approval → executing-plans → HOLD before push → P9 → push.
+
+**Full menu** (operator picks beyond defaults): P9 push gate, P10 wp-compliance, P11 ledger, no-Railway-state-changes, no-new-env-vars, HOLD-before-code-execution, HOLD-before-push, P5 elegance, P6 autonomous bug fixing, P8 simplicity-first, cache-bust on JS/CSS enqueue change.
+
+## Step 8 — Classify complexity (load-bearing vs inline-only)
+
+Single post-intake pass — runs after Step 7 completes, so every flag has a fillable input.
+
+A handover is **load-bearing** (writes a `.md` doc in addition to inline prompt) when ≥2 of these flags fire:
+
+| # | Flag | Detection signal | Input source |
+|---|---|---|---|
+| 1 | F-* trade-off table needed | Operator intake Q2 (state summary) or Q6 (do-NOT list) mentions ≥2 quantified F-* deltas | Intake answers |
+| 2 | ≥2 architectural options carried | Operator intake Q2 mentions "Option 2", "Approach A vs B", etc. | Intake answers |
+| 3 | Plan paused mid-task | Ledger top row contains "paused", "BLOCKED on", "Tasks X-Y paused" | Ledger (read in Step 3) |
+| 4 | Active spec is in needs-revision / blocked-on-context | Intake Q4 includes a path matching `*-design.md`; if a sibling `*-review*.md` exists in the same folder and its `**Verdict:**` line reads `needs-revision` or `blocked-on-context`, fire the flag. If no design path in must-read, skip (flag does not fire). | Intake Q4 + filesystem |
+| 5 | Next action is `brainstorming` | Operator picks brainstorming as first-action skill in Q3 | Intake answers |
+| 6 | Sanity-retest / evidence file is load-bearing | Operator's must-read list (Q4) includes a `debug-evidence/*.json` or `*-retest*.md` or `*-handoff*.md` file | Intake Q4 |
+
+Print the classifier result + which flags fired, so the operator can override (`force load-bearing` / `force inline-only`).
