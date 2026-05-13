@@ -17,6 +17,51 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ---
 
+## [0.10.0] — 2026-05-13
+
+### Added — `skills/d-handover`
+
+A new Claude Code skill that packages saturated-context work into a copy/paste-ready handover prompt for a fresh agent. The skill walks an 11-step execution sequence: verify global CLAUDE.md → resolve `project_root` + `profile_key` (CU / wpservice-saas / AI-Assets-Scanner / claude-skill-dev / other) → locate the ledger (multi-ledger disambiguation by cwd-ancestor + keyword-overlap + recency) → detect ledger/session topic mismatch → invoke `d-focus-tasks` for the P11 pre-flight ledger update → auto-detect F-* priority (memory → project CLAUDE.md → recent specs; 14-day staleness flag) → structured intake (topic slug + state summary + first action enum + must-read sequence + project-aware constraint defaults + do-NOT list) → single-pass complexity classifier (6 flags; ≥2 = load-bearing) → render templates → final ledger touch (if load-bearing) → print 11-field audit footer.
+
+**What it produces:**
+- An inline copy/paste prompt in a single fenced code block, structured per `templates/inline-prompt.md`.
+- For load-bearing handovers, a `<date>-<slug>-handoff.md` document under `docs/product-docs/04-development/` matching `templates/handoff-doc.md`.
+- A P11 confirmation strip (`[focus-tasks-ledger updated — handover prep — <path>]`, plus a second `… — handover doc written — …` line for load-bearing) that lets the operator verify the ledger update fired from chat alone.
+
+**Why:** when a session's context window saturates mid-project, the operator needs to boot a fresh agent into the same work without losing F-* framing, hard constraints, read-first sequence, or the specific next action. Today this is a manual ritual with inconsistent quality and high risk of forgetting one of: ledger update (P11), F-* priority, P9 push gate, the "what NOT to do" list, or the specific next-skill invocation. The skill turns the ritual into a structured artifact-builder with built-in P11 compliance.
+
+**Surfaced by** repeated context-saturation handovers across the CU scanner project (mobile-determinism instrumentation 2026-05-11, Adaptive Visual-Diff Wrapper 2026-05-13) where each handover required ~30 minutes of hand-crafting a load-bearing doc plus a kickoff prompt — and each had small inconsistencies (forgotten F-* priority line, wrong hard-constraint set, ambiguous next-skill invocation) that the receiving fresh agent had to surface and clarify before starting real work.
+
+### Added — `skills/d-handover/templates/`
+
+Two skeleton files used by the skill at render time:
+
+- `templates/inline-prompt.md` — the single fenced copy/paste block with 10 placeholders (`{{LEAD_PARAGRAPH}}`, `{{NEXT_SKILL}}`, `{{FIRST_ACTION_VERB}}`, `{{READ_FIRST_NUMBERED_LIST}}`, `{{CARRY_OVER_FRAMING_OR_EMPTY}}`, `{{HARD_CONSTRAINTS_BULLETS}}`, `{{F_STAR_PRIORITY_INLINE}}`, `{{HANDOFF_DOC_REF_PARENTHETICAL_OR_EMPTY}}`, `{{DO_NOT_LIST}}`, `{{KICKOFF_INSTRUCTION}}`).
+- `templates/handoff-doc.md` — the load-bearing document skeleton with 6 numbered sections (§0 read-first, §1 picking-up paragraph, §2 first action, §3 framing, §4 hard constraints, §5 do-NOT list, §6 start).
+
+Templates are externalised (not inlined in `SKILL.md`) so the output format can be tuned without touching skill behaviour.
+
+### Changed — `README.md`
+
+- Intro count updated `Eight tools` → `Nine tools`.
+- Tool table gains a new row for `skills/d-handover` immediately after `skills/d-focus-tasks`.
+- New "## 5 — D-handover Skill" section inserted between section 4 (Focus Tasks Ledger Skill) and the rule sections, with Install + Verify steps mirroring the existing skill sections.
+- Rule sections renumbered: 5 → 6 (GitHub Push Warning), 6 → 7 (Deploy Reminder), 7 → 8 (Local-Only Default), 8 → 9 (Post-Significant-Push Audit). Mirrors the v0.9.0 renumbering precedent when `d-focus-tasks` was inserted at section 4.
+
+### Commits
+- `feat(d-handover): scaffold skill — frontmatter + triggers`
+- `feat(d-handover): execution sequence + CLAUDE.md verify + root/profile resolution`
+- `feat(d-handover): ledger location + keyword-overlap + mismatch detection`
+- `feat(d-handover): d-focus-tasks invocation + F-* auto-detection`
+- `feat(d-handover): structured intake + constraint defaults + classifier`
+- `feat(d-handover): render rules + inline-prompt + handoff-doc templates`
+- `feat(d-handover): final ledger touch + audit footer`
+- `feat(d-handover): failure modes + NOT-list + ACs self-check`
+- `docs(readme): add d-handover skill section + tool table row; renumber rules 5-8 -> 6-9`
+- `chore: release v0.10.0`
+
+---
+
 ## [0.9.1] — 2026-05-12
 
 ### Changed — `claude-rules/d-focus-tasks.md`
