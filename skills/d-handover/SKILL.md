@@ -17,3 +17,50 @@ The skill fires on operator phrasing including:
 - "create a handover prompt", "package this for a fresh session"
 
 If the operator pastes a current-state summary and says "package this for a fresh session", use that summary directly instead of asking intake Q2.
+
+## Execution Sequence
+
+No step is skippable. If any step halts (operator-required answer, hard error), do NOT emit the prompt until the halt is resolved.
+
+```
+1.  Verify global CLAUDE.md exists               (Step 1 below)
+2.  Locate project root + select profile         (Step 2)
+3.  Locate ledger                                (Step 3)
+4.  Detect ledger ↔ session topic mismatch       (Step 4)
+5.  Invoke d-focus-tasks                         (P11 pre-flight; Step 5)
+6.  Auto-detect F-* priority                     (Step 6)
+7.  Structured intake                            (Step 7)
+8.  Classify complexity                          (Step 8 — single post-intake pass)
+9.  Render templates                             (Step 9)
+10. Final ledger touch                           (post-emit, if a new handoff doc was written; Step 10)
+11. Print audit footer                           (Step 11)
+```
+
+## Step 1 — Verify global CLAUDE.md exists
+
+Read `C:\Users\dalib\.claude\CLAUDE.md`. If missing or unreadable, halt with this exact error:
+
+> Global CLAUDE.md not found at <path>; rules are load-bearing for hard-constraint defaults. Resolve path or supply rules explicitly before re-running.
+
+Do NOT emit the prompt or print the audit footer.
+
+## Step 2 — Locate project root + select profile
+
+Resolve `project_root` and `profile_key` together. Both feed Step 3 (ledger location) and Step 7.5 (constraint defaults).
+
+### 2.1 Supported roots + resolution table
+
+| `profile_key` | Path-pattern trigger (any one matches) | `project_root` | Notes |
+|---|---|---|---|
+| `CU` | cwd is `D:\AI\CU` exactly, or any path under it that is NOT under one of the subroots below | `D:\AI\CU` | Default for the scanner project. |
+| `wpservice-saas` | cwd contains `wpservice-saas` as a path segment | `D:\AI\CU\AI Assets Scanner\wpservice-saas` (closest ancestor matching the segment) | WP plugin; ledger may be at the CU master location or the subroot. Step 3 multi-ledger scan handles both. |
+| `AI-Assets-Scanner` | cwd contains `AI-Assets-Scanner` as a path segment AND NOT `wpservice-saas` | `D:\AI\CU\AI Assets Scanner\AI-Assets-Scanner` (closest ancestor matching the segment) | WP plugin; same ledger note. |
+| `claude-skill-dev` | cwd is under `C:\Users\dalib\.claude` or `C:\Users\dalib\claude-compliance-by-D` (skill development sessions) | `<the matching root>` | Step 3 still runs; scan typically finds zero ledgers under this root, so it falls through to "0 ledgers found" → `d-focus-tasks` asks scan-or-blank per its default protocol. |
+| `other` | none of the above | operator-supplied | Prompt: "I couldn't identify a known project root from cwd `<cwd>`. Paste the project root path or accept the default `D:\AI\CU`." |
+
+### 2.2 Resolution flow
+
+1. **Operator-supplied path in the invocation** → match against the table; if path falls under a known subroot, use that profile; if not, treat as `other`.
+2. **cwd-based match** → walk cwd ancestors against the table top-to-bottom; first match wins.
+3. **Session-activity fallback** → if cwd is at `D:\AI\CU` exactly but recent conversation activity (last ~30 turns) shows edits or file references under one of the subroots, ask: "cwd is at CU root but recent activity references `<subroot>`. Pick profile: (a) CU, (b) `<subroot>`."
+4. **Print resolved root + profile** before continuing. Operator can override with a single follow-up.
