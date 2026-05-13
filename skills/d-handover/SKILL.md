@@ -107,3 +107,37 @@ If shared content-words <2 (the mismatch threshold), halt and ask the operator u
 > The ledger's top active row reads: "<row>". The current session has been working on "<inferred-topic>". Is this current work a sub-thread of the active row, or does the ledger need updating before I write the handover prompt?
 
 Resume after their answer.
+
+## Step 5 — Invoke d-focus-tasks (hard sub-step, P11 pre-flight)
+
+Call `d-focus-tasks` with the current commit/plan/handover state to update `master-tasks.md`.
+
+**Inputs passed:**
+- Ledger path resolved in Step 3.
+- Current topic + status (active / paused / blocked / handover-prep).
+- Current commit SHA — resolved by running `git -C <project_root> log -1 --format=%h` if the project root is a git working tree. If no git tree (e.g. `claude-skill-dev` profile), or `git` fails, ask the operator once: "Pre-flight ledger row needs a commit SHA. Paste short SHA, or answer `none yet` if no commit exists for this work." **Inferred-from-conversation SHA is explicitly rejected** — `d-focus-tasks` deduplicates by SHA; a guessed SHA risks logging the wrong commit.
+- Operator-supplied next-action summary.
+
+**Behaviour:**
+- If `d-focus-tasks` halts (missing ledger → scan-or-blank question), surface the question to the operator and resume after their answer.
+- After success, print this P11 confirmation line on its own line in the same response:
+
+  ```
+  [focus-tasks-ledger updated — handover prep — <ledger-path>]
+  ```
+
+- If `d-focus-tasks` errors hard (permission, malformed ledger), halt and surface the error. Do not emit the handover prompt.
+
+## Step 6 — Auto-detect F-* priority
+
+Sources scanned, in order, until one returns a usable F-* priority list:
+
+1. **Memory** — grep `~/.claude/projects/<active-project>/memory/MEMORY.md` and individual memory files for filenames or content matching `*failure_priority*`, `F-SEC`, `F-DEG`, `F-MISS`, `F-COST$`, `F-THRU`, `F-CHECK-EFF`, `F-OVERFIT`, `F-IMPOSSIBLE`. **`<active-project>` derivation:** this slug is the agent runtime's project namespace (the directory name under `~/.claude/projects/`, e.g. `d--AI-ChatGPT` for this operator's primary working directory). It is NOT derived from `project_root` — when `profile_key=wpservice-saas` resolves `project_root` to `D:\AI\CU\AI Assets Scanner\wpservice-saas`, the memory still lives under the agent's startup slug (`d--AI-ChatGPT`), not under a per-subroot namespace. Read the slug from the runtime, not from `project_root`.
+2. **Project CLAUDE.md** — read `<project_root>\CLAUDE.md` if it exists; grep for the same patterns.
+3. **Recent specs** — scan `<project_root>\docs\product-docs\04-development\` for the 5 most recently modified files; grep for F-* patterns.
+
+**Staleness check:** if the detected anchor memory file has a date older than **14 days** from today (parsed from filename or content), tag the result `stale` in the audit footer; do not block emit. (14d picked because the project's memory cadence is ~daily; 14d gives one re-anchor cycle before flagging.)
+
+**Fallback:** if no source returns a list, ask:
+
+> I couldn't auto-detect the F-* priority for this project. Paste the priority order (e.g. `F-SEC > F-DEG > F-MISS > F-COST$ > F-THRU > F-CHECK-EFF > F-OVERFIT > F-IMPOSSIBLE`) or skip to omit F-* from the handover.
