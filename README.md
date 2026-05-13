@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Eight tools are included:
+Nine tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -10,6 +10,7 @@ Eight tools are included:
 | `skills/d-review` | Claude Code skill | Staff-engineer review of a spec or design doc — flags gaps, inconsistencies, ambiguity, errors, risks, testability issues, and missing acceptance criteria, ending with a go/no-go verdict |
 | `skills/d-security` | Claude Code skill | Generic web-app security checklist — auth, API, DB, infra, code hygiene, plus OWASP Top 10 coverage for XSS, SSRF, IDOR, deserialization, and file upload |
 | `skills/d-focus-tasks` | Codex / Claude Code skill | Keeps a lightweight project task ledger current across commits, handovers, plans, specs, and followups |
+| `skills/d-handover` | Claude Code skill | Builds a copy/paste-ready handover prompt for a fresh agent — read-first sequence, F-* metrics, hard constraints, do-NOT list, specific next action — and updates the project ledger via `d-focus-tasks` before emitting |
 | `claude-rules/d-focus-tasks.md` | AGENTS.md / CLAUDE.md rule | Makes task-ledger updates mandatory without manual skill invocation |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
@@ -165,7 +166,47 @@ Then add the rule block from [`claude-rules/d-focus-tasks.md`](claude-rules/d-fo
 
 ---
 
-## 5 — GitHub Push Warning Rule
+## 5 — D-handover Skill
+
+A Claude Code skill that packages a saturated-context session into a copy/paste-ready prompt for a fresh agent. The skill walks an 11-step execution sequence: verify global CLAUDE.md → resolve project root and constraint profile → locate the project ledger (handles multi-ledger disambiguation) → detect ledger/session topic mismatch → invoke `d-focus-tasks` to update the ledger BEFORE emitting → auto-detect F-* priority from memory/CLAUDE.md/specs → structured intake → classify complexity (load-bearing doc vs inline-only) → render templates → final ledger touch → print a greppable audit footer.
+
+**What it produces:**
+- An inline copy/paste prompt in a single fenced code block (read-first sequence, hard constraints, F-* priority line, do-NOT list, specific kickoff instruction with the next-skill invocation).
+- For load-bearing handovers (architectural pivots, paused plans, F-* trade-off tables), also writes a `<date>-<slug>-handoff.md` document under `docs/product-docs/04-development/` that the inline prompt points at.
+- A two-line P11 confirmation strip (`[focus-tasks-ledger updated — handover prep — <path>]`) so the operator can verify the ledger update fired without grepping diffs.
+
+**What it does NOT do:** push to remote (P9 stands), commit the handoff doc (operator commits), invent project state, skip `d-focus-tasks`, or invoke the next-skill on the fresh agent's behalf.
+
+Composes with `d-focus-tasks` (hard sub-step) and the `github-push-warning` rule (P9 gate applies if the fresh agent's next action will eventually push).
+
+### Install
+
+**Step 1 — Copy the skill files**
+
+```bash
+mkdir -p ~/.claude/skills/d-handover/templates
+cp skills/d-handover/SKILL.md ~/.claude/skills/d-handover/SKILL.md
+cp skills/d-handover/templates/inline-prompt.md ~/.claude/skills/d-handover/templates/inline-prompt.md
+cp skills/d-handover/templates/handoff-doc.md ~/.claude/skills/d-handover/templates/handoff-doc.md
+```
+
+On Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\d-handover\templates"
+Copy-Item "skills\d-handover\SKILL.md" "$env:USERPROFILE\.claude\skills\d-handover\SKILL.md"
+Copy-Item "skills\d-handover\templates\inline-prompt.md" "$env:USERPROFILE\.claude\skills\d-handover\templates\inline-prompt.md"
+Copy-Item "skills\d-handover\templates\handoff-doc.md" "$env:USERPROFILE\.claude\skills\d-handover\templates\handoff-doc.md"
+```
+
+**Step 2 — Verify**
+
+Start a new Claude Code session inside a project with a `docs/product-docs/master-tasks.md` ledger and say *"D-handover"* (or *"hand this off to a fresh agent"*). Claude should walk the 11-step sequence, invoke `d-focus-tasks` to update the ledger (with a visible `[focus-tasks-ledger updated — handover prep — <path>]` line), ask the structured-intake questions, classify complexity, and emit the inline copy/paste prompt in a single fenced code block followed by an audit footer outside the block.
+
+No CLAUDE.md edit required — the skill auto-triggers from its `description:` field. The skill REQUIRES `d-focus-tasks` to be installed and invocable (Step 5 of the execution sequence is a hard sub-step).
+
+---
+
+## 6 — GitHub Push Warning Rule
 
 A CLAUDE.md instruction that stops Claude before any push to your private GitHub repository and requires explicit "YES" confirmation.
 
@@ -177,7 +218,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/github-push-warn
 
 ---
 
-## 6 — Deploy Reminder Rule
+## 7 — Deploy Reminder Rule
 
 A CLAUDE.md instruction that forces Claude to list every file needing manual server deployment at the end of any response that changes deployable code. It omits the deploy section entirely for local-only artifacts with no server target.
 
@@ -189,7 +230,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/deploy-reminder.
 
 ---
 
-## 7 — Local-Only Default Rule
+## 8 — Local-Only Default Rule
 
 A CLAUDE.md instruction that makes local work the default and blocks remote writes unless the user explicitly requests them in the current session.
 
@@ -201,7 +242,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/local-only-defau
 
 ---
 
-## 8 — Post-Significant-Push Audit Rule
+## 9 — Post-Significant-Push Audit Rule
 
 A CLAUDE.md instruction that fires **after** any successful remote push of a significant change. Two gates: (1) y/n on whether to ratify project docs/plans against what was just shipped (close doc debt), then (2) a `F-CHECK-EFF`-style sweep for improvement opportunities (efficiency / security / gap-fill) of estimated ≥ 10 % gain that the work surfaced but did not act on. Found items are offered as next-todo follow-ups.
 
