@@ -221,3 +221,35 @@ Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templ
 
 - Inline prompt: emit in a single fenced code block in the chat. No narrative interruptions inside the block.
 - Handoff doc (load-bearing only): write to `<project_root>\docs\product-docs\04-development\<YYYY-MM-DD>-<slug>-handoff.md`. Use the native Write tool. Do NOT commit; operator commits.
+
+## Step 10 — Final ledger touch
+
+If Step 9 wrote a load-bearing `.md`, re-invoke `d-focus-tasks` to log the doc path under the current top active row (as `handover: <path>`). Print a second P11 confirmation line:
+
+```
+[focus-tasks-ledger updated — handover doc written — <ledger-path>]
+```
+
+Inline-only handovers skip this step; the Step 5 pre-flight update already captured the handover-prep event.
+
+## Step 11 — Audit footer (printed outside the fenced copy/paste block)
+
+Exact shape — every field is always present even if value is `none`; order is fixed; one line per field for `grep`-ability:
+
+```
+wrote: <doc path or "none">
+ledger pre-flight P11 line: [focus-tasks-ledger updated — handover prep — <ledger-path>]
+ledger post-emit P11 line: [focus-tasks-ledger updated — handover doc written — <ledger-path>] OR "skipped (inline-only handover)"
+complexity: <load-bearing | inline-only> (flags fired: <comma-list or "none">) (operator override: <yes/no>)
+F-priority source: <path or "operator-supplied" or "none">
+F-priority freshness: <fresh | stale | n/a>
+must-read paths missing: <comma-list or "none">
+project root: <path>
+profile_key: <CU | wpservice-saas | AI-Assets-Scanner | claude-skill-dev | other>
+ledger path: <path>
+additional-working-dirs: <available | unavailable>
+```
+
+The `ledger pre-flight P11 line` and `ledger post-emit P11 line` fields re-print the literal P11 confirmation lines (not paths only, not references). This means operator and any auditing reader can `grep "focus-tasks-ledger updated"` against either the live chat or the audit footer and find the same string twice for load-bearing handovers, once for inline-only.
+
+The fenced copy/paste block (the inline prompt) stays clean so the operator can copy-paste without trimming.
