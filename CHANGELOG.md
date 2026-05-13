@@ -17,6 +17,29 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ---
 
+## [0.11.1] — 2026-05-13
+
+### Fixed — `skills/d-handover/SKILL.md`
+
+Broaden the v0.11.0 pre-flight no-ledger clause from "gates Steps 5 + 10" to "gates Steps 3, 4, 5, 10 + omits Step 7.4 ledger-row auto-pre-fill + adjusts Step 11 audit footer `ledger path` field".
+
+**Bug:** the v0.11.0 clause skipped only the `d-focus-tasks` pre-flight call (Step 5) and the post-emit ledger touch (Step 10), but left Step 3 (locate ledger) and Step 4 (ledger ↔ session topic mismatch) running. On the canonical use case of `-no ledger` — a handover for work unrelated to the active project ledger — Step 4's keyword-overlap mismatch check would **halt the skill** and ask "is this current work a sub-thread of the active row, or does the ledger need updating?" — even though the operator had already explicitly said no-ledger via the flag. The flag is precisely meant to bypass that question. Additionally, Step 7.4's auto-pre-fill of the ledger top row in the must-read list would surface a ledger that is unrelated to the handover's content, misleading the fresh agent.
+
+**Fix:** when `no_ledger=true`, the entire ledger interaction is now out of scope. Steps 3, 4, 5, 10 all skip; Step 7.4's auto-pre-fill of the ledger top row in the must-read list is omitted (operator supplies all entries manually via intake Q4); the Step 9.1 `{{READ_FIRST_NUMBERED_LIST}}` placeholder rendering also omits the ledger-row prefix; Step 11 audit footer reads `skipped (no-ledger flag)` for `ledger pre-flight P11 line`, `ledger post-emit P11 line`, AND `ledger path` fields.
+
+**Surfaced by** an operator behaviour-trace 2026-05-13 immediately after the v0.11.0 push: "In that `-no ledger` case why is `locate ledger (cwd/keyword/recency heuristics) → check for ledger ↔ session topic mismatch` still working?"
+
+### Changed — `README.md`
+
+§5 (D-handover Skill) gains an explicit subsection "Suppressing the ledger for one handover — `-no-ledger` flag" with example invocation, the full list of what the flag suppresses (4 step skips + 2 placeholder/render omissions + 3 audit-footer field overrides), the canonical use case (handover unrelated to any project ledger), and the safety note that the flag is matched against the d-handover invocation arg string only (CLI-arg-only — no false positives on file paths like `tests/no-ledger-helpers.test.js`).
+
+### Commits
+- `fix(d-handover): broaden -no-ledger pre-flight skip to Steps 3, 4 + Step 7.4 + Step 11 ledger-path field`
+- `docs(readme): mention -no-ledger flag in §5 d-handover section`
+- `chore: release v0.11.1`
+
+---
+
 ## [0.11.0] — 2026-05-13
 
 ### Changed — `skills/d-focus-tasks/SKILL.md`
