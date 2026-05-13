@@ -18,6 +18,23 @@ The skill fires on operator phrasing including:
 
 If the operator pastes a current-state summary and says "package this for a fresh session", use that summary directly instead of asking intake Q2.
 
+## Pre-flight: no-ledger flag check (gates Steps 5 + 10)
+
+Before running the Execution Sequence, inspect this skill's invocation arg string — the text immediately after `d-handover` / `D-handover` / `/d-handover` on the invocation line. Do NOT search the broader user message, file contents, or earlier conversation.
+
+Match the case-insensitive regex `(?:^|\s)--?no[-\s]ledger(?:$|\s)` against the arg string. Recognized forms: `-no-ledger`, `-no ledger`, `--no-ledger`, `--no ledger`.
+
+**If matched:**
+- Set internal flag `no_ledger=true` for this invocation.
+- Skip Step 5 entirely. Do NOT invoke `d-focus-tasks`. No pre-flight P11 confirmation line is emitted.
+- Skip Step 10 entirely. Do NOT write the post-emit P11 line either.
+- In Step 11 audit footer, both `ledger pre-flight P11 line` and `ledger post-emit P11 line` fields read `skipped (no-ledger flag)`.
+- All other Execution Sequence steps run normally; the handover prompt is still emitted.
+
+**If not matched**, proceed normally. `d-focus-tasks` handles the session-state decision per its own rules (it may itself decide to skip if the operator's session is in `off` state).
+
+This clause exists because the operator may need to produce a handover prompt for an unrelated task without polluting the project ledger. The flag does NOT change `d-focus-tasks` session state — it suppresses one invocation only. See `skills/d-focus-tasks/SKILL.md` "No-ledger flag grammar" section for the canonical matching rule.
+
 ## Execution Sequence
 
 No step is skippable. If any step halts (operator-required answer, hard error), do NOT emit the prompt until the halt is resolved.
