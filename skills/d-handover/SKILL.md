@@ -47,17 +47,18 @@ This clause exists because the operator may need to produce a handover prompt fo
 No step is skippable. If any step halts (operator-required answer, hard error), do NOT emit the prompt until the halt is resolved.
 
 ```
-1.  Verify global CLAUDE.md exists               (Step 1 below)
-2.  Locate project root + select profile         (Step 2)
-3.  Locate ledger                                (Step 3)
-4.  Detect ledger ↔ session topic mismatch       (Step 4)
-5.  Invoke d-focus-tasks                         (P11 pre-flight; Step 5)
-6.  Auto-detect F-* priority                     (Step 6)
-7.  Structured intake                            (Step 7)
-8.  Classify complexity                          (Step 8 — single post-intake pass)
-9.  Render templates                             (Step 9)
-10. Final ledger touch                           (post-emit, if a new handoff doc was written; Step 10)
-11. Print audit footer                           (Step 11)
+1.   Verify global CLAUDE.md exists               (Step 1 below)
+2.   Locate project root + select profile         (Step 2)
+3.   Locate ledger                                (Step 3)
+4.   Detect ledger ↔ session topic mismatch       (Step 4)
+5.   Invoke d-focus-tasks                         (P11 pre-flight; Step 5)
+6.   Auto-detect F-* priority                     (Step 6)
+7.   Structured intake                            (Step 7)
+8.   Classify complexity                          (Step 8 — single post-intake pass)
+8.5. Docs-debt closure pre-pass                   (Step 8.5 — fires on closure-signal detection; operator-reviewable)
+9.   Render templates                             (Step 9)
+10.  Final ledger touch                           (post-emit, if a new handoff doc was written; Step 10)
+11.  Print audit footer                           (Step 11)
 ```
 
 ## Step 1 — Verify global CLAUDE.md exists
@@ -226,6 +227,149 @@ A handover is **load-bearing** (writes a `.md` doc in addition to inline prompt)
 
 Print the classifier result + which flags fired, so the operator can override (`force load-bearing` / `force inline-only`).
 
+## Step 8.5 — Docs-debt closure pre-pass (added 2026-05-13 PM)
+
+**Goal**: detect and remediate stale-doc state for any just-closed-or-superseded work-track BEFORE emitting the handover prompt. Fresh agents picking up the new work-track shouldn't be misled by upstream docs (specs / memos / plans / kickoff handoffs) that still reflect a pre-closure state.
+
+This step exists because closure events (work-track parking, supersession, rollback, ratification, refutation) leave a trail of related artifacts that need annotation: a spec marked "shipped" when it was just rolled back, a parking memo that still says "parked" when the work has unparked, a kickoff handoff that doesn't yet point at the closure spec. Without this pass, every closure-handover requires manual operator follow-up to fix the doc graph — exactly the friction the operator surfaced 2026-05-13 PM ("I'd like the handover skill also triggers the proper doc debt closure, so I don't have to do this again").
+
+### 8.5.1 When this step fires
+
+Trigger detection — keyword scan over intake Q2 (state-summary) for closure signals:
+
+| Signal pattern | Example |
+|---|---|
+| `closed`, `CLOSED`, `work-track closed`, `work-track closure` | "wrapper-redesign work-track CLOSED" |
+| `superseded`, `SUPERSEDED`, `supersede` | "rev 2.1 SUPERSEDED by …" |
+| `rolled back`, `rollback`, `revert` | "rollback shipped at `2a1b59d`" |
+| `parked`, `PARKED`, `unparked`, `UNPARKED` | "Phase 2 UNPARKED" |
+| `obsolete`, `OBSOLETE`, `deprecated`, `DEPRECATED` | "Tasks 11-18 obsolete" |
+| `ratified`, `approved` (when in completion context) | "spec ratified by d-review r2" |
+| `dropped`, `DROPPED`, `refuted`, `REFUTED`, `vindicated`, `VINDICATED` | "hypothesis REFUTED" |
+| `Step N of Bundle X` (bundle-progression closure) | "Step 1 of B1 shipped" |
+
+If NONE match → step is a no-op; audit footer reads `docs-closure: skipped (no closure signals in Q2 summary)`.
+
+**Operator overrides** (CLI-style args on d-handover invocation, parsed per the no-ledger flag grammar pattern):
+- `--skip-docs-closure` or `-skip-docs-closure` → skip this step regardless of detection
+- `--force-docs-closure` or `-force-docs-closure` → run this step even when no signals match
+
+### 8.5.2 Candidate-doc discovery
+
+When the step fires:
+
+1. **Touched-files this session** — start with files the agent has read, edited, written, or staged in the current turn AND prior turns of the current agent session. Per the d-focus-tasks "touched paths" definition.
+2. **Walk the work-track artifact graph** outward from each touched file:
+   - Specs in `<project_root>/docs/product-docs/04-development/` matching topic keywords from intake Q1 (topic slug) or intake Q2 (state summary)
+   - Sibling d-reviews matching `<spec-name>-review*.md` patterns in the same folder
+   - Memory files in `~/.claude/projects/<slug>/memory/` indexed in `MEMORY.md`, matching topic keywords
+   - Evidence memos and verdict files in `<project_root>/debug-evidence/<date>/` referenced by any in-scope spec
+   - Task plans in `<project_root>/CU Scanner Railway/.../tasks/` matching topic keywords
+3. **De-duplicate** by absolute path.
+4. **Cap at ~20 candidates max** — beyond that, operator-time-cost outweighs benefit; surface a `>20 candidates detected — focus operator review on top N by relevance` warning and present only the top 20.
+
+### 8.5.3 Staleness classification
+
+For each candidate doc, classify into ONE of four states:
+
+| State | Detection signal | Action |
+|---|---|---|
+| **STALE** | Top-of-file `Status:` header (or `**Status:**` line) predates the closure event AND its wording contradicts the new state. Example: spec says "SHIPPED" when work-track has now rolled back. | Propose status-header annotation. |
+| **NEEDS-CROSS-REF** | Doc references an upstream artifact (by path) whose state has changed in this session; downstream's reference is stale or missing. Example: parking memo references mobile-determinism work which has now closed; cross-ref to closure spec missing. | Propose adding cross-reference. |
+| **HISTORICAL** | Doc is intentionally pre-closure (kickoff handoffs, intermediate d-reviews, in-progress brainstorm artifacts). Should NOT be edited to claim current-state; should gain a "(HISTORICAL — superseded by …)" header annotation that redirects future readers. | Propose historical annotation. |
+| **UP-TO-DATE** | Doc's status header / cross-refs already reflect the closure. (This catches docs operator may have already annotated manually mid-session.) | No edit; report as up-to-date. |
+
+### 8.5.4 Operator-review gate
+
+Print a numbered candidates list with classification + proposed annotation summary:
+
+```
+Docs-debt closure pre-pass — N candidates detected:
+
+1. <relative-path> — STALE
+   Reason: <one-line reason>
+   Proposed annotation (top of file):
+   <2-line preview of proposed status header text>
+
+2. <relative-path> — NEEDS-CROSS-REF
+   Reason: missing pointer to <upstream-path>'s current state
+   Proposed annotation: <one-line insert preview>
+
+3. <relative-path> — HISTORICAL
+   Reason: kickoff handoff for now-closed work-track
+   Proposed annotation: add (HISTORICAL — superseded by <closure-spec>) note
+
+4. <relative-path> — UP-TO-DATE
+   (no edit; manually annotated already)
+
+How to respond:
+- "all" → apply all proposed annotations
+- "1,3" or "1-3" → apply only these
+- "none" → skip docs-closure for this handover; flag in audit footer
+- "edit N: <text>" → operator pastes desired annotation for candidate N
+- "skip N" → mark candidate N as deliberately-unannotated for this pass
+```
+
+Wait for operator response. Honor exactly. Do not silently expand scope.
+
+### 8.5.5 Apply approved annotations
+
+For each approved candidate:
+1. Read the file (required by Edit tool).
+2. Identify insertion point — usually the top-of-file `Status:` line or a "## N. Disposition update" subsection.
+3. Apply annotation, preserving historical content (per d-focus-tasks "preserve historical entries" discipline). Don't delete pre-closure text; add the post-closure annotation.
+4. For each successfully applied annotation, log: `docs-closure: annotated <path>`.
+5. If an Edit fails (file not found, conflict, etc.), log the failure + skip; do NOT halt the d-handover flow.
+
+### 8.5.6 Verification pass
+
+After applying, print summary:
+
+```
+docs-closure pre-pass complete:
+- annotated: <count> (paths listed above)
+- skipped (operator declined): <count>
+- up-to-date (no edit needed): <count>
+- failed (errors): <count, with error reasons>
+- candidates total: <count>
+```
+
+### 8.5.7 Audit footer addition
+
+In Step 11 audit footer, ADD a new field:
+
+```
+docs-closure: <annotated>/<total-candidates> (skipped: <count>; up-to-date: <count>; failed: <count>)
+```
+
+OR when step is a no-op:
+```
+docs-closure: skipped (signals not detected in Q2 summary)
+```
+
+OR when explicitly bypassed:
+```
+docs-closure: skipped (operator --skip-docs-closure flag)
+```
+
+### 8.5.8 Failure modes + escape valves
+
+| Failure | Behaviour |
+|---|---|
+| No closure signals AND no operator force | Skip step; audit footer reflects no-op. Do NOT prompt. |
+| >20 candidates detected | Cap at 20 by relevance score (recency of edit, keyword-overlap with Q2); surface warning. |
+| Operator declines all (`none`) | Skip step; flag in audit footer. Continue to Step 9 render. |
+| Edit fails on one candidate | Log failure + skip; continue with remaining candidates; report in summary. |
+| Operator asks to halt mid-review | Honor; abort Step 8.5; continue to Step 9 with partial annotations applied. |
+| Stale-doc would require operator-only judgement (e.g., AI uncertain whether HISTORICAL or STALE) | Classify as `AMBIGUOUS` with both options; operator picks. |
+
+### 8.5.9 What this step does NOT do
+
+- Does not rename files (filename changes are operator-judgement; flag in summary if observed but don't act).
+- Does not rewrite spec content — only adds annotations / status updates / cross-references at the top of files or in dedicated subsections.
+- Does not commit annotations to git. Product-docs is non-git; memory files are non-git. Operator commits any tracked-file annotations (task plans, repo specs) separately if desired.
+- Does not modify `master-tasks.md` (the ledger; that's d-focus-tasks's responsibility per Step 5).
+
 ## Step 9 — Render templates
 
 Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templates/handoff-doc.md`. Fill placeholders. Write outputs.
@@ -267,6 +411,7 @@ wrote: <doc path or "none">
 ledger pre-flight P11 line: [focus-tasks-ledger updated — handover prep — <ledger-path>]
 ledger post-emit P11 line: [focus-tasks-ledger updated — handover doc written — <ledger-path>] OR "skipped (inline-only handover)"
 complexity: <load-bearing | inline-only> (flags fired: <comma-list or "none">) (operator override: <yes/no>)
+docs-closure: <annotated>/<total-candidates> (skipped: <count>; up-to-date: <count>; failed: <count>) OR "skipped (no closure signals)" OR "skipped (operator --skip-docs-closure flag)" OR "force-run (operator --force-docs-closure flag)"
 F-priority source: <path or "operator-supplied" or "none">
 F-priority freshness: <fresh | stale | n/a>
 must-read paths missing: <comma-list or "none">

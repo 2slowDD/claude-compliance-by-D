@@ -15,6 +15,18 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/d-handover/SKILL.md` Step 8.5 (Docs-debt closure pre-pass)
+
+New step between Step 8 (complexity classification) and Step 9 (render templates). On every d-handover invocation, **detect closure signals** in intake Q2 (state summary); if found, **scan candidate docs** related to the just-closed-or-superseded work-track (touched files this session + walk to siblings: specs, d-reviews, memory files, evidence memos, task plans). **Classify each candidate** as `STALE` / `NEEDS-CROSS-REF` / `HISTORICAL` / `UP-TO-DATE`. **Operator-review gate**: present numbered list with proposed annotation summaries; operator picks `all` / numeric subset / `none` / per-item edit. **Apply** approved annotations preserving historical content. **Verify + audit-footer** with new `docs-closure: <annotated>/<total>` field.
+
+**Why this exists**: closure events (work-track parking, supersession, rollback, ratification, refutation) leave a trail of related artifacts that need annotation: a spec marked "shipped" when it was just rolled back; a parking memo that still says "parked" when the work has unparked; a kickoff handoff that doesn't yet point at the closure spec. Without this pass, every closure-handover requires manual operator follow-up to fix the doc graph.
+
+**Surfaced by** operator request 2026-05-13 PM during Bail-Aware Phase 2 handover prep, AFTER the operator and agent had together manually closed docs debt across 5 product-docs + 1 memory + 1 evidence-memo for the just-closed Adaptive Visual-Diff Wrapper redesign work-track. Operator's exact words: "I'd like the handover skill also triggers the proper doc debt closure (as I asked you to do now). First check if docs are already up to date, if not - thoroughly update them like you did now. So, I don't have to do this again when doing handovers."
+
+Operator overrides via CLI-style args: `--skip-docs-closure` (skip regardless of detection); `--force-docs-closure` (run even when no signals match). Parsed per the same no-ledger flag grammar pattern (invocation arg string only).
+
+Execution-sequence overview at the top of the skill updates to include `8.5. Docs-debt closure pre-pass`. Step 11 audit footer adds new `docs-closure:` field.
+
 ### Fixed — `skills/d-handover/SKILL.md`
 
 Step 7.5 project-aware hard-constraint defaults: removed `no-new-env-vars` from the CU profile's default-checked constraints AND from the Full-menu list. Operator-clarified 2026-05-13 PM that `no-new-env-vars` is a **preference** (justification required per CLAUDE.md), NOT a hard rule. New env vars ARE allowed if justified; surfacing them as a hard constraint in handover prompts misrepresented the operator's actual policy.
