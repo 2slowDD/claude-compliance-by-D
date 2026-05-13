@@ -15,6 +15,32 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Fixed — `skills/d-focus-tasks/SKILL.md`
+
+Clarify the session-start prompt's Option 1 as **"Accept default"** (was previously ambiguous — labelled "Select a different ledger file" while the anchor-lines table + operator-response interpretation BOTH treated Option 1 as "accept default" → two intents collapsed into one option with no documented path for the common case of "use the displayed default").
+
+**Bug:** the prompt's Option 1 read "Select a different ledger file" → naive operator read: typing `1` picks a DIFFERENT path. But the anchor-lines table mapped "Operator picks Option 1 / accepts the default" → the active-with-default anchor, and the operator-response interpretation said free-text paths are "treated as Option 1 with that path." Two distinct intents (accept-default vs specify-different-path) had been collapsed into one numbered option without disambiguation in the UI text. Operators picking `1` thinking they were accepting would land at the same code path as operators wanting to pick a different file.
+
+**Fix:** restructured to 4 options where Option 1 is **explicitly** "Accept default":
+
+```
+Options:
+1. Accept default
+2. Select a different ledger file
+3. Create a new ledger file
+4. Do NOT use ledger file in this session
+```
+
+7 cross-references updated to stay consistent:
+- Operator-response interpretation (the line below the prompt): bare Enter / `1` → Option 1; free-text path → Option 2; `4` or bare no-ledger phrase → Option 4
+- "Option 2 follow-up" header → "Option 3 follow-up (new-ledger creation)"
+- "default proposal is Option 2 (create new)" → "Option 3 (create new)"
+- "interpreted as Option 3" (no-ledger free-text section) → "Option 4"
+- Anchor-lines table: 3 option rows → 4 rows with explicit accept-default row + free-text path row
+- "via Option 2 of the session-start prompt" (Locate or Create section) → "via Option 3"
+
+**Surfaced by** an operator behaviour-trace 2026-05-13 PM during mid-execution d-handover invocation, when the agent told the operator "type `1` to accept the default" and the operator caught the inconsistency: "you are saying to accept by typing 1, and on the Options menu 1. stands for select a different ledger file. 1. should be Accept the ledger file?"
+
 ---
 
 ## [0.11.1] — 2026-05-13

@@ -68,9 +68,10 @@ I'll use this ledger file as default in this session:
 <default-path-or-"(none found)">
 
 Options:
-1. Select a different ledger file
-2. Create a new ledger file
-3. Do NOT use ledger file in this session
+1. Accept default
+2. Select a different ledger file
+3. Create a new ledger file
+4. Do NOT use ledger file in this session
 
 Other candidates found this session:
 - <path-1> (last modified <date>)
@@ -78,9 +79,9 @@ Other candidates found this session:
 [...or "(none)"]
 ```
 
-The operator may respond with `1`, `2`, `3`, a free-text path (treated as Option 1 with that path), or a bare no-ledger phrase like `no ledger` / `no-ledger` (treated as Option 3 — context disambiguates because the operator is answering this prompt).
+The operator may respond with `1`, `2`, `3`, `4`, a free-text path (treated as Option 2 with that path), or a bare no-ledger phrase like `no ledger` / `no-ledger` (treated as Option 4 — context disambiguates because the operator is answering this prompt). Bare Enter / empty response also counts as Option 1 (accept default).
 
-### Option 2 follow-up
+### Option 3 follow-up (new-ledger creation)
 
 ```
 Where should the new ledger live? Suggested:
@@ -114,7 +115,7 @@ When proposing a default ledger:
 2. Walk up from agent's cwd. Add if not already present.
 3. Order unique candidates by last-modified time, newest first. Newest = default.
 
-If the candidate list is empty, default proposal is Option 2 (create new) with no path pre-filled.
+If the candidate list is empty, default proposal is Option 3 (create new) with no path pre-filled.
 
 NO hardcoded project table inside this skill. Add a new project = drop `master-tasks.md` at its root, confirm at next prompt.
 
@@ -144,7 +145,7 @@ If matched, the participating skill MUST NOT invoke `d-focus-tasks` for that inv
 
 ### Operator free-text responses
 
-When the operator is responding to the session-start prompt, bare phrases (`no ledger`, `no-ledger`) ARE interpreted as Option 3. Context disambiguates.
+When the operator is responding to the session-start prompt, bare phrases (`no ledger`, `no-ledger`) ARE interpreted as Option 4. Context disambiguates.
 
 ## Anchor lines (chat-visible, load-bearing)
 
@@ -152,9 +153,10 @@ Emit these on transitions:
 
 | Trigger | Anchor line |
 |---|---|
-| Operator picks Option 1 / accepts the default | `[focus-tasks-session — ledger active: <path>]` |
-| Operator picks Option 2 (new file) | `[focus-tasks-ledger created — <path>]` then `[focus-tasks-session — ledger active: <path>]` |
-| Operator picks Option 3 / no-ledger phrase | `[focus-tasks-session — ledger off]` |
+| Operator picks Option 1 (accept default) | `[focus-tasks-session — ledger active: <path>]` |
+| Operator picks Option 2 (different file) or pastes a free-text path | `[focus-tasks-session — ledger active: <path>]` |
+| Operator picks Option 3 (new file) | `[focus-tasks-ledger created — <path>]` then `[focus-tasks-session — ledger active: <path>]` |
+| Operator picks Option 4 / no-ledger phrase | `[focus-tasks-session — ledger off]` |
 | `/d-focus-tasks -no-ledger` mid-session | `[focus-tasks-session — ledger deactivated]` |
 | `/d-focus-tasks <path>` mid-session | `[focus-tasks-session — ledger active: <path>]` |
 | Per-update success | `[focus-tasks-ledger updated — <trigger> — <path>]` |
@@ -229,7 +231,7 @@ When state is `active(<path>)` and a trigger fires:
 
 ## Locate or Create
 
-Used when bootstrapping a ledger via Option 2 of the session-start prompt. Use the operator-confirmed path. Create the file if it does not exist with a minimal scaffold matching the Ledger Shape below.
+Used when bootstrapping a ledger via Option 3 of the session-start prompt. Use the operator-confirmed path. Create the file if it does not exist with a minimal scaffold matching the Ledger Shape below.
 
 ## Scope Calibration
 
