@@ -197,7 +197,7 @@ Keyed off `profile_key` from Step 2 (not on raw path matching). Each profile pre
 
 | `profile_key` | Default-checked constraints |
 |---|---|
-| `CU` | P9; P11; no-Railway-state-changes; no-new-env-vars; HOLD-before-code-execution (chain below the table) |
+| `CU` | P9; P11; no-Railway-state-changes; HOLD-before-code-execution (chain below the table) |
 | `wpservice-saas` | P10 wp-compliance; SFTP-not-Railway deploy (manual); P9; P11 |
 | `AI-Assets-Scanner` | P10 wp-compliance; P9; P11; cache-bust on JS/CSS enqueue change |
 | `claude-skill-dev` | P11 if a project ledger applies; no auto-install of skill without operator YES |
@@ -205,7 +205,9 @@ Keyed off `profile_key` from Step 2 (not on raw path matching). Each profile pre
 
 > **HOLD-before-code-execution chain:** brainstorm → spec → d-review → approval → writing-plans → operator approval → executing-plans → HOLD before push → P9 → push.
 
-**Full menu** (operator picks beyond defaults): P9 push gate, P10 wp-compliance, P11 ledger, no-Railway-state-changes, no-new-env-vars, HOLD-before-code-execution, HOLD-before-push, P5 elegance, P6 autonomous bug fixing, P8 simplicity-first, cache-bust on JS/CSS enqueue change.
+**Full menu** (operator picks beyond defaults): P9 push gate, P10 wp-compliance, P11 ledger, no-Railway-state-changes, HOLD-before-code-execution, HOLD-before-push, P5 elegance, P6 autonomous bug fixing, P8 simplicity-first, cache-bust on JS/CSS enqueue change.
+
+**Preferences (NOT hard constraints — surface via free-text intake Q6 if relevant)**: env-var additions require justification per CLAUDE.md (preference; not a ban). New env vars ARE allowed if justified; "no new env vars" is NOT a hard rule. (Removed from defaults + full menu 2026-05-13 PM per operator clarification.)
 
 ## Step 8 — Classify complexity (load-bearing vs inline-only)
 

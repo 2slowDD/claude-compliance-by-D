@@ -15,6 +15,14 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Fixed — `skills/d-handover/SKILL.md`
+
+Step 7.5 project-aware hard-constraint defaults: removed `no-new-env-vars` from the CU profile's default-checked constraints AND from the Full-menu list. Operator-clarified 2026-05-13 PM that `no-new-env-vars` is a **preference** (justification required per CLAUDE.md), NOT a hard rule. New env vars ARE allowed if justified; surfacing them as a hard constraint in handover prompts misrepresented the operator's actual policy.
+
+**Fix:** removed from CU defaults row (line 200) and from the Full-menu list (line 208). Added a "Preferences" footnote clarifying the new framing: env-var additions require justification but are not banned; surface as free-text intake Q6 if relevant to a specific handover.
+
+**Surfaced by** operator behaviour-trace 2026-05-13 PM during a Bail-Aware Phase 2 handover intake: "no-new-env-vars is not a hard constraint, it's merely a preferred option, if new env-var would benefit the project I'm not against it. Fix it where necessary."
+
 ### Fixed — `skills/d-focus-tasks/SKILL.md`
 
 Clarify the session-start prompt's Option 1 as **"Accept default"** (was previously ambiguous — labelled "Select a different ledger file" while the anchor-lines table + operator-response interpretation BOTH treated Option 1 as "accept default" → two intents collapsed into one option with no documented path for the common case of "use the displayed default").
