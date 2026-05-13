@@ -18,22 +18,29 @@ The skill fires on operator phrasing including:
 
 If the operator pastes a current-state summary and says "package this for a fresh session", use that summary directly instead of asking intake Q2.
 
-## Pre-flight: no-ledger flag check (gates Steps 5 + 10)
+## Pre-flight: no-ledger flag check (gates Steps 3, 4, 5, 10)
 
 Before running the Execution Sequence, inspect this skill's invocation arg string — the text immediately after `d-handover` / `D-handover` / `/d-handover` on the invocation line. Do NOT search the broader user message, file contents, or earlier conversation.
 
 Match the case-insensitive regex `(?:^|\s)--?no[-\s]ledger(?:$|\s)` against the arg string. Recognized forms: `-no-ledger`, `-no ledger`, `--no-ledger`, `--no ledger`.
 
-**If matched:**
-- Set internal flag `no_ledger=true` for this invocation.
-- Skip Step 5 entirely. Do NOT invoke `d-focus-tasks`. No pre-flight P11 confirmation line is emitted.
-- Skip Step 10 entirely. Do NOT write the post-emit P11 line either.
-- In Step 11 audit footer, both `ledger pre-flight P11 line` and `ledger post-emit P11 line` fields read `skipped (no-ledger flag)`.
-- All other Execution Sequence steps run normally; the handover prompt is still emitted.
+**If matched:** set internal flag `no_ledger=true` for this invocation. **Ledger is entirely out of scope** — no read, no update, no surfacing in the fresh-agent prompt.
+
+- **Skip Step 3** (locate ledger). No candidate discovery, no path resolution.
+- **Skip Step 4** (ledger ↔ session topic mismatch). Mismatch check has no purpose when no update is intended; without this skip, an unrelated handover would trigger an unwanted halt-and-ask on the very mismatch condition that justifies using `-no ledger`.
+- **Skip Step 5** (d-focus-tasks pre-flight). No `d-focus-tasks` invocation; no pre-flight P11 confirmation line.
+- **Skip Step 10** (final ledger touch). No post-emit P11 line either.
+- **In Step 7.4** (must-read sequence intake): the ledger-row auto-pre-fill is **omitted**. The operator supplies all must-read entries manually (the prompt still requires ≥1 entry from intake Q4 as before).
+- **In Step 9.1** (`{{READ_FIRST_NUMBERED_LIST}}` placeholder): omit the ledger-row-first prefix; the list contains only the operator's Q4 entries.
+- **In Step 11 audit footer:**
+  - `ledger pre-flight P11 line` → `skipped (no-ledger flag)`
+  - `ledger post-emit P11 line` → `skipped (no-ledger flag)`
+  - `ledger path` → `skipped (no-ledger flag)`
+- All other Execution Sequence steps (1, 2, 6, 7, 8, 9, 11) run normally; the handover prompt is still emitted in its single fenced code block followed by the audit footer.
 
 **If not matched**, proceed normally. `d-focus-tasks` handles the session-state decision per its own rules (it may itself decide to skip if the operator's session is in `off` state).
 
-This clause exists because the operator may need to produce a handover prompt for an unrelated task without polluting the project ledger. The flag does NOT change `d-focus-tasks` session state — it suppresses one invocation only. See `skills/d-focus-tasks/SKILL.md` "No-ledger flag grammar" section for the canonical matching rule.
+This clause exists because the operator may need to produce a handover prompt for work that is entirely unrelated to any project ledger. The flag does NOT change `d-focus-tasks` session state — it suppresses one invocation only. See `skills/d-focus-tasks/SKILL.md` "No-ledger flag grammar" section for the canonical matching rule.
 
 ## Execution Sequence
 
