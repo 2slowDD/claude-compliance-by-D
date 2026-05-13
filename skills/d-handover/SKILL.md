@@ -253,3 +253,54 @@ additional-working-dirs: <available | unavailable>
 The `ledger pre-flight P11 line` and `ledger post-emit P11 line` fields re-print the literal P11 confirmation lines (not paths only, not references). This means operator and any auditing reader can `grep "focus-tasks-ledger updated"` against either the live chat or the audit footer and find the same string twice for load-bearing handovers, once for inline-only.
 
 The fenced copy/paste block (the inline prompt) stays clean so the operator can copy-paste without trimming.
+
+## Failure Modes + Escape Valves
+
+| Failure | Behaviour |
+|---|---|
+| `d-focus-tasks` errors hard | Halt before emit; surface error verbatim; do not write prompt or doc. |
+| Project root ambiguous | Ask once with detected candidates; respect operator choice. |
+| Multiple ledgers found, no decisive heuristic winner | Show numbered list (path + last-modified + top-row preview); operator picks. |
+| Ledger row ↔ session topic mismatch | Halt; ask whether ledger needs updating or work is sub-thread; resume after answer. |
+| F-* auto-detection finds nothing | Ask operator to paste or skip. |
+| F-* anchor memory >14 days old | Continue; flag `stale` in audit footer. |
+| Must-read paths don't exist | Inline warning next to each missing path; do not block emit. |
+| Topic-slug collision (existing file) | Ask: overwrite / -r2 / update-in-place / new slug; default `-r2`. |
+| Global CLAUDE.md not found at `C:\Users\dalib\.claude\CLAUDE.md` | Halt — rules are load-bearing; ask operator for path or to fix. |
+| MEMORY.md not found at expected project path | Continue; log in audit footer; F-* falls back to project CLAUDE.md or operator input. |
+| Empty conversation context (no current work topic) | Halt; ask operator to paste state summary; no fabrication. |
+| Complexity classifier disagrees with operator intent | Print classifier verdict + flags; honour operator override (`force load-bearing` / `force inline-only`). |
+
+## What d-handover does NOT do
+
+- Does not push to remote (P9 stands).
+- Does not commit the handoff `.md` (operator commits, keeps human-in-loop).
+- Does not invent project state — only carries what the operator types in intake + what auto-detection surfaces from canonical sources (ledger, CLAUDE.md, memory).
+- Does not skip `d-focus-tasks`.
+- Does not auto-clear the previous session's todo list.
+- Does not install the skill itself into `~/.claude/skills/` — that is a separate implementation step gated by operator approval.
+- Does not modify `CLAUDE.md` or memory files.
+- Does not invoke the next-skill (brainstorming / writing-plans / etc.) on behalf of the fresh agent. That is the fresh agent's first action.
+
+## Acceptance Criteria (self-check before emit)
+
+A successful run produces:
+
+1. An updated ledger with a handover-prep row at the top active task, printed via P11 confirmation line.
+2. (Load-bearing only) A `.md` handoff doc at `<root>\docs\product-docs\04-development\<date>-<slug>-handoff.md` matching the `templates/handoff-doc.md` skeleton.
+3. An inline copy/paste prompt in a single fenced code block, structured per `templates/inline-prompt.md`, with:
+   - Read-first sequence containing ledger row + ≥1 operator-supplied path
+   - Hard constraints bullets including F-* priority line (if detected or supplied)
+   - Do-NOT list with ≥1 entry
+   - Specific kickoff instruction naming the next-skill invocation
+4. An audit footer outside the fenced block per Step 11, with all 11 fields populated.
+5. No silent decisions: every classifier verdict, ledger pick, and staleness flag is visible to the operator.
+
+**Conditional ACs** (must hold when their precondition fires):
+
+6. **Multi-ledger disambiguation** — if Step 3 finds ≥2 ledgers and no decisive heuristic winner, print a numbered list (path + last-modified + first-200-chars of top active row) and halt pending operator pick.
+7. **Step 4 mismatch halt format** — when keyword-overlap is <2, print the exact phrasing: `The ledger's top active row reads: "<row>". The current session has been working on "<inferred-topic>". Is this current work a sub-thread of the active row, or does the ledger need updating before I write the handover prompt?` (Verbatim text; only the two `<...>` slots vary.)
+8. **Operator override of classifier** — when operator passes `force load-bearing` or `force inline-only` after the classifier verdict prints, respect the override and log `operator override: yes` in the audit footer field. Without override, the field reads `no`.
+9. **First-action "other (free text)"** — collect both `{{NEXT_SKILL}}` and `{{FIRST_ACTION_VERB}}` before rendering; if either is missing, halt and re-ask rather than rendering with placeholders.
+10. **Global CLAUDE.md missing** — Step 1 halts with the exact error string; audit footer is NOT printed (no emit).
+11. **`additional-working-dirs: unavailable`** — when runtime does not expose the additional-working-directories block, still produce a valid prompt using paths (1) + (2) of Step 3 and log the unavailability in the audit footer.
