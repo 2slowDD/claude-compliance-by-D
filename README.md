@@ -177,9 +177,20 @@ A Claude Code skill that packages a saturated-context session into a copy/paste-
 - For load-bearing handovers (architectural pivots, paused plans, F-* trade-off tables), also writes a `<date>-<slug>-handoff.md` document under `docs/product-docs/04-development/` that the inline prompt points at.
 - A two-line P11 confirmation strip (`[focus-tasks-ledger updated — handover prep — <path>]`) so the operator can verify the ledger update fired without grepping diffs.
 
-**What it does NOT do:** push to remote (P9 stands), commit the handoff doc (operator commits), invent project state, skip `d-focus-tasks`, or invoke the next-skill on the fresh agent's behalf.
+**What it does NOT do:** push to remote (P9 stands), commit the handoff doc (operator commits), invent project state, skip `d-focus-tasks` (unless the `-no-ledger` flag is set — see below), or invoke the next-skill on the fresh agent's behalf.
 
 Composes with `d-focus-tasks` (hard sub-step) and the `github-push-warning` rule (P9 gate applies if the fresh agent's next action will eventually push).
+
+### Suppressing the ledger for one handover — `-no-ledger` flag
+
+Invoke as `/d-handover -no-ledger ...` (or `/d-handover -no ledger ...`, `--no-ledger`, `--no ledger` — all case-insensitive). The flag suppresses the **entire ledger interaction** for that single invocation:
+
+- Steps 3 (locate ledger), 4 (ledger/session mismatch check), 5 (`d-focus-tasks` pre-flight), and 10 (final ledger touch) all skip.
+- The ledger top row is omitted from the auto-pre-filled must-read list (Step 7.4 / placeholder `{{READ_FIRST_NUMBERED_LIST}}`).
+- The Step 11 audit footer reads `skipped (no-ledger flag)` for both ledger P11 line fields and the `ledger path` field.
+- The handover prompt is still emitted normally in its single fenced code block.
+
+Use this when the work being handed off is unrelated to any project ledger — e.g. a global-skill design session that touches files only under `~/.claude/skills/`, when the active project ledger lives in a different project tree. The flag is matched against the d-handover invocation arg string ONLY (CLI-arg-only matching per the `d-focus-tasks` no-ledger grammar — it will NOT trigger on file paths like `tests/no-ledger-helpers.test.js` in the conversation). The flag suppresses one invocation only — it does NOT change `d-focus-tasks` session state.
 
 ### Install
 
