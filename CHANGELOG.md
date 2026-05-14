@@ -15,6 +15,35 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/d-test-assumptions` + `claude-rules/d-test-assumptions.md`
+
+A new Claude Code skill + CLAUDE.md rule pairing — the **active counterpart** to the `d-assumption` rule. Where `d-assumption` *labels* claims ⚠️ Assumption / 🟢 CONFIRMED, `d-test-assumptions` *acts* on the ⚠️ labels: it drives assumption-based reasoning to a tested verdict instead of letting it ride as a guess.
+
+**Two phases:**
+
+- **Phase 1 — pre-lock-in assumption audit.** Before any non-trivial approach (architectural weight, or 3+ steps — mirrors P1) is presented as "the plan": inventory the load-bearing claims, quantify the assumption load ("N of M claims are assumptions"), triage each ⚠️ Assumption (`testable-locally` / `testable-with-operator` / `untestable-but-load-bearing` / `not-worth-testing`), test the testables, and emit a per-claim 🟢 CONFIRMED / 🔴 REFUTED / 🟡 INCONCLUSIVE verdict. A refuted load-bearing assumption repositions to the next-best approach — **reposition once, then checkpoint** with the operator rather than walking the ranked list autonomously.
+- **Phase 2 — post-implementation verification reflex.** After implementing an easily-verifiable code segment: quick-test it against spec locally. In line → proceed. Not in line → **PAUSE**, do not patch-and-continue, alert the operator with the mismatch and whether it warrants an architectural rethink.
+
+**Test-design rules:** N≥2 minimum (never N=1); N≥3 when the first two runs diverge; F-OVERFIT — a single-case pass is "confirmed for `<case>`", never bare "confirmed"; the usual F-* metrics (F-COST$, F-THRU, F-SEC, F-MISS, F-DEG) constrain the test itself; local-first, operator-second with the exact command handed over on escalation.
+
+**Session-level off switch:** `/d-test-assumptions off` (also `no`, `-off`, `--off`) suppresses both phases for the session; `/d-test-assumptions on` re-enables. CLI-arg-only flag matching and chat-visible anchor lines (`[d-test-assumptions — off for session]` / `[d-test-assumptions — on]`) mirror the `d-focus-tasks` override-command model. A permanent disable means removing the rule block from CLAUDE.md.
+
+Output is **inline only** — no register file (operator decision: keep it cheap; "organize it only if not a large detour").
+
+**Why:** plans routinely lock in on reasoning that is mostly inference. `d-assumption` made the inference *visible*; this skill makes it *testable* — closing the loop so an ⚠️ Assumption either becomes a 🟢 CONFIRMED via a real N≥2 test, or is consciously carried as a named risk.
+
+**Surfaced by** operator request 2026-05-14 via a `/superpowers:brainstorming` session, immediately after shipping the `d-assumption` rule. Design spec co-located at `skills/d-test-assumptions/specs/2026-05-14-d-test-assumptions-design.md`.
+
+### Added — `skills/d-test-assumptions/specs/`
+
+Co-located design artifact: `2026-05-14-d-test-assumptions-design.md` (brainstormed design, approved + amended with the session-level off switch during the spec-review gate).
+
+### Changed — `README.md` (d-test-assumptions)
+
+- Intro count updated `Ten tools` → `Eleven tools`.
+- Tool table gains two rows: `skills/d-test-assumptions` (after `skills/d-handover`) and `claude-rules/d-test-assumptions.md` (after `claude-rules/d-assumption.md`).
+- New "## 11 — Assumption Testing & Verification Discipline" section inserted after section 10, with skill-copy + rule-block install steps mirroring the existing skill+rule sections (4, 5).
+
 ### Added — `claude-rules/d-assumption.md`
 
 A new CLAUDE.md instruction rule that forces Claude to tag every item in a plan, recommendation, proposal, design spec, or multi-item answer by the strength of its basis:

@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Ten tools are included:
+Eleven tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -11,12 +11,14 @@ Ten tools are included:
 | `skills/d-security` | Claude Code skill | Generic web-app security checklist — auth, API, DB, infra, code hygiene, plus OWASP Top 10 coverage for XSS, SSRF, IDOR, deserialization, and file upload |
 | `skills/d-focus-tasks` | Codex / Claude Code skill | Keeps a lightweight project task ledger current across commits, handovers, plans, specs, and followups |
 | `skills/d-handover` | Claude Code skill | Builds a copy/paste-ready handover prompt for a fresh agent — read-first sequence, F-* metrics, hard constraints, do-NOT list, specific next action — and updates the project ledger via `d-focus-tasks` before emitting |
+| `skills/d-test-assumptions` | Claude Code skill | Drives assumption-based reasoning to a tested 🟢 CONFIRMED / 🔴 REFUTED verdict before an approach locks in, and quick-tests easily-verifiable code segments against spec after implementation |
 | `claude-rules/d-focus-tasks.md` | AGENTS.md / CLAUDE.md rule | Makes task-ledger updates mandatory without manual skill invocation |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
 | `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
 | `claude-rules/post-significant-push-audit.md` | CLAUDE.md rule | After a significant remote push: forces a y/n doc-debt ratification gate, then a F-CHECK-EFF style improvement-opportunity sweep |
 | `claude-rules/d-assumption.md` | CLAUDE.md rule | Forces Claude to tag every item in a plan or recommendation as ⚠️ Assumption or 🟢 CONFIRMED, each with a short basis note |
+| `claude-rules/d-test-assumptions.md` | CLAUDE.md rule | Makes the `d-test-assumptions` skill auto-fire before locking a non-trivial approach and after implementing a verifiable code segment |
 
 ---
 
@@ -279,6 +281,43 @@ See [`claude-rules/d-assumption.md`](claude-rules/d-assumption.md) for the full 
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-assumption.md`.
+
+---
+
+## 11 — Assumption Testing & Verification Discipline
+
+A Claude Code skill + CLAUDE.md rule pairing that is the **active counterpart** to rule 10 (`d-assumption`). Where `d-assumption` *labels* claims ⚠️ Assumption / 🟢 CONFIRMED, `d-test-assumptions` *acts* on the ⚠️ labels — it drives them to a tested verdict instead of letting them ride as guesses.
+
+**Two phases:**
+- **Phase 1 — pre-lock-in assumption audit.** Before any non-trivial approach (architectural weight, or 3+ steps) is presented as "the plan", the skill inventories the load-bearing claims, quantifies the assumption load ("N of M claims are assumptions"), triages each ⚠️ Assumption, tests the testable ones (N≥2; N≥3 on divergence; F-OVERFIT and the usual F-* metrics constrain test design), and emits a per-claim 🟢 CONFIRMED / 🔴 REFUTED / 🟡 INCONCLUSIVE verdict. A refuted load-bearing assumption repositions to the next-best approach — reposition once, then checkpoint with the operator.
+- **Phase 2 — post-implementation verification reflex.** After implementing an easily-verifiable code segment, the skill quick-tests it against spec. In line → proceed. Not in line → **PAUSE**, do not patch-and-continue, alert the operator with the mismatch and whether it warrants an architectural rethink.
+
+On by default, with a session-level off switch (`/d-test-assumptions off` / `on`). Output is inline only — no register file.
+
+See [`skills/d-test-assumptions/SKILL.md`](skills/d-test-assumptions/SKILL.md) for the full procedure and [`claude-rules/d-test-assumptions.md`](claude-rules/d-test-assumptions.md) for the rule text.
+
+### Install
+
+**Step 1 — Copy the skill file**
+
+```bash
+mkdir -p ~/.claude/skills/d-test-assumptions
+cp skills/d-test-assumptions/SKILL.md ~/.claude/skills/d-test-assumptions/SKILL.md
+```
+
+On Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\d-test-assumptions"
+Copy-Item "skills\d-test-assumptions\SKILL.md" "$env:USERPROFILE\.claude\skills\d-test-assumptions\SKILL.md"
+```
+
+**Step 2 — Add the trigger rule to your global CLAUDE.md**
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-test-assumptions.md`.
+
+**Step 3 — Verify**
+
+Start a new Claude Code session and ask Claude to recommend an approach for any non-trivial task. Before it locks the approach in, you should see the Phase 1 assumption-load summary and the assumption→test→verdict table. Pairs best with rule 10 (`d-assumption`) installed.
 
 ---
 
