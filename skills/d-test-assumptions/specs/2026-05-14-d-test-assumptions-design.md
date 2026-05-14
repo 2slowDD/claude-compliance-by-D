@@ -33,6 +33,22 @@ Two artifacts, both shipped in `claude-compliance-by-D`:
 - **Phase 1 — Pre-lock-in assumption audit.** Fires before locking any **non-trivial** approach: one with architectural weight, or 3+ steps (mirrors the P1 planning threshold). In practice this is the end of brainstorming before `writing-plans`, or any point where an approach/recommendation is about to be presented as "the plan." Skips obvious single-step fixes. Also runs on demand via `/d-test-assumptions`.
 - **Phase 2 — Post-implementation verification reflex.** Fires after implementing a new code segment that is easily verifiable against the spec/design.
 
+### Off switch (session-level enable/disable)
+
+The rule is **on by default**. The operator can disable it for the current agent session and re-enable it, mirroring the `d-focus-tasks` override-command grammar.
+
+| Command | Effect |
+|---|---|
+| `/d-test-assumptions off` (also `no`, `-off`, `--off`, `-no`, `--no`) | Suppresses **both phases** for the rest of the session. |
+| `/d-test-assumptions on` (also `yes`, `-on`, `--on`) | Re-enables both phases. |
+| `/d-test-assumptions` (no args) | Runs Phase 1 on demand. If currently off, reports the off state and asks whether to run once anyway or flip back on. |
+
+- **Session-scoped, not permanent.** "Off" lasts until re-enabled or the session ends. A permanent disable means removing the rule block from `~/.claude/CLAUDE.md`.
+- **Anchor lines.** On each transition, emit a chat-visible anchor line on its own line so the state survives compaction: `[d-test-assumptions — off for session]` / `[d-test-assumptions — on]`. Preserve the most recent anchor verbatim in compaction summaries — it is the load-bearing source of truth for the on/off state; an in-context variable is just a cache.
+- **Flag matching is CLI-arg-only.** The off/on token is matched only against the `/d-test-assumptions` invocation arg string (per the `d-focus-tasks` no-ledger flag grammar) — never against broader message text, file contents, or conversation history. Free-text like "turn off d-test-assumptions for now" is honored only when intent is unambiguous in context.
+- **While off:** Phase 1 and Phase 2 both no-op silently — no audit table, no verification-reflex line, no PAUSE alert.
+- **Subagents** start with the rule **on** unless the parent passes an off token in the subagent prompt (`d-test-assumptions=off`).
+
 ## 4. Phase 1 — Pre-lock-in assumption audit
 
 Procedure, in order:
@@ -116,18 +132,20 @@ On mismatch, emit the PAUSE alert instead: the observed-vs-expected mismatch, th
 - Does not auto-accept its own 🔴 REFUTED → reposition outcome silently — every refutation and repositioning is surfaced to the operator.
 - Does not write a register file — output is inline only (operator decision: keep it cheap, "organize it only if not a large detour").
 - Does not re-implement `d-assumption` tagging — it consumes those tags, it does not produce them.
+- Does not provide a permanent disable — the off switch (§3) is session-scoped; a permanent disable means removing the rule block from `~/.claude/CLAUDE.md`.
 
 ## 9. Acceptance criteria
 
 A correct implementation produces:
 
 1. `skills/d-test-assumptions/SKILL.md` with frontmatter (`name`, `description`), a Triggers section, the Phase 1 procedure (§4), the Phase 2 procedure (§5), the test-design rules (§6), the verdict vocabulary + output formats (§7), and a "does NOT do" section (§8).
-2. `claude-rules/d-test-assumptions.md` — a rule file matching the repo's existing `claude-rules/*.md` shape (slug h1, title, description, `## What it does`, `## How to install` with a copy-paste CLAUDE.md block, `## Notes`).
+2. `claude-rules/d-test-assumptions.md` — a rule file matching the repo's existing `claude-rules/*.md` shape (slug h1, title, description, `## What it does`, `## How to install` with a copy-paste CLAUDE.md block, `## Notes`). The rule documents the session-level off switch and its command grammar (§3).
 3. `README.md` updated: tool count bumped to **Eleven**, a new tool-table row, and a new numbered section (`## 11 — …`) with quick-install steps.
 4. `CHANGELOG.md` `[Unreleased]` updated with an `### Added` entry for the skill + rule and a `### Changed — README.md` entry.
 5. Phase 1, when run on a sample non-trivial approach, emits the §7 table with an explicit assumption-load count and a per-claim verdict.
 6. Phase 2, when run after a verifiable code segment, emits either the one-line pass confirmation or the PAUSE alert — never silently proceeds on a mismatch.
 7. The skill consumes ⚠️ Assumption tags from `d-assumption` rather than re-deriving them.
+8. The skill recognizes the session-level off/on commands per §3, emits the anchor line on each transition, and no-ops both phases while off.
 
 ## 10. Open questions / deferred
 
