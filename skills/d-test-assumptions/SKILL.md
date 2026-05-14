@@ -1,6 +1,6 @@
 ---
 name: d-test-assumptions
-description: Use before locking in a non-trivial approach, plan, or hypothesis — drives assumption-based reasoning to a tested CONFIRMED or REFUTED state by testing locally where possible and with operator help where not. Also a post-implementation reflex: after building an easily-verifiable code segment, quick-test it against spec and pause-and-rethink on mismatch. The active counterpart to the d-assumption tagging rule. Triggers on "test assumptions", "test the assumptions", "how much of this is guessing", "/d-test-assumptions", before presenting an approach as the plan, and after implementing a verifiable code segment.
+description: Use before locking in a non-trivial approach, plan, or hypothesis — drives assumption-based reasoning to a tested CONFIRMED or REFUTED state by testing locally where possible and with operator help where not. Also a post-implementation reflex — after building an easily-verifiable code segment, quick-test it against spec and pause-and-rethink on mismatch. The active counterpart to the d-assumption tagging rule. Triggers on "test assumptions", "test the assumptions", "how much of this is guessing", "/d-test-assumptions", before presenting an approach as the plan, and after implementing a verifiable code segment.
 ---
 
 # d-test-assumptions — Assumption Testing & Verification Discipline
