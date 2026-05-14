@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Nine tools are included:
+Ten tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -16,6 +16,7 @@ Nine tools are included:
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
 | `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
 | `claude-rules/post-significant-push-audit.md` | CLAUDE.md rule | After a significant remote push: forces a y/n doc-debt ratification gate, then a F-CHECK-EFF style improvement-opportunity sweep |
+| `claude-rules/d-assumption.md` | CLAUDE.md rule | Forces Claude to tag every item in a plan or recommendation as ⚠️ Assumption or 🟢 CONFIRMED, each with a short basis note |
 
 ---
 
@@ -266,6 +267,18 @@ See [`claude-rules/post-significant-push-audit.md`](claude-rules/post-significan
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/post-significant-push-audit.md`.
+
+---
+
+## 10 — Assumption / Confirmation Tagging Rule
+
+A CLAUDE.md instruction that forces Claude to label every item in a plan, recommendation, proposal, design spec, or multi-item answer by the strength of its basis: **⚠️ Assumption** for anything resting on inference or unverified information (including unverified subagent summaries), **🟢 CONFIRMED** for anything backed by verifiable hard data. Every tag carries a short basis note, so the operator can see at a glance which parts of a plan are solid and which still need verification. Tags are inline per item — no separate summary block. Always-on; there is no `/d-assumption` invocation.
+
+See [`claude-rules/d-assumption.md`](claude-rules/d-assumption.md) for the full rule text and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-assumption.md`.
 
 ---
 

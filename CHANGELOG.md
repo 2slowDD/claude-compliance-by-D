@@ -15,6 +15,27 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `claude-rules/d-assumption.md`
+
+A new CLAUDE.md instruction rule that forces Claude to tag every item in a plan, recommendation, proposal, design spec, or multi-item answer by the strength of its basis:
+
+- **⚠️ Assumption** — the item rests on inference, guesswork, an unverified subagent summary, or information not directly backed by verifiable data.
+- **🟢 CONFIRMED** — the item is backed by verifiable hard data: a command output, a file read, a test result, or a documented source (including from memory or a subagent, as long as a real source exists).
+
+Each tag carries a **required short basis note** (why it's an assumption / what the confirming source is) so tags are auditable, not decorative. Tags are applied **inline per item** — no separate summary block or table. The rule does not fire on casual conversation or simple single-fact answers.
+
+The CONFIRMED bar is deliberately the looser of the two candidate bars — "verifiable hard data with a real source" rather than "personally re-verified this session" — with the basis note doing the work of keeping it honest. Information from another agent is an ⚠️ Assumption by default, since a subagent summary describes intent, not verified outcome.
+
+**Why:** plans and recommendations routinely mix solid, data-backed items with inferred or agent-relayed items, and the operator has no fast way to tell them apart. Surfacing the split inline lets the operator target verification effort at exactly the items that need it.
+
+**Surfaced by** operator request 2026-05-14 via a `/superpowers:brainstorming` session.
+
+### Changed — `README.md`
+
+- Intro count updated `Nine tools` → `Ten tools`.
+- Tool table gains a new row for `claude-rules/d-assumption.md` after the `post-significant-push-audit.md` row.
+- New "## 10 — Assumption / Confirmation Tagging Rule" section inserted after section 9 (Post-Significant-Push Audit Rule), with Quick install steps mirroring the existing rule sections.
+
 ### Added — `skills/d-handover/SKILL.md` Step 8.5 (Docs-debt closure pre-pass)
 
 New step between Step 8 (complexity classification) and Step 9 (render templates). On every d-handover invocation, **detect closure signals** in intake Q2 (state summary); if found, **scan candidate docs** related to the just-closed-or-superseded work-track (touched files this session + walk to siblings: specs, d-reviews, memory files, evidence memos, task plans). **Classify each candidate** as `STALE` / `NEEDS-CROSS-REF` / `HISTORICAL` / `UP-TO-DATE`. **Operator-review gate**: present numbered list with proposed annotation summaries; operator picks `all` / numeric subset / `none` / per-item edit. **Apply** approved annotations preserving historical content. **Verify + audit-footer** with new `docs-closure: <annotated>/<total>` field.
