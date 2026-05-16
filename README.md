@@ -287,6 +287,20 @@ See [`claude-rules/f-check-eff.md`](claude-rules/f-check-eff.md) for the full ru
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/f-check-eff.md`.
 
+### How rules 9 and 10 compose
+
+The two rules are temporally complementary — different attachment points in the workflow, same threshold and same metric. Install both for full coverage; installing only one leaves a gap.
+
+| | **Rule 10 — F-CHECK-EFF** | **Rule 9 — Post-Significant-Push Audit** |
+|---|---|---|
+| **When it fires** | *During* a bigger change — at plan / design / recommendation / PR-review time, **before** shipping | *After* a significant remote push completes (the `git push` is on the wire) |
+| **Trigger surface** | Authoring a plan, brainstorm spec, design doc, multi-file refactor; reviews of bigger changes | `git push`, `git push --force`, `gh pr create` returning success |
+| **What it does** | Surfaces ≥ 20 % alternative approaches as you build. Two shapes: in-scope detour (ask: bundle?) or out-of-scope flag (file as follow-up) | Two-step audit: (1) **y/n doc-debt gate** — ratify project docs against what was just shipped; (2) **≥ 20 % improvement-opportunity sweep** on the just-pushed change set |
+| **Role** | Forward-looking discipline — catch the better alternative early, before sunk-cost makes the switch harder | Backwards-looking review — backstop if rule 10 missed something, plus the only mechanism that closes documentation debt after a push |
+| **Threshold** | ≥ 20 % gain | ≥ 20 % gain (synced) |
+
+When both are installed, rule 10 should catch most ≥ 20 % alternatives upstream, leaving rule 9's Step 2 to almost always say "none — silence is the failure" in one line. **Step 1 (doc-debt y/n) is the part that does unique work on every significant-push case** — rule 10 does not close doc debt, so without rule 9 that gap is never reliably closed.
+
 ---
 
 ## 11 — Assumption / Confirmation Tagging Rule
