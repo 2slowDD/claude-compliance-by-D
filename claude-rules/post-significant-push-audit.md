@@ -25,7 +25,7 @@ Claude asks, verbatim:
 
 ### Step 2 — Improvement-opportunity sweep (F-CHECK-EFF)
 
-Claude reviews the just-pushed change set and surfaces alternatives that, with reasonable diligence, could improve any project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated **≥ 10 %**. Per item:
+Claude reviews the just-pushed change set and surfaces alternatives that, with reasonable diligence, could improve any project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated **≥ 20 %**. Per item:
 
 ```
 - [one-line description] — F-METRIC, ~N% gain — bundle | defer (reason)
@@ -84,7 +84,7 @@ After any successful remote push (`git push`, `gh pr create`, etc.) of a **signi
 
 **Step 2 — Improvement-opportunity sweep (F-CHECK-EFF):**
 
-Review the just-pushed change set. Surface alternatives that, with reasonable diligence, could improve any project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated **≥ 10 %**. Per item, one line:
+Review the just-pushed change set. Surface alternatives that, with reasonable diligence, could improve any project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated **≥ 20 %**. Per item, one line:
 
 `- [one-liner] — F-METRIC, ~N% gain — bundle | defer (reason)`
 
@@ -99,6 +99,6 @@ Bundle if same files/subsystem and < ~30 % LOC; defer if it adds a new failure s
 - This is a CLAUDE.md instruction rule, not a Claude Code skill — it lives in your global config, not in `~/.claude/skills/`.
 - Applies in every project directory where the global CLAUDE.md is loaded.
 - It is a **post-push** rule. Pre-push confirmation (P9 / `github-push-warning.md`) is a separate rule that runs **before** the push.
-- The improvement-opportunity step is modeled on the `F-CHECK-EFF` discipline floor in `success-failure-metrics.md`: silently passing on a ≥ 10 % gain is the failure, not the bundle-vs-defer judgement call.
+- The improvement-opportunity step uses the same threshold as the global `F-CHECK-EFF` rule (`claude-rules/f-check-eff.md`): silently passing on a ≥ 20 % gain is the failure, not the bundle-vs-defer judgement call.
 - The Step 1 y/n is intentional. It forces an explicit operator decision and prevents Claude from drifting into uncontrolled doc edits. A `n` answer does NOT skip Step 2.
 - One-time authorizations ("skip audit this once") do not grant standing permission for future pushes.

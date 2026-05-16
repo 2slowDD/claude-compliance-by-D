@@ -15,6 +15,37 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `claude-rules/f-check-eff.md`
+
+A new CLAUDE.md instruction rule that applies to **every project**. When Claude is executing a **bigger change** — new phases, sub-specs, multi-file refactors / subsystem rewrites, planned tasks, or reviews of those — it must surface any alternative approach that could improve a project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated **≥ 20 %**. Silently shipping the original without flagging the alternative is the failure — regardless of whether the alternative is bundled or deferred.
+
+**Two shapes:**
+
+- **In-scope detour** (≥ 20 % gain on the *current task's primary* failure metric) — pause, surface the alternative, ask whether to bundle into this task.
+- **Out-of-scope flag** (≥ 20 % gain on a *different* failure metric) — append to the current plan's "Follow-ups discovered during this task" section, or defer to a future spec. If uncertain which fits, ask.
+
+**Does NOT fire** on single-line fixes, typo / copy edits, version bumps, single-file isolated patches that don't touch architectural surface, single-paragraph doc edits, or mechanical chores. **Borderline → run anyway.** Over-flagging beats silent passing.
+
+**Threshold:** ≥ 20 % is a discipline floor, not a measured gate — estimate from project signals (proxy rates, wall-clock budgets, error rates, throughput, cost). When uncertain, surface anyway: one extra operator decision is cheaper than an unflagged improvement nobody re-discovers.
+
+**Operational signal:** every plan carries a "Follow-ups discovered during this task" section, populated as work proceeds (not backfilled). Absent on a multi-step task is itself the trip — same review-time enforcement model as F-SECURITY.
+
+**Why this is global, not per-project:** originated as a CU-local metric inside `success-failure-metrics.md` §2.9 at a ≥ 5 % floor. Threshold raised to ≥ 20 % so the rule surfaces only material wins and reduces operator noise on small estimates. Promoted to a global rule so the same discipline applies to every project, not just CU. The CU-local §2.9 stays in place as the project-specific scope/operational-signal detail and is threshold-synced to ≥ 20 % to match this global rule. Global rule wording is tightened relative to §2.9 (~25 lines + install block vs ~50): scope bullets compressed, motivation paragraph dropped (belongs in commits, not the rule), ownership paragraph dropped (the CLAUDE.md install *is* the ownership), un-wired-metrics-table cross-reference dropped (irrelevant once global).
+
+**Surfaced by** operator request 2026-05-16 via a `/superpowers:brainstorming` session.
+
+### Changed — `claude-rules/post-significant-push-audit.md`
+
+- Improvement-opportunity sweep threshold updated **≥ 10 % → ≥ 20 %** (3 occurrences: rule body, install block, and Notes cross-reference) so the post-push sweep and the new global `f-check-eff` rule share one threshold for the same metric.
+- Stale cross-reference from "the `F-CHECK-EFF` discipline floor in `success-failure-metrics.md`" replaced with a pointer at `claude-rules/f-check-eff.md` — F-CHECK-EFF no longer lives in any CU-local spec.
+
+### Changed — `README.md` (f-check-eff)
+
+- Intro count updated `Eleven tools` → `Twelve tools`.
+- Tool index table gains a new row for `claude-rules/f-check-eff.md` after the `post-significant-push-audit.md` row.
+- New "## 10 — F-CHECK-EFF — Improvement Opportunity Surfacing" section inserted after §9. Existing §10 (d-assumption) renumbered to §11; existing §11 (d-test-assumptions) renumbered to §12. Two cross-references in the renumbered sections updated (one in the §12 body header, one in the §12 verify-step note).
+- §9 description: threshold `≥ 10 %` → `≥ 20 %`; "Composes with rule 4 (pre-push warning)" → "Composes with rule 6 (pre-push warning)" (pre-existing wrong cross-reference fixed); composes-with line now also notes the shared threshold with new rule 10.
+
 ### Added — `skills/d-test-assumptions` + `claude-rules/d-test-assumptions.md`
 
 A new Claude Code skill + CLAUDE.md rule pairing — the **active counterpart** to the `d-assumption` rule. Where `d-assumption` *labels* claims ⚠️ Assumption / 🟢 CONFIRMED, `d-test-assumptions` *acts* on the ⚠️ labels: it drives assumption-based reasoning to a tested verdict instead of letting it ride as a guess.

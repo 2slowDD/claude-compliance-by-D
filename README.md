@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Eleven tools are included:
+Twelve tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -17,6 +17,7 @@ Eleven tools are included:
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
 | `claude-rules/local-only-default.md` | CLAUDE.md rule | Makes local-only work the default unless remote action is explicitly requested |
 | `claude-rules/post-significant-push-audit.md` | CLAUDE.md rule | After a significant remote push: forces a y/n doc-debt ratification gate, then a F-CHECK-EFF style improvement-opportunity sweep |
+| `claude-rules/f-check-eff.md` | CLAUDE.md rule | Forces Claude to surface any alternative approach that could improve a project failure metric by ≥ 20 % during bigger changes — silent passing is the failure |
 | `claude-rules/d-assumption.md` | CLAUDE.md rule | Forces Claude to tag every item in a plan or recommendation as ⚠️ Assumption or 🟢 CONFIRMED, each with a short basis note |
 | `claude-rules/d-test-assumptions.md` | CLAUDE.md rule | Makes the `d-test-assumptions` skill auto-fire before locking a non-trivial approach and after implementing a verifiable code segment |
 
@@ -260,9 +261,9 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/local-only-defau
 
 ## 9 — Post-Significant-Push Audit Rule
 
-A CLAUDE.md instruction that fires **after** any successful remote push of a significant change. Two gates: (1) y/n on whether to ratify project docs/plans against what was just shipped (close doc debt), then (2) a `F-CHECK-EFF`-style sweep for improvement opportunities (efficiency / security / gap-fill) of estimated ≥ 10 % gain that the work surfaced but did not act on. Found items are offered as next-todo follow-ups.
+A CLAUDE.md instruction that fires **after** any successful remote push of a significant change. Two gates: (1) y/n on whether to ratify project docs/plans against what was just shipped (close doc debt), then (2) a `F-CHECK-EFF`-style sweep for improvement opportunities (efficiency / security / gap-fill) of estimated ≥ 20 % gain that the work surfaced but did not act on. Found items are offered as next-todo follow-ups.
 
-Composes with rule 4 (pre-push warning): pre-push gates the push itself, post-push audit forces the doc-debt + improvement check immediately after.
+Composes with rule 6 (pre-push warning): pre-push gates the push itself, post-push audit forces the doc-debt + improvement check immediately after. Shares its threshold with rule 10 (`f-check-eff`).
 
 See [`claude-rules/post-significant-push-audit.md`](claude-rules/post-significant-push-audit.md) for the full rule text and install instructions.
 
@@ -272,7 +273,23 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/post-significant
 
 ---
 
-## 10 — Assumption / Confirmation Tagging Rule
+## 10 — F-CHECK-EFF — Improvement Opportunity Surfacing
+
+A CLAUDE.md instruction that applies to **every project**. When Claude is executing a **bigger change** — new phases, sub-specs, multi-file refactors / subsystem rewrites, planned tasks, or reviews of those — it must surface any alternative approach that could improve a project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated **≥ 20 %**. Shipping the original without flagging the alternative is the failure, regardless of whether the alternative ends up bundled or deferred.
+
+Two shapes: **in-scope detour** (≥ 20 % on the current task's primary metric → pause, surface, ask whether to bundle) and **out-of-scope flag** (≥ 20 % on a different metric → append to the plan's "Follow-ups discovered during this task" or defer to a future spec). Does not fire on single-line fixes, version bumps, single-file isolated patches, single-paragraph doc edits, or mechanical chores. Borderline → run anyway.
+
+Composes with rule 9 (post-significant-push audit): both use the same ≥ 20 % threshold. Rule 10 fires *during* a bigger change; rule 9 fires *after* the push.
+
+See [`claude-rules/f-check-eff.md`](claude-rules/f-check-eff.md) for the full rule text and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/f-check-eff.md`.
+
+---
+
+## 11 — Assumption / Confirmation Tagging Rule
 
 A CLAUDE.md instruction that forces Claude to label every item in a plan, recommendation, proposal, design spec, or multi-item answer by the strength of its basis: **⚠️ Assumption** for anything resting on inference or unverified information (including unverified subagent summaries), **🟢 CONFIRMED** for anything backed by verifiable hard data. Every tag carries a short basis note, so the operator can see at a glance which parts of a plan are solid and which still need verification. Tags are inline per item — no separate summary block. Always-on; there is no `/d-assumption` invocation.
 
@@ -284,9 +301,9 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-assumption.md`
 
 ---
 
-## 11 — Assumption Testing & Verification Discipline
+## 12 — Assumption Testing & Verification Discipline
 
-A Claude Code skill + CLAUDE.md rule pairing that is the **active counterpart** to rule 10 (`d-assumption`). Where `d-assumption` *labels* claims ⚠️ Assumption / 🟢 CONFIRMED, `d-test-assumptions` *acts* on the ⚠️ labels — it drives them to a tested verdict instead of letting them ride as guesses.
+A Claude Code skill + CLAUDE.md rule pairing that is the **active counterpart** to rule 11 (`d-assumption`). Where `d-assumption` *labels* claims ⚠️ Assumption / 🟢 CONFIRMED, `d-test-assumptions` *acts* on the ⚠️ labels — it drives them to a tested verdict instead of letting them ride as guesses.
 
 **Two phases:**
 - **Phase 1 — pre-lock-in assumption audit.** Before any non-trivial approach (architectural weight, or 3+ steps) is presented as "the plan", the skill inventories the load-bearing claims, quantifies the assumption load ("N of M claims are assumptions"), triages each ⚠️ Assumption, tests the testable ones (N≥2; N≥3 on divergence; F-OVERFIT and the usual F-* metrics constrain test design), and emits a per-claim 🟢 CONFIRMED / 🔴 REFUTED / 🟡 INCONCLUSIVE verdict. A refuted load-bearing assumption repositions to the next-best approach — reposition once, then checkpoint with the operator.
@@ -317,7 +334,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-test-assumptio
 
 **Step 3 — Verify**
 
-Start a new Claude Code session and ask Claude to recommend an approach for any non-trivial task. Before it locks the approach in, you should see the Phase 1 assumption-load summary and the assumption→test→verdict table. Pairs best with rule 10 (`d-assumption`) installed.
+Start a new Claude Code session and ask Claude to recommend an approach for any non-trivial task. Before it locks the approach in, you should see the Phase 1 assumption-load summary and the assumption→test→verdict table. Pairs best with rule 11 (`d-assumption`) installed.
 
 ---
 
