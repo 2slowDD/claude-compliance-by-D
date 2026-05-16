@@ -38,6 +38,7 @@ Run through this checklist before writing any code:
 - No raw variables in SQL — $wpdb->prepare() for values, allowlists for column/direction names; LIKE wildcards passed as %s via $wpdb->esc_like()
 - Sanitizer is flat and outermost (e.g. `absint( wp_unslash( $_GET['x'] ?? 0 ) )`), not nested inside trim()/strtolower()/etc.
 - JSON input: wp_unslash → json_decode → sanitize decoded values (do NOT sanitize_text_field before decode)
+- Structured POST/REST maps (nested arrays from bracket-syntax forms or FormData): walk + sanitize per-value, not just outer `(array) wp_unslash`
 - No hardcoded API keys, tokens, or credentials
 - No eval(), unserialize() on untrusted data, or dynamic includes from user input
 
@@ -59,6 +60,7 @@ Run through this before writing any code. Every item must be addressed:
 - [ ] No raw variables in SQL — `$wpdb->prepare()` used for values, allowlists for column/direction names, LIKE wildcards passed via `$wpdb->esc_like()` + `%s`
 - [ ] Sanitizer is flat and outermost (`absint( wp_unslash( ... ) )`), not nested through `trim()`/`strtolower()`/etc.
 - [ ] JSON input decoded before sanitizing (`wp_unslash` → `json_decode` → sanitize per-value)
+- [ ] Structured POST/REST maps (nested arrays from bracket-syntax forms or FormData) walked + sanitized per-value — outer `(array) wp_unslash` is not sufficient
 - [ ] No hardcoded API keys, tokens, or credentials
 - [ ] No `eval()`, `unserialize()` on untrusted data, or dynamic includes from user input
 
@@ -340,6 +342,36 @@ wp_delete_file( $tmp_path );
 
 **Caveat:** `wp_delete_file()` returns `void`. If you need to detect cleanup failure to log it (e.g. diagnosing temp-dir drift or permissions issues), you must keep `@unlink()` with a `phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- need return value for debug-only error_log on cleanup failure.` annotation. In practice this is rarely worth the extra suppression — silent cleanup plus occasional orphaned temp files is usually acceptable. *(flagged 2026-04-24 after Plugin Check audit)*
 
+**27. Structured POST/REST maps: sanitize every value, not just the outer container.**
+When `$_POST['x']` carries a multi-level array (typical form syntax `x[key][]=val` or fetch-API `FormData` with bracket keys), `(array) wp_unslash( $_POST['x'] )` only unslashes the outer level. The inner-level scalars are still untrusted strings.
+
+Walk the structure with explicit loops, validate each key, validate the shape of each value, and apply a recognized WordPress sanitizer or an allowlist regex to every leaf scalar before using it. Apply the same shape check that JSON bodies get (Rule 25) — the only difference is PHP did the decode for you instead of `json_decode`.
+
+```php
+// Wrong — outer cast only; inner scalar values flow into URL concat / SQL / output unsanitized.
+$map = (array) wp_unslash( $_POST['option_map'] ?? [] );
+foreach ( $map[ $u ] as $v ) { $url .= '&' . $v; }
+
+// Right — walk the structure, validate keys + values, allowlist legal characters.
+$raw   = (array) wp_unslash( $_POST['option_map'] ?? [] );
+$clean = array();
+foreach ( $raw as $k => $vals ) {
+    $key = esc_url_raw( (string) $k );
+    if ( $key === '' || ! is_array( $vals ) ) {
+        continue;
+    }
+    foreach ( $vals as $v ) {
+        if ( preg_match( '/^[A-Za-z0-9_=.\-]+$/', (string) $v ) ) {
+            $clean[ $key ][] = (string) $v;
+        }
+    }
+}
+```
+
+PHP's `$_POST` parser turns `option_map[key1][]=foo&option_map[key1][]=bar` into a real nested array. The outer `(array) wp_unslash` recursively unslashes magic-quoted strings — but it does not enforce structure, validate keys, or sanitize values. That is your job, the same way it is for `json_decode`'d JSON bodies (Rule 25). The two patterns differ only in who does the decode: PHP for bracket-syntax forms, your code for raw JSON. The trust-no-input + per-value-sanitize discipline is identical.
+
+If the inner values must conform to a specific shape (a known enum, a known character class, a known max length), **validate-not-sanitize**: an allowlist regex or `in_array( $v, $allowed, true )` is stronger than `sanitize_text_field`, which only strips a few specific patterns and lets through values that pass-the-strip but still don't belong. This matters more for structured maps than for flat scalars, because the per-leaf trust budget is multiplied across every key/value the operator can submit. *(flagged 2026-05-15 after wp-compliance audit during a structured-POST-map-sanitization audit)*
+
 ---
 
 ## Safe Default Order
@@ -362,6 +394,7 @@ Before releasing or committing, confirm you are NOT:
 - [ ] Hardcoding LIKE wildcards inside a prepared query
 - [ ] Saving settings without capability + nonce checks
 - [ ] Sanitizing raw JSON before `json_decode` (corrupts the payload)
+- [ ] Outer-cast-only sanitization on structured POST/REST maps (inner scalars left untrusted)
 - [ ] Reading `$_SERVER` HTTP_*/REDIRECT_*/REMOTE_* values without sanitize + wp_unslash
 - [ ] Exposing debug pages or logs
 - [ ] Trusting uploads, remote URLs, or API responses
