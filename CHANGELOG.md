@@ -15,6 +15,16 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `claude-rules/github-push-warning.md`
+
+The rule now has a **Step 1 — verify the remote default branch first** requirement. Before composing the push command, writing the warning, or hardcoding any `HEAD:<branch>` refspec, Claude must run `git ls-remote --heads <remote>` to confirm which branch this repo actually publishes to (`main` vs `master` vs a feature branch). The warning template gained a `Branch :` line that displays the verified branch from Step 1.
+
+**Why:** LLMs can confidently hardcode the wrong branch from training-data muscle memory or a stale memory entry. A real misroute happened 2026-05-16 on `cu-scanner-railway` (default branch `master`) where the agent assumed `main` and pushed to a non-existent ref. The two-second `git ls-remote` check is cheaper than fixing a misrouted push.
+
+The install block now also recommends listing the known `repo → default-branch` mapping as a sanity-check anchor (still without skipping the live check).
+
+**Surfaced by** operator request 2026-05-16.
+
 ### Added — `claude-rules/f-check-eff.md`
 
 A new CLAUDE.md instruction rule that applies to **every project**. When Claude is executing a **bigger change** — new phases, sub-specs, multi-file refactors / subsystem rewrites, planned tasks, or reviews of those — it must surface any alternative approach that could improve a project failure metric (efficiency / cost / throughput / miss-rate / security / gap-fill) by an estimated **≥ 20 %**. Silently shipping the original without flagging the alternative is the failure — regardless of whether the alternative is bundled or deferred.
