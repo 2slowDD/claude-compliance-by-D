@@ -12,6 +12,10 @@ After Claude completes any command that writes commits to a remote (`git push`, 
 
 ### Step 1 — Documentation debt (y/n gate)
 
+**Skipped-debt sweep first.** Before asking the y/n question below, scan the current session transcript for any line matching `[doc-debt: skipped — <reason>]` emitted by a P9 Step 2 invocation in this session. If one or more such lines exist, the y/n question below is **not optional**: answer `y` and treat the named skipped debt as the explicit set of files to ratify. If no skipped-debt line is found, the y/n question runs as written (operator may answer `y`, `n`, or `n — closed pre-push by P9 Step 2`).
+
+**Implementation assumption (transcript scan).** "Scan the current session transcript" assumes the agent can grep its own active session content. For agents where prior turns may be summarized away, the absence of a confirmed `[doc-debt: skipped — ...]` line is treated as "no skipped debt this session" and the existing y/n question runs as before — no regression vs. the pre-amend behavior.
+
 Claude asks, verbatim:
 
 > The push is on the wire. Before moving on:
@@ -71,7 +75,13 @@ After any successful remote push (`git push`, `gh pr create`, etc.) of a **signi
 
 **Does NOT fire** on single-file < 20 LOC hotfixes, typo / copy edits, version bumps, single-paragraph doc edits, or mechanical chores. **Borderline → run anyway.**
 
-**Step 1 — Doc-debt y/n gate. Ask, verbatim:**
+**Step 1 — Doc-debt y/n gate.**
+
+**Skipped-debt sweep first.** Before asking the y/n question below, scan the current session transcript for any line matching `[doc-debt: skipped — <reason>]` emitted by a P9 Step 2 invocation in this session. If one or more such lines exist, the y/n question below is **not optional**: answer `y` and treat the named skipped debt as the explicit set of files to ratify. If no skipped-debt line is found, the y/n question runs as written.
+
+**Implementation assumption (transcript scan).** Assumes the agent can grep its own active session content. For context-managed agents where prior turns may be summarized away, the absence of a confirmed `[doc-debt: skipped — ...]` line is treated as "no skipped debt this session" and the existing y/n question runs as before — no regression vs. the pre-amend behavior.
+
+Ask, verbatim:
 
 > The push is on the wire. Before moving on:
 >
@@ -102,3 +112,4 @@ Bundle if same files/subsystem and < ~30 % LOC; defer if it adds a new failure s
 - The improvement-opportunity step uses the same threshold as the global `F-CHECK-EFF` rule (`claude-rules/f-check-eff.md`): silently passing on a ≥ 20 % gain is the failure, not the bundle-vs-defer judgement call.
 - The Step 1 y/n is intentional. It forces an explicit operator decision and prevents Claude from drifting into uncontrolled doc edits. A `n` answer does NOT skip Step 2.
 - One-time authorizations ("skip audit this once") do not grant standing permission for future pushes.
+- **Composition with P9 (`github-push-warning.md`).** P9's new Step 2 (added 2026-05-18) closes doc-debt **before** the push for `2slowDD/*`-style remotes. The "Skipped-debt sweep first." lead in Step 1 above is the backward-link: when P9 Step 2 was bypassed via `skip doc-debt: <reason>`, the skipped debt is named in this session as `[doc-debt: skipped — ...]` and gets closed at this gate instead. For non-`2slowDD` remotes (where P9 does not apply), Step 1 runs as the existing y/n gate. The "Skipped-debt sweep first." mechanism is documented in spec `docs/superpowers/specs/2026-05-18-p9-doc-debt-closure-design.md` §4.6.

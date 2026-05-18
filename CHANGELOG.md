@@ -15,6 +15,24 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `claude-rules/github-push-warning.md` (Step 2 — pre-push doc-debt closure)
+
+**Step 2 — pre-push doc-debt closure** added between the existing Step 1 (verify branch) and the YES warning (renumbered to Step 3). For significant pushes (same gate as the Post-Significant-Push Audit), Claude inspects what is about to ship via `git log <remote>/<branch>..HEAD --stat --no-merges`, identifies doc-debt files (`README.md` / `CHANGELOG.md` / plan / spec / ADR), proposes specific edits per a five-field stanza (file path / Section / Why / Before / After), applies on operator approval (`apply` / `revise` / `skip doc-debt: <reason>` or natural equivalents), and stages them so they ship in the same push as the work. Trivial pushes (per-push aggregate < 20 LOC, single-paragraph doc edits, version bumps, typo / copy edits, mechanical chores) skip with one line. A new audit-anchor convention `[doc-debt: <closed|skipped|none> — <reason>]` is emitted before the YES warning.
+
+**Why:** the prior P9 left doc updates as trailing commits or post-push catch-ups, so the wire-state lagged the work. Operator framing (2026-05-18): *"whenever pushing remotely, close the debt (update) the appropriate sections in readme/changelog files."* Pre-push closure ships docs and code in the same push, eliminating the lag.
+
+**Edge cases handled:** doc-IS-the-work (work commit *is* the README/CHANGELOG edit → emit `[doc-debt: none — work commit is the doc-debt closure]`, no separate Step 2 commit); mixed-work (code + pre-written CHANGELOG entry → inspect, accept-as-is or revise); no-doc-surface (repo without README/CHANGELOG/plan/spec → emit `[doc-debt: none — repo has no documentation surface]`); first-ever push to brand-new branch (no remote ref even after fetch → fall back to `git log HEAD --stat --no-merges`).
+
+**Surfaced by** operator request 2026-05-18 via a `/superpowers:brainstorming` session. Design spec at `docs/superpowers/specs/2026-05-18-p9-doc-debt-closure-design.md` (rev 2, d-review verdict `ready-to-plan`). Plan at `docs/superpowers/plans/2026-05-18-p9-doc-debt-closure.md`.
+
+### Changed — `claude-rules/post-significant-push-audit.md` (Skipped-debt sweep lead sentence)
+
+**Step 1 gains a "Skipped-debt sweep first." lead sentence** at the top of the y/n gate, before the existing `> The push is on the wire.` quote block. Before asking the y/n question, Claude scans the current session transcript for any line matching `[doc-debt: skipped — <reason>]` emitted by a P9 Step 2 invocation; if found, y/n is forced to `y` with the named skipped debt as the close-now set. Mirrored in the install block. A new Notes-section paragraph cross-references P9 Step 2 as the pre-push closure path. **Implementation assumption documented**: for context-managed agents where prior turns may be summarized away, the absence of a confirmed skipped-debt line degrades to the existing y/n behavior — no regression vs. pre-amend.
+
+**Why:** the new P9 Step 2 (above) introduces a `skip doc-debt: <reason>` operator override; without the backward-link sweep here, skipped debt would rely on operator memory + chat anchor only — a wishful mitigation flagged Critical by d-review rev 1. The lead sentence makes the mitigation enforced.
+
+**Composition note:** P9 Step 2 + rule 9 Step 1 sweep are temporally complementary. Pre-push closure for `2slowDD/*`-style remotes; post-push backstop everywhere else. The composition table in README §9 + §10 (L290-302) gains a new "P9 ↔ Rule 9 doc-debt composition" row documenting this.
+
 ### Changed — `claude-rules/github-push-warning.md`
 
 The rule now has a **Step 1 — verify the remote default branch first** requirement. Before composing the push command, writing the warning, or hardcoding any `HEAD:<branch>` refspec, Claude must run `git ls-remote --heads <remote>` to confirm which branch this repo actually publishes to (`main` vs `master` vs a feature branch). The warning template gained a `Branch :` line that displays the verified branch from Step 1.

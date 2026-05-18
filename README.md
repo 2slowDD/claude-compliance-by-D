@@ -225,7 +225,7 @@ No CLAUDE.md edit required — the skill auto-triggers from its `description:` f
 
 ## 6 — GitHub Push Warning Rule
 
-A CLAUDE.md instruction that stops Claude before any push to your private GitHub repository and requires explicit "YES" confirmation.
+A CLAUDE.md instruction that stops Claude before any push to your private GitHub repository in three steps: (1) verifies the remote default branch via `git ls-remote --heads`, (2) **closes doc-debt by proposing README/CHANGELOG/plan/spec edits and committing them so they ship in the same push as the work** (significant pushes only — trivial pushes skip with one line; operator can `skip doc-debt: <reason>` to bypass), then (3) requires explicit "YES" confirmation. Composes with the Post-Significant-Push Audit (§9): rule 9 Step 1 carries a "Skipped-debt sweep first." backward-link that closes any debt that was bypassed via the skip override.
 
 See [`claude-rules/github-push-warning.md`](claude-rules/github-push-warning.md) for the full rule text and install instructions.
 
@@ -261,7 +261,7 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/local-only-defau
 
 ## 9 — Post-Significant-Push Audit Rule
 
-A CLAUDE.md instruction that fires **after** any successful remote push of a significant change. Two gates: (1) y/n on whether to ratify project docs/plans against what was just shipped (close doc debt), then (2) a `F-CHECK-EFF`-style sweep for improvement opportunities (efficiency / security / gap-fill) of estimated ≥ 20 % gain that the work surfaced but did not act on. Found items are offered as next-todo follow-ups.
+A CLAUDE.md instruction that fires **after** any successful remote push of a significant change. Two gates: (1) y/n on whether to ratify project docs/plans against what was just shipped (close doc debt), then (2) a `F-CHECK-EFF`-style sweep for improvement opportunities (efficiency / security / gap-fill) of estimated ≥ 20 % gain that the work surfaced but did not act on. Found items are offered as next-todo follow-ups. As of 2026-05-18 (v0.12.0 unreleased), Step 1 carries a "Skipped-debt sweep first." lead sentence: before asking the y/n question, Claude scans the current session for any `[doc-debt: skipped — ...]` line emitted by P9 Step 2; if found, the y/n is forced to `y` with the named skipped debt as the close-now set. This makes the skipped-debt mitigation enforced rather than operator-memory-dependent.
 
 Composes with rule 6 (pre-push warning): pre-push gates the push itself, post-push audit forces the doc-debt + improvement check immediately after. Shares its threshold with rule 10 (`f-check-eff`).
 
@@ -298,8 +298,9 @@ The two rules are temporally complementary — different attachment points in th
 | **What it does** | Surfaces ≥ 20 % alternative approaches as you build. Two shapes: in-scope detour (ask: bundle?) or out-of-scope flag (file as follow-up) | Two-step audit: (1) **y/n doc-debt gate** — ratify project docs against what was just shipped; (2) **≥ 20 % improvement-opportunity sweep** on the just-pushed change set |
 | **Role** | Forward-looking discipline — catch the better alternative early, before sunk-cost makes the switch harder | Backwards-looking review — backstop if rule 10 missed something, plus the only mechanism that closes documentation debt after a push |
 | **Threshold** | ≥ 20 % gain | ≥ 20 % gain (synced) |
+| **P9 ↔ Rule 9 doc-debt composition** (new 2026-05-18) | — | **P9 Step 2 closes doc-debt pre-push** for `2slowDD/*`-style remotes (significant pushes only). **Rule 9 Step 1 carries the "Skipped-debt sweep first." backward-link**: scans this session for `[doc-debt: skipped — ...]` lines from P9 Step 2 and forces the y/n to `y` with the skipped debt as the close-now set. For non-`2slowDD`-style remotes (where P9 doesn't apply), rule 9 Step 1 is the primary closure path. See spec at `docs/superpowers/specs/2026-05-18-p9-doc-debt-closure-design.md` §4.6. |
 
-When both are installed, rule 10 should catch most ≥ 20 % alternatives upstream, leaving rule 9's Step 2 to almost always say "none — silence is the failure" in one line. **Step 1 (doc-debt y/n) is the part that does unique work on every significant-push case** — rule 10 does not close doc debt, so without rule 9 that gap is never reliably closed.
+When both are installed, rule 10 should catch most ≥ 20 % alternatives upstream, leaving rule 9's Step 2 to almost always say "none — silence is the failure" in one line. **Step 1 (doc-debt y/n) is the part that does unique work on every significant-push case** — rule 10 does not close doc debt; the new P9 Step 2 (2026-05-18) closes it pre-push for `2slowDD/*`-style remotes, and the backward-link sweep in rule 9 Step 1 enforces closure of any skipped debt.
 
 ---
 
