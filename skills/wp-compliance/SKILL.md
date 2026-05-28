@@ -4,7 +4,7 @@ description: WordPress plugin security compliance. Invoke before writing, editin
 type: rigid
 ---
 
-> **[WP Code Compliance applied — 25 rules active]**
+> **[WP Code Compliance applied — 27 rules active]**
 
 This skill is rigid. Follow every rule exactly. Do not skip or relax any item.
 

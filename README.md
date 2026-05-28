@@ -2,11 +2,11 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Twelve tools are included:
+Thirteen tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
-| `skills/wp-compliance` | Claude Code skill | Enforces 25 WordPress security rules + Plugin Check review workflow + PHPCS suppression playbook before any WP coding task |
+| `skills/wp-compliance` | Claude Code skill | Enforces 27 WordPress security rules + Plugin Check review workflow + PHPCS suppression playbook before any WP coding task |
 | `skills/d-review` | Claude Code skill | Staff-engineer review of a spec or design doc — flags gaps, inconsistencies, ambiguity, errors, risks, testability issues, and missing acceptance criteria, ending with a go/no-go verdict |
 | `skills/d-security` | Claude Code skill | Generic web-app security checklist — auth, API, DB, infra, code hygiene, plus OWASP Top 10 coverage for XSS, SSRF, IDOR, deserialization, and file upload |
 | `skills/d-focus-tasks` | Codex / Claude Code skill | Keeps a lightweight project task ledger current across commits, handovers, plans, specs, and followups |
@@ -20,6 +20,7 @@ Twelve tools are included:
 | `claude-rules/f-check-eff.md` | CLAUDE.md rule | Forces Claude to surface any alternative approach that could improve a project failure metric by ≥ 20 % during bigger changes — silent passing is the failure |
 | `claude-rules/d-assumption.md` | CLAUDE.md rule | Forces Claude to tag every item in a plan or recommendation as ⚠️ Assumption or 🟢 CONFIRMED, each with a short basis note |
 | `claude-rules/d-test-assumptions.md` | CLAUDE.md rule | Makes the `d-test-assumptions` skill auto-fire before locking a non-trivial approach and after implementing a verifiable code segment |
+| `claude-rules/d-master-ledger-trim.md` | CLAUDE.md rule | Keeps the master task-ledger (`master-tasks.md`) lean at the top — relocates aged `Last updated` history + superseded top-active-rows into a linked archive via a verified, conservation-checked scripted move (reorganize, never delete) |
 
 ---
 
@@ -36,7 +37,7 @@ A rigid Claude Code skill based on official WordPress security guidance and Plug
 - Plugin Check / PHPCS compliance expectations
 
 Each time the skill is applied, Claude outputs a visible confirmation line:
-> `[WP Code Compliance applied — 19 rules active]`
+> `[WP Code Compliance applied — 27 rules active]`
 
 The skill is designed to grow: when you find a new issue, ask Claude to append it and it will slot into the right category automatically.
 
@@ -350,6 +351,20 @@ Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-test-assumptio
 **Step 3 — Verify**
 
 Start a new Claude Code session and ask Claude to recommend an approach for any non-trivial task. Before it locks the approach in, you should see the Phase 1 assumption-load summary and the assumption→test→verdict table. Pairs best with rule 11 (`d-assumption`) installed.
+
+---
+
+## 13 — D-Master-Ledger-Trim Rule
+
+A CLAUDE.md instruction that keeps a project's master task-ledger (`master-tasks.md`, the file maintained by rule 4 / `d-focus-tasks`) **lean at the top** as it accretes history over weeks. The ledger is the first read for every fresh agent and is loaded into context, so an overgrown opening is a recurring context tax. The rule moves aged/superseded **opening** blocks — the chained `Last updated` history (keeping only the newest entry live), the stacked `Previous top active row` entries, and the `Archived milestone progression` section — into a companion `master-tasks-archive.md`, newest-first, **verbatim**. Reorganize, never delete; the working body (How-To-Read, Current Work Queue, registers, commit ledger) stays in the live file.
+
+The load-bearing detail is the **mechanism**: bloated entries are often single physical lines too large to load for the Edit/Write tools (e.g., a `Last updated` line grown to tens of thousands of characters). The only reliable move is a **verified scripted transform**, done safely — operator OK first (it may override a no-script-write tooling policy + mutates a load-bearing file), a `.bak` backup as the first write, and **abort-before-write conservation asserts** (index-coverage so no line is dropped, exact split-concat for any intra-line split, each moved block verbatim-in-archive + absent-from-live, body preserved verbatim) — then a before/after size report. Composes with rule 4 (`d-focus-tasks` appends + status-marks in place; this rule is the periodic hygiene pass that relocates the accumulated history).
+
+See [`claude-rules/d-master-ledger-trim.md`](claude-rules/d-master-ledger-trim.md) for the full rule text and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-master-ledger-trim.md`.
 
 ---
 
