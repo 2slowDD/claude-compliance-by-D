@@ -198,15 +198,20 @@ Keyed off `profile_key` from Step 2 (not on raw path matching). Each profile pre
 
 | `profile_key` | Default-checked constraints |
 |---|---|
-| `CU` | P9; P11; no-Railway-state-changes; HOLD-before-code-execution (chain below the table) |
-| `wpservice-saas` | P10 wp-compliance; SFTP-not-Railway deploy (manual); P9; P11 |
-| `AI-Assets-Scanner` | P10 wp-compliance; P9; P11; cache-bust on JS/CSS enqueue change |
-| `claude-skill-dev` | P11 if a project ledger applies; no auto-install of skill without operator YES |
+| `CU` | P9; P11; P12 d-assumption; P13 d-test-assumptions; no-Railway-state-changes; HOLD-before-code-execution (chain below the table) |
+| `wpservice-saas` | P10 wp-compliance; SFTP-not-Railway deploy (manual); P9; P11; P12 d-assumption; P13 d-test-assumptions |
+| `AI-Assets-Scanner` | P10 wp-compliance; P9; P11; P12 d-assumption; P13 d-test-assumptions; cache-bust on JS/CSS enqueue change |
+| `claude-skill-dev` | P11 if a project ledger applies; P13 d-test-assumptions (non-trivial skill design); no auto-install of skill without operator YES |
 | `other` | No defaults pre-checked; operator picks from full menu |
 
 > **HOLD-before-code-execution chain:** brainstorm → spec → d-review → approval → writing-plans → operator approval → executing-plans → HOLD before push → P9 → push.
 
-**Full menu** (operator picks beyond defaults): P9 push gate, P10 wp-compliance, P11 ledger, no-Railway-state-changes, HOLD-before-code-execution, HOLD-before-push, P5 elegance, P6 autonomous bug fixing, P8 simplicity-first, cache-bust on JS/CSS enqueue change.
+> **P12 d-assumption + P13 d-test-assumptions (carry into the fresh-agent prompt by default for any project with code work).** The fresh agent MUST apply both, on by default per global CLAUDE.md:
+> - **P12 d-assumption** — tag every item in plans / recommendations / multi-item answers `⚠️ Assumption` or `🟢 CONFIRMED` with a short basis note (inline, no summary block).
+> - **P13 d-test-assumptions — TWO trigger points:** (1) **Phase 1 — before locking in any non-trivial approach** (architectural weight, or 3+ steps): inventory load-bearing claims, state the assumption load, test the testables (N≥2), emit per-claim 🟢 CONFIRMED / 🔴 REFUTED / 🟡 INCONCLUSIVE; a refuted load-bearing assumption repositions once then checkpoints with the operator. (2) **Phase 2 — after implementing an easily-verifiable code segment**: quick-test against spec; in line → proceed; not in line → PAUSE, do not patch-and-continue, alert the operator. Session off-switch: `/d-test-assumptions off`.
+> These are on-by-default. Authoritative runtime reference for both is `~/.claude/CLAUDE.md` — **P12** (rule block "Assumption / Confirmation Tagging (d-assumption)") + **P13** (rule block "Assumption Testing & Verification Discipline (d-test-assumptions)"); P13 also has the skill `~/.claude/skills/d-test-assumptions/SKILL.md` (P12 is rule-only — no separate skill; rule source lives at `claude-compliance-by-D/claude-rules/d-assumption.md`). The handover prompt should name both so the fresh agent does not silently skip the assumption discipline on the work it inherits — it is inheriting an approach it did not author, which is exactly the Phase-1 trigger condition.
+
+**Full menu** (operator picks beyond defaults): P9 push gate, P10 wp-compliance, P11 ledger, P12 d-assumption tagging, P13 d-test-assumptions (Phase 1 pre-lock-in + Phase 2 post-implementation), no-Railway-state-changes, HOLD-before-code-execution, HOLD-before-push, P5 elegance, P6 autonomous bug fixing, P8 simplicity-first, cache-bust on JS/CSS enqueue change.
 
 **Preferences (NOT hard constraints — surface via free-text intake Q6 if relevant)**: env-var additions require justification per CLAUDE.md (preference; not a ban). New env vars ARE allowed if justified; "no new env vars" is NOT a hard rule. (Removed from defaults + full menu 2026-05-13 PM per operator clarification.)
 
@@ -379,7 +384,7 @@ Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templ
 - `{{LEAD_PARAGRAPH}}`: 1-3 sentences from intake Q2.
 - `{{NEXT_SKILL}}`: e.g. `superpowers:brainstorming`, `superpowers:executing-plans`, `d-review`. From intake Q3.
 - `{{FIRST_ACTION_VERB}}`: "start the Option 2 brainstorm", "execute Task 11", "review the spec", etc. Built from intake Q3.
-- `{{READ_FIRST_NUMBERED_LIST}}`: numbered list, ledger row first (auto-pre-filled), then operator's entries from Q4. Each entry is path + 1-line purpose.
+- `{{READ_FIRST_NUMBERED_LIST}}`: numbered list, ledger row first (auto-pre-filled), then operator's entries from Q4. Each entry is path + 1-line purpose. **The ledger row (item #1) MUST carry a d-focus-tasks session pre-direction** so the fresh agent does not have to re-decide the ledger on its first trigger: append to that row the literal text `— this is the project ledger; when d-focus-tasks first prompts this session (first commit/plan trigger), select THIS path (session-start Option 1). Read the top active row now.` Rationale: a fresh agent booted from a pasted prompt is a new d-focus-tasks session (`ledger_session_state = unset`) — the parent's locked session state and the subagent `ledger=<path>` inheritance token do NOT flow into a copy-paste prompt, so without this directive the fresh agent re-runs the 3-option session-start prompt blind. **Omit this pre-direction when `no_ledger=true`** (the no-ledger flag path has no ledger row at all).
 - `{{CARRY_OVER_FRAMING_OR_EMPTY}}`: for load-bearing handovers, a short bullet list summarising the framing (Options carried, F-* trade-offs noted) with a pointer to the `.md` doc for full text. Empty string for inline-only.
 - `{{HARD_CONSTRAINTS_BULLETS}}`: bullets from intake Q5.
 - `{{F_STAR_PRIORITY_INLINE}}`: the priority list itself, e.g. `F-SEC > F-DEG > F-MISS > F-COST$ > F-THRU > F-CHECK-EFF > F-OVERFIT > F-IMPOSSIBLE (source: memory/feedback_cu_scanner_failure_priority_anchor.md)`. If Step 6 returned nothing AND operator skipped, omit the entire `- F-priority: …` bullet line (strip that single line, not the whole hard-constraints section).
