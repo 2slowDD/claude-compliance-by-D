@@ -273,6 +273,28 @@ Compact rows:
 
 Every handover must point the fresh agent to the ledger path and mention the current top active row. If you discover uncommitted followups during handover, update the ledger before handing off.
 
+## Ledger Read/Write Protocol (keeping the ledger useful long-term)
+
+The ledger is loaded into context every session and read FIRST by every fresh agent, so its usefulness decays in two predictable ways: (1) the **TOP ACTIVE ROW bloats** into a multi-paragraph blob that buries the current focus; (2) **live state hides in top-row prose** instead of a structured register, so "what is open / what's next" can't be answered by reading a row. Both happened on the CU Scanner project (2026-05-29). Bake these rules into how you write the ledger; mirror them into a `## How To Use This Ledger` section at the top of each ledger you create or maintain.
+
+### Read order (write the ledger so this works for a fresh agent)
+1. **TOP ACTIVE ROW** — the single current focus + pointers, ~2-4 lines. Not a changelog.
+2. **The active work register** — a structured table of live state + the follow-up graph for the current work family (e.g. "Phase 2b — Status & Follow-up Register"). *This, not top-row prose, is the source of truth for "what is open."*
+3. **Current work queue + active/pending decisions** — cross-workstream items + open decisions.
+4. **Plan/spec register + milestone spine** — history + where design/plan docs live.
+5. **Superseded top-active-row history** (in-file section) and the companion `master-tasks-archive.md` — verbatim prior top rows, on-demand.
+
+### Write rules
+- **Never delete or lose content.** To supersede the top row, MOVE its full text verbatim into a `## Superseded Top-Active-Row History` section (newest first), THEN replace the top with the new state. No row may vanish. (Reinforces the "Preserve historical entries" rule in Update rules above.)
+- **Keep the TOP ACTIVE ROW to ~2-4 lines** — status + current gate/blocker + single next action + pointers to the structured sections. Detail belongs in the register and in evidence/ANALYSIS files, NOT the top row. If the top row exceeds a short paragraph, trim it (move the detail down) before adding more.
+- **Put structured state in a register, not top-row prose.** If "what is the next follow-up?" cannot be answered by reading a register row, the register is under-populated — fix the register; do not answer from prose or from memory. Populate the register from the authoritative design/spec doc's follow-up section, not from recollection.
+- **Verify before writing a fact.** Status claims (shipped / commit SHA / AC-pass / metric numbers) must trace to real tool output (git, a printed parse) — NOT memory. Memory and prior notes lag reality: multiple "open" follow-ups were found already-shipped. Never write a number you have not seen in actual tool output; if a parse returns empty, STOP and fix the parse rather than backfilling plausible values.
+- **Mark stale-but-kept entries** rather than deleting: when a row turns out shipped/closed/wrong, update its status in place (and link the correcting commit/evidence), preserving the original text.
+
+### Trim / archive mechanics (when the opening bloats)
+- Move aged opening blocks into the in-file `## Superseded Top-Active-Row History`, or for even-older generations into a companion `master-tasks-archive.md` (newest-first, verbatim, with a forward `📁 Archive:` pointer in the live file and a back-pointer in the archive).
+- **Back up first.** Product-docs ledger trees are often NOT git-tracked — a timestamped `.bak` copy is the only safety net. Before any scripted edit: take the `.bak`, run abort-before-write conservation asserts (every moved block present verbatim in the output; nothing duplicated into the opening; body unchanged), then verify counts after the write. Reading the bloated single-line top row may exceed a read tool's token cap — use a sandbox/script to slice it.
+
 ## Participating skills convention
 
 Any skill that wants to invoke `d-focus-tasks` MUST:
