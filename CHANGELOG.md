@@ -15,6 +15,12 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/d-focus-tasks` (new "Ledger Read/Write Protocol" section)
+
+Added a `## Ledger Read/Write Protocol (keeping the ledger useful long-term)` section to the skill, after the Handover Rule. It codifies how to keep a `master-tasks.md` ledger useful over a long-running project: a **read order** for fresh agents (top active row → structured register → work queue/decisions → plan-spec register → superseded-row history) and **write rules** — keep the TOP ACTIVE ROW to ~2-4 lines (pointers, not a changelog); hold live state in a structured register (not top-row prose); answer "what's next" from a register row, not memory; **verify facts against real tool output, never backfill numbers a parse didn't return**; mark stale-but-kept entries in place; and the back up + abort-before-write conservation-assert mechanics for trimming a non-git-tracked ledger. Instructs agents to mirror a `## How To Use This Ledger` block into each ledger they maintain.
+
+**Why:** distilled from a live CU Scanner session where the `master-tasks.md` TOP ACTIVE ROW had bloated to a ~2.8 KB single-paragraph blob and live follow-up state was buried in that prose instead of a register — so "what is the next follow-up?" repeatedly could not be answered from the ledger (and several "open" follow-ups turned out already-shipped because status was read from memory, not verified). Complements `d-master-ledger-trim` (the periodic opening-hygiene rule) with the per-write discipline that prevents the bloat in the first place. Operator-driven 2026-05-29.
+
 ### Added — `claude-rules/d-master-ledger-trim.md` (new rule — 13th tool)
 
 New CLAUDE.md rule that keeps a project's master task-ledger (`master-tasks.md`, maintained by `d-focus-tasks`) lean at the top as it accretes history. Moves aged/superseded **opening** blocks — chained `Last updated` history (newest entry kept live), stacked `Previous top active row` entries, the `Archived milestone progression` section — into a companion `master-tasks-archive.md`, newest-first and verbatim. Reorganize, never delete; the working body stays in the live file.
