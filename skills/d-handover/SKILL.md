@@ -29,6 +29,7 @@ Match the case-insensitive regex `(?:^|\s)--?no[-\s]ledger(?:$|\s)` against the 
 - **Skip Step 3** (locate ledger). No candidate discovery, no path resolution.
 - **Skip Step 4** (ledger ↔ session topic mismatch). Mismatch check has no purpose when no update is intended; without this skip, an unrelated handover would trigger an unwanted halt-and-ask on the very mismatch condition that justifies using `-no ledger`.
 - **Skip Step 5** (d-focus-tasks pre-flight). No `d-focus-tasks` invocation; no pre-flight P11 confirmation line.
+- **Skip Step 5.5** (session-discovered FU sweep). No ledger to sweep into; the spawned-FU list is still carried inline in the prompt as a "Parallel open FUs" block (operator's responsibility to home them later).
 - **Skip Step 10** (final ledger touch). No post-emit P11 line either.
 - **In Step 7.4** (must-read sequence intake): the ledger-row auto-pre-fill is **omitted**. The operator supplies all must-read entries manually (the prompt still requires ≥1 entry from intake Q4 as before).
 - **In Step 9.1** (`{{READ_FIRST_NUMBERED_LIST}}` placeholder): omit the ledger-row-first prefix; the list contains only the operator's Q4 entries.
@@ -52,6 +53,7 @@ No step is skippable. If any step halts (operator-required answer, hard error), 
 3.   Locate ledger                                (Step 3)
 4.   Detect ledger ↔ session topic mismatch       (Step 4)
 5.   Invoke d-focus-tasks                         (P11 pre-flight; Step 5)
+5.5. Session-discovered follow-up sweep           (Step 5.5 — sweep spawned FUs into ledger register)
 6.   Auto-detect F-* priority                     (Step 6)
 7.   Structured intake                            (Step 7)
 8.   Classify complexity                          (Step 8 — single post-intake pass)
@@ -152,6 +154,21 @@ Call `d-focus-tasks` with the current commit/plan/handover state to update `mast
   ```
 
 - If `d-focus-tasks` errors hard (permission, malformed ledger), halt and surface the error. Do not emit the handover prompt.
+
+## Step 5.5 — Session-discovered follow-up sweep (skip when `no_ledger=true`)
+
+The outgoing agent is the only one who knows the follow-ups it spawned this session. If they live only in a spec's "Follow-ups discovered" section, a memory file, or chat, the fresh agent (and every later agent) won't see them in the ledger register — the canonical "what's open" surface. Sweep them into the ledger **register body** (NOT the opening top-row prose) before emitting the prompt.
+
+1. **Collect** every follow-up surfaced this session: FUs filed in specs/plans this session, deferred items, "fix before X" notes, and anything the operator flagged as later/parallel. Source = the current conversation + files touched this session.
+2. **Dedupe** against the existing register rows by FU id / one-line intent (per the d-focus-tasks dedup discipline). Already-present → leave as-is (do not duplicate).
+3. **Write the missing ones** into the register section (the `## *Follow-up Register*` table, or the project's equivalent open-FU section — NOT the `> TOP ACTIVE ROW` opening, NOT `Last updated`). Each new row: id, `⏳ OPEN` + one-line state, priority, trigger/blocks. If the project has no dedicated FU/register section, create one **separate sub-section** (`### Session-discovered follow-ups`) under the active-work area rather than appending to the top-row prose.
+4. **This runs through `d-focus-tasks`** (Step 5 already invoked it; this sweep is additional rows under the same ledger write) — preserve history, never delete existing rows.
+5. **Carry the same list inline** into the handover (it becomes the §8.5 "Parallel open FUs" block of the handoff doc, or a `Parallel open FUs (resume after this task)` bullet group in an inline-only prompt) so the fresh agent sees them **without** needing to read the full ledger.
+6. Print one line: `[focus-tasks — swept N session FUs into register: <comma id list>; M already present]` (or `[focus-tasks — no session FUs to sweep]`).
+
+**❌ Do NOT append swept FUs to the `> TOP ACTIVE ROW` / `Last updated` opening prose.** That bloats the opening (the recurring D-Master-Ledger-Trim context tax) AND buries the FUs where the register-reader won't find them. Swept FUs go in the register body table or a dedicated `### Session-discovered follow-ups` sub-section under the active-work area — never the opening.
+
+This step exists because a spec-only follow-up (`FU-…` filed in a spec §9 but never propagated to the ledger) is invisible at the register — caught 2026-05-29 by operator double-check.
 
 ## Step 6 — Auto-detect F-* priority
 
@@ -385,6 +402,7 @@ Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templ
 - `{{NEXT_SKILL}}`: e.g. `superpowers:brainstorming`, `superpowers:executing-plans`, `d-review`. From intake Q3.
 - `{{FIRST_ACTION_VERB}}`: "start the Option 2 brainstorm", "execute Task 11", "review the spec", etc. Built from intake Q3.
 - `{{READ_FIRST_NUMBERED_LIST}}`: numbered list, ledger row first (auto-pre-filled), then operator's entries from Q4. Each entry is path + 1-line purpose. **The ledger row (item #1) MUST carry a d-focus-tasks session pre-direction** so the fresh agent does not have to re-decide the ledger on its first trigger: append to that row the literal text `— this is the project ledger; when d-focus-tasks first prompts this session (first commit/plan trigger), select THIS path (session-start Option 1). Read the top active row now.` Rationale: a fresh agent booted from a pasted prompt is a new d-focus-tasks session (`ledger_session_state = unset`) — the parent's locked session state and the subagent `ledger=<path>` inheritance token do NOT flow into a copy-paste prompt, so without this directive the fresh agent re-runs the 3-option session-start prompt blind. **Omit this pre-direction when `no_ledger=true`** (the no-ledger flag path has no ledger row at all).
+  - **Ledger-access mechanics (append to the same item #1 row).** Mature ledgers exceed the Read token cap (a full-file Read fails). Tell the fresh agent how to read it AND where its task lives, so it doesn't bounce off the truncation or miss the open-FU register. At render time the outgoing agent: (a) measures the ledger (`wc -l` / byte size) and the line range of the open-FU register / the rows relevant to THIS handover's task (grep the register heading + the task's FU ids); (b) appends the literal text `— ledger is <size>; if a full Read truncates, use Grep or offset/limit Read. Your task's rows: <section name> ~L<start>-<end>; open follow-up register ~L<a>-<b>. Read those ranges.` Fill the real numbers from (a); if the ledger is small enough to Read whole (< ~1.5k lines and no token-cap warning), append instead `— ledger reads whole; read the register section directly.` **Omit when `no_ledger=true`.**
 - `{{CARRY_OVER_FRAMING_OR_EMPTY}}`: for load-bearing handovers, a short bullet list summarising the framing (Options carried, F-* trade-offs noted) with a pointer to the `.md` doc for full text. Empty string for inline-only.
 - `{{HARD_CONSTRAINTS_BULLETS}}`: bullets from intake Q5.
 - `{{F_STAR_PRIORITY_INLINE}}`: the priority list itself, e.g. `F-SEC > F-DEG > F-MISS > F-COST$ > F-THRU > F-CHECK-EFF > F-OVERFIT > F-IMPOSSIBLE (source: memory/feedback_cu_scanner_failure_priority_anchor.md)`. If Step 6 returned nothing AND operator skipped, omit the entire `- F-priority: …` bullet line (strip that single line, not the whole hard-constraints section).
@@ -417,6 +435,7 @@ ledger pre-flight P11 line: [focus-tasks-ledger updated — handover prep — <l
 ledger post-emit P11 line: [focus-tasks-ledger updated — handover doc written — <ledger-path>] OR "skipped (inline-only handover)"
 complexity: <load-bearing | inline-only> (flags fired: <comma-list or "none">) (operator override: <yes/no>)
 docs-closure: <annotated>/<total-candidates> (skipped: <count>; up-to-date: <count>; failed: <count>) OR "skipped (no closure signals)" OR "skipped (operator --skip-docs-closure flag)" OR "force-run (operator --force-docs-closure flag)"
+session-FU-sweep: swept <N> (<comma id list>); <M> already present OR "none to sweep" OR "skipped (no-ledger flag)"
 F-priority source: <path or "operator-supplied" or "none">
 F-priority freshness: <fresh | stale | n/a>
 must-read paths missing: <comma-list or "none">
@@ -471,6 +490,8 @@ A successful run produces:
    - Specific kickoff instruction naming the next-skill invocation
 4. An audit footer outside the fenced block per Step 11, with all 11 fields populated.
 5. No silent decisions: every classifier verdict, ledger pick, and staleness flag is visible to the operator.
+
+6. Step 5.5 sweep complete: every follow-up spawned this session is either present in the ledger register (or a `### Session-discovered follow-ups` sub-section) OR explicitly deferred inline in the prompt — **no spec-only or chat-only FU orphans** left invisible to the register-reader. Verified via the `session-FU-sweep:` audit-footer line.
 
 **Conditional ACs** (must hold when their precondition fires):
 
