@@ -6,7 +6,7 @@ Thirteen tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
-| `skills/wp-compliance` | Claude Code skill | Enforces 27 WordPress security rules + Plugin Check review workflow + PHPCS suppression playbook before any WP coding task |
+| `skills/wp-compliance` | Claude Code skill | Enforces 28 WordPress security rules + Plugin Check review workflow + PHPCS suppression playbook before any WP coding task |
 | `skills/d-review` | Claude Code skill | Staff-engineer review of a spec or design doc — flags gaps, inconsistencies, ambiguity, errors, risks, testability issues, and missing acceptance criteria, ending with a go/no-go verdict |
 | `skills/d-security` | Claude Code skill | Generic web-app security checklist — auth, API, DB, infra, code hygiene, plus OWASP Top 10 coverage for XSS, SSRF, IDOR, deserialization, and file upload |
 | `skills/d-focus-tasks` | Codex / Claude Code skill | Keeps a lightweight project task ledger current across commits, handovers, plans, specs, and followups |
@@ -37,7 +37,7 @@ A rigid Claude Code skill based on official WordPress security guidance and Plug
 - Plugin Check / PHPCS compliance expectations
 
 Each time the skill is applied, Claude outputs a visible confirmation line:
-> `[WP Code Compliance applied — 27 rules active]`
+> `[WP Code Compliance applied — 28 rules active]`
 
 The skill is designed to grow: when you find a new issue, ask Claude to append it and it will slot into the right category automatically.
 

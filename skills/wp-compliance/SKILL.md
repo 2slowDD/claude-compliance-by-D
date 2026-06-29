@@ -4,7 +4,7 @@ description: WordPress plugin security compliance. Invoke before writing, editin
 type: rigid
 ---
 
-> **[WP Code Compliance applied — 27 rules active]**
+> **[WP Code Compliance applied — 28 rules active]**
 
 This skill is rigid. Follow every rule exactly. Do not skip or relax any item.
 
@@ -41,6 +41,7 @@ Run through this checklist before writing any code:
 - Structured POST/REST maps (nested arrays from bracket-syntax forms or FormData): walk + sanitize per-value, not just outer `(array) wp_unslash`
 - No hardcoded API keys, tokens, or credentials
 - No eval(), unserialize() on untrusted data, or dynamic includes from user input
+- Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 Safe order: validate input → sanitize when needed → check capability → verify nonce → perform action safely → escape output late
 ```
@@ -63,6 +64,7 @@ Run through this before writing any code. Every item must be addressed:
 - [ ] Structured POST/REST maps (nested arrays from bracket-syntax forms or FormData) walked + sanitized per-value — outer `(array) wp_unslash` is not sufficient
 - [ ] No hardcoded API keys, tokens, or credentials
 - [ ] No `eval()`, `unserialize()` on untrusted data, or dynamic includes from user input
+- [ ] Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 ---
 
@@ -372,6 +374,9 @@ PHP's `$_POST` parser turns `option_map[key1][]=foo&option_map[key1][]=bar` into
 
 If the inner values must conform to a specific shape (a known enum, a known character class, a known max length), **validate-not-sanitize**: an allowlist regex or `in_array( $v, $allowed, true )` is stronger than `sanitize_text_field`, which only strips a few specific patterns and lets through values that pass-the-strip but still don't belong. This matters more for structured maps than for flat scalars, because the per-leaf trust budget is multiplied across every key/value the operator can submit. *(flagged 2026-05-15 after wp-compliance audit during a structured-POST-map-sanitization audit)*
 
+**28. Normalize line endings before Plugin Check/release.**
+Plugin Check reports `Internal.LineEndings.Mixed` when a file contains both CRLF and LF line endings. Treat this as a release-blocking hygiene issue, not a false positive. After touching plugin PHP/readme/assets, run a line-ending check on changed files and normalize each affected file to one style before claiming Plugin Check is clean. This especially matters after edits from mixed tools (PowerShell, patch tools, IDEs) because `php -l` and JS syntax checks can still pass while Plugin Check warns. *(flagged 2026-06-29 after Plugin Check report)*
+
 ---
 
 ## Safe Default Order
@@ -400,6 +405,7 @@ Before releasing or committing, confirm you are NOT:
 - [ ] Trusting uploads, remote URLs, or API responses
 - [ ] Relying on sanitization alone instead of validation + escaping
 - [ ] Ignoring Plugin Check warnings without justification
+- [ ] Shipping files with mixed CRLF/LF line endings (`Internal.LineEndings.Mixed`)
 
 ---
 

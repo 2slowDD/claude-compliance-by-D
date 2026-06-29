@@ -15,6 +15,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/wp-compliance` Rule 28 (`Internal.LineEndings.Mixed`)
+
+New Rule 28 treats Plugin Check `Internal.LineEndings.Mixed` as release-blocking hygiene, not a false positive. The WP Compliance mandatory checklist, pre-code checklist, and quick release checklist now require consistent line endings after touching plugin PHP/readme/assets, because syntax checks can pass while Plugin Check still warns. README wp-compliance rule-count references updated from 27 to 28. Operator-flagged 2026-06-29.
+
 ### Changed — `skills/d-handover` (Step 5.5 session-FU sweep + ledger-access mechanics for the fresh agent)
 
 **New Step 5.5 — Session-discovered follow-up sweep.** Between the Step 5 `d-focus-tasks` pre-flight and Step 6, the outgoing agent now sweeps every follow-up it spawned this session (FUs filed in specs/plans, deferred items, "fix before X" notes, chat-only mentions) into the ledger **register body** — deduped against existing rows, and explicitly **NOT** the `> TOP ACTIVE ROW` / `Last updated` opening prose (that bloats the opening per `d-master-ledger-trim` and buries the FUs). If the project has no register section, a dedicated `### Session-discovered follow-ups` sub-section is created. The same list is carried inline into the handover as a "Parallel open FUs" block so the fresh agent sees them without reading the full ledger. Skipped under `-no-ledger` (list still carried inline). Runs through `d-focus-tasks` (preserve history, never delete).
