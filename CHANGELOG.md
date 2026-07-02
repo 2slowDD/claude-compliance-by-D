@@ -15,6 +15,12 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `claude-rules/elastic-model-routing.md` (new rule — 14th tool)
+
+A CLAUDE.md rule that routes each unit of work to the minimum-sufficient Claude model. Tiers are **roles** (`frontier` / `reasoner` / `worker`), resolved **live each session** by ranking the Claude models actually available (Agent tool `model` options + the `claude-api` skill) — so a rename (`fable`→`mythos`) or a brand-new model needs zero edits, and the printed name table self-heals on drift. `frontier` handles one-way doors (data model, API contracts, core abstractions), planning, and fleet-governing artifacts (eval suites, rubrics, subagent prompts); `reasoner` handles judgment work (complex debugging, algorithm/architecture, non-trivial impl, reviews); `worker` handles mechanical / clear-spec work (coding from a plan, boilerplate, tests, formatting, migrations).
+
+**Scope:** a rule can set a subagent's model per dispatch (Agent tool `model` param) but cannot change the main session's model/effort — only `/model` and `/effort` can, and there is no per-dispatch effort parameter. So subagents auto-size per dispatch (effort steered by a prompt cue), and the main session gets a one-line nudge when a task's tier exceeds the model in use. A one-line message fires on every model/effort switch. Never the smallest / Haiku-class model; Claude-only (GPT / Codex out of scope). README tool count Thirteen → Fourteen; §14 section + tool-table row added; rule block installed to the global CLAUDE.md. Operator-driven 2026-07-02 via a `/superpowers:brainstorming` session (design spec external to this repo).
+
 ### Added — `skills/wp-compliance` Rule 28 (`Internal.LineEndings.Mixed`)
 
 New Rule 28 treats Plugin Check `Internal.LineEndings.Mixed` as release-blocking hygiene, not a false positive. The WP Compliance mandatory checklist, pre-code checklist, and quick release checklist now require consistent line endings after touching plugin PHP/readme/assets, because syntax checks can pass while Plugin Check still warns. README wp-compliance rule-count references updated from 27 to 28. Operator-flagged 2026-06-29.

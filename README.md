@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Thirteen tools are included:
+Fourteen tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -21,6 +21,7 @@ Thirteen tools are included:
 | `claude-rules/d-assumption.md` | CLAUDE.md rule | Forces Claude to tag every item in a plan or recommendation as ⚠️ Assumption or 🟢 CONFIRMED, each with a short basis note |
 | `claude-rules/d-test-assumptions.md` | CLAUDE.md rule | Makes the `d-test-assumptions` skill auto-fire before locking a non-trivial approach and after implementing a verifiable code segment |
 | `claude-rules/d-master-ledger-trim.md` | CLAUDE.md rule | Keeps the master task-ledger (`master-tasks.md`) lean at the top — relocates aged `Last updated` history + superseded top-active-rows into a linked archive via a verified, conservation-checked scripted move (reorganize, never delete) |
+| `claude-rules/elastic-model-routing.md` | CLAUDE.md rule | Routes each task to the minimum-sufficient Claude model (frontier / reasoner / worker, resolved live by capability so it survives renames); auto-sizes subagents, nudges the main session, never uses Haiku |
 
 ---
 
@@ -365,6 +366,22 @@ See [`claude-rules/d-master-ledger-trim.md`](claude-rules/d-master-ledger-trim.m
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/d-master-ledger-trim.md`.
+
+---
+
+## 14 — Elastic Model Routing Rule
+
+A CLAUDE.md instruction that applies to **every project**. It routes each unit of work to the **minimum-sufficient Claude model** — `frontier` for the most demanding / irreversible work (one-way doors like the data model, API contracts, and core abstractions; planning; and the artifacts that govern a cheaper fleet), `reasoner` for judgment work (complex debugging, algorithm design, architecture within an agreed design, non-trivial implementation, plan / impl reviews), and `worker` for mechanical / clear-spec work (coding from a plan, boilerplate, tests, formatting, migrations, data munging, simple edits). It never uses the smallest (Haiku-class) model and excludes non-Claude models (GPT / Codex are governed elsewhere).
+
+**Robust to model renames:** tiers are defined as **roles**, not fixed names. The current name is resolved **live each session** by ranking the Claude models actually available (via the Agent tool's `model` options and the `claude-api` skill) — so if a model is renamed (e.g. `fable`→`mythos`) or a new one appears, routing stays correct with zero edits, and the printed name table self-heals when drift is noticed.
+
+**How the switch happens:** a rule can set a subagent's model per dispatch (the Agent tool's `model` parameter) but cannot change the main session's model or reasoning effort — only `/model` and `/effort` can, and there is no per-dispatch effort parameter. So subagents auto-size at dispatch time (effort steered by a prompt cue), and the main session gets a one-line nudge when the current task's tier exceeds the model in use. Every model / effort switch emits a one-line message.
+
+See [`claude-rules/elastic-model-routing.md`](claude-rules/elastic-model-routing.md) for the full rule text and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/elastic-model-routing.md`.
 
 ---
 
