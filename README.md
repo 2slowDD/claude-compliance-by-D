@@ -311,6 +311,8 @@ When both are installed, rule 10 should catch most ≥ 20 % alternatives upstrea
 
 A CLAUDE.md instruction that forces Claude to label every item in a plan, recommendation, proposal, design spec, or multi-item answer by the strength of its basis: **⚠️ Assumption** for anything resting on inference or unverified information (including unverified subagent summaries), **🟢 CONFIRMED** for anything backed by verifiable hard data. Every tag carries a short basis note, so the operator can see at a glance which parts of a plan are solid and which still need verification. Tags are inline per item — no separate summary block. Always-on; there is no `/d-assumption` invocation.
 
+⚠️ **Scope boundary with §15.** This rule deliberately sets the *looser* CONFIRMED bar — a subagent's or memory's hard data can earn 🟢 provided a checkable source exists. **That bar holds for conversational tagging and is overridden at the propagation boundary by [§15 — No Second-Hand 🟢](#15--no-second-hand--verify-before-amplify-rule):** once a load-bearing claim enters a durable artifact (ledger, spec, plan, handover, memory) or gates a production action, **🟢 requires a check *you* ran, with the check cited.** *Unverified may sit in chat; it may not sit in the record.*
+
 See [`claude-rules/d-assumption.md`](claude-rules/d-assumption.md) for the full rule text and install instructions.
 
 ### Quick install

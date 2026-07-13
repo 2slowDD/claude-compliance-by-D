@@ -15,6 +15,19 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `claude-rules/d-assumption.md` + `skills/d-handover` (reconciled with the new P16 rule)
+
+🔴 **A direct contradiction between two shipped rules, found by the post-push ratification gate.** `d-assumption.md`'s Notes **deliberately** set the looser CONFIRMED bar: *"Hard data surfaced via memory or a subagent still qualifies [for 🟢], as long as a source exists that could be checked."* **That clause is what made the incident behind P16 technically compliant** — the agent said *"code-verified"*, a checkable source existed, so a 🟢 was arguably permitted. Left alone, the package would ship two rules that contradict each other and let the next reader pick whichever they prefer.
+
+**Reconciled by SCOPE, not repeal** — the looser bar is defensible for its stated purpose:
+
+| rule | governs |
+|---|---|
+| **d-assumption (P12)** | how you **tag in conversation** — the looser bar stands here |
+| **verify-before-amplify (P16)** | what may **enter the record** — the stricter bar, and it **wins at the propagation boundary** |
+
+⇒ *Unverified may sit in chat; it may not sit in the record.* `d-assumption.md` gains a Notes clause naming the override; `verify-before-amplify.md` gains a reciprocal reconciliation section, so the precedence is explicit **from either entry point**. `skills/d-handover` now carries **P16 alongside P12/P13** in the constraint block it injects into every fresh-agent prompt — the handover doc being the exact artifact type the original claim was laundered into (*"the brief you are reading is a durable artifact, and so is the one you write"*).
+
 ### Added — `claude-rules/verify-before-amplify.md` (new rule — 15th tool)
 
 A CLAUDE.md rule that closes the gap left open by `d-assumption` (§11). d-assumption already tells Claude to **tag** an unverified inherited claim as ⚠️ — but nothing stopped it from **republishing someone else's claim of verification as its own 🟢**, writing an unchecked assertion into a ledger, spec, or handover where the next agent reads it as established fact. The rule names that failure **provenance laundering** and forbids it: **a 🟢 CONFIRMED tag means *I ran the check* — nothing else earns it.** If the basis is *"source X says they verified it"*, the tag is **⚠️**, with X named — even when X claims a code-read, even when X is a d-review, even when X is an earlier session.

@@ -43,6 +43,23 @@ Do not deliberate about whether verification is worth it. One grep, one schema r
 - ❌ **Not "re-verify everything."** It fires on **load-bearing** claims crossing into the **record**. Background context, casual conversation, and single-fact answers are out of scope.
 - ❌ **Not a substitute for P12.** P12 tags; this rule governs the **upgrade path** between tags and the **gate at propagation**.
 
+## ⚠️ It DOES override one clause of d-assumption — read this if you are reconciling the two
+
+`d-assumption.md`'s Notes **deliberately** set the looser bar:
+
+> *"The CONFIRMED bar is 'verifiable hard data with a real source' — not 'personally re-verified this session'. Hard data surfaced via memory or **a subagent still qualifies** … This is deliberately the looser of the two possible bars."*
+
+**That clause is what made the failure above technically compliant.** The agent said *"code-verified"*; a source existed that *could* be checked; so under the looser bar, a 🟢 was arguably permitted.
+
+**The two rules are not in conflict once scoped:**
+
+| rule | governs |
+|---|---|
+| **d-assumption (P12)** | how you **tag in conversation** — looser bar stands here |
+| **verify-before-amplify (P16)** | what may **enter the record** — stricter bar, and it **wins at the propagation boundary** |
+
+⇒ **Unverified may sit in chat; it may not sit in the record.** d-assumption has been amended with a pointer to this clause so the precedence is explicit from either entry point.
+
 ## Sibling discipline (different failure, same lane)
 
 Distinct from deference, and worth naming so the two are not conflated: **state the UNIT of every statistic next to it, and re-state it at the point of use.** Four denominator-unit errors occurred in one workstream (a predicate counting clears as demotes; a positional ordinal used as an entity key; a rate computed per-page applied per-leg; an SD measured in paired-pages applied to a count in legs). Those were **own-work** errors, not deference — a rule against over-agreeing would not have caught any of them.
