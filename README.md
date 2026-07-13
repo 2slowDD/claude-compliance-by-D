@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Fourteen tools are included:
+Fifteen tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -22,6 +22,7 @@ Fourteen tools are included:
 | `claude-rules/d-test-assumptions.md` | CLAUDE.md rule | Makes the `d-test-assumptions` skill auto-fire before locking a non-trivial approach and after implementing a verifiable code segment |
 | `claude-rules/d-master-ledger-trim.md` | CLAUDE.md rule | Keeps the master task-ledger (`master-tasks.md`) lean at the top — relocates aged `Last updated` history + superseded top-active-rows into a linked archive via a verified, conservation-checked scripted move (reorganize, never delete) |
 | `claude-rules/elastic-model-routing.md` | CLAUDE.md rule | Routes each task to the minimum-sufficient Claude model (frontier / reasoner / worker, resolved live by capability so it survives renames); auto-sizes subagents, nudges the main session, never uses Haiku |
+| `claude-rules/verify-before-amplify.md` | CLAUDE.md rule | A 🟢 CONFIRMED tag means *you* ran the check — forbids republishing a source's "verified" as your own. Gates on **propagation into the record**, not on disagreement |
 
 ---
 
@@ -382,6 +383,32 @@ See [`claude-rules/elastic-model-routing.md`](claude-rules/elastic-model-routing
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/elastic-model-routing.md`.
+
+---
+
+## 15 — No Second-Hand 🟢 (Verify Before Amplify) Rule
+
+A CLAUDE.md instruction that closes the gap left open by the **d-assumption** rule (§11). d-assumption tells Claude to *tag* an unverified inherited claim as ⚠️ — but nothing stops it from **repeating someone else's claim of verification as if it were its own**, and thereby writing an unchecked assertion into a ledger, spec, or handover where the next agent reads it as established fact.
+
+**The failure it prevents — provenance laundering.** A subagent, reviewer, or prior session hands Claude a claim already stamped *"verified"* / *"code-read"* / *"🟢 CONFIRMED"*. Claude carries it into a durable artifact using **their** confidence marker. The artifact now asserts the claim on **Claude's** authority. Nobody ever ran the check.
+
+**The rule:**
+
+- **A 🟢 tag means *I ran the check*. Nothing else earns it.** If the basis is *"source X says they verified it"*, the honest tag is **⚠️**, with X named — even when X claims a code-read, even when X is a d-review, even when X is an earlier session. **Never upgrade ⚠️ → 🟢 on someone else's assurance.**
+- **The trigger is PROPAGATION, not disagreement.** Before a load-bearing claim enters a durable/shared artifact, it must be either 🟢 **with the check cited** (command / file:line / re-derivation), or explicitly marked **⚠️ INHERITED — from `<source>`, NOT independently verified**. **Unverified may sit in chat; it may not sit in the record.**
+- **Cheap-check-first:** if the check is ≤ 1 command, just run it — don't deliberate.
+- **Scale to blast radius:** chat → ⚠️ suffices. Durable artifact → 🟢 + citation, or an explicit INHERITED marker. **Gates a production action (flag flip, push, deploy, customer-facing output) → 🟢 only, no exceptions.**
+- **Plausibility is a trigger to check, not a licence to skip.** A claim that sounds *wrong* gets checked automatically; **the one that sounds right is the one that slips through.** That is the mechanism.
+
+**What it is NOT:** not "distrust reviewers" (it is agnostic to whether you end up agreeing — in the session that produced it, an external d-review's five Critical findings were all verified and all held), and not "re-verify everything" (it fires only on **load-bearing claims crossing into the record**).
+
+**Sibling discipline, deliberately named so the two are not conflated:** state the **unit** of every statistic next to it, and **re-state it at the point of use**. That guards a different failure — own-work denominator errors — which a rule against over-agreeing would not catch.
+
+See [`claude-rules/verify-before-amplify.md`](claude-rules/verify-before-amplify.md) for the full rule text, the worked incident, and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/verify-before-amplify.md`.
 
 ---
 
