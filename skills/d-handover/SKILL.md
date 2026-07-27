@@ -66,7 +66,7 @@ No step is skippable. If any step halts (operator-required answer, hard error), 
 
 ## Step 1 — Verify global CLAUDE.md exists
 
-Read `C:\Users\Korisnik\.claude\CLAUDE.md`. If missing or unreadable, halt with this exact error:
+Read `{CLAUDE_DIR}\CLAUDE.md` (machine-profile token per Step 2.0 — `{HOME}` resolves anywhere, so this needs no Step-2 ordering). If missing or unreadable, halt with this exact error:
 
 > Global CLAUDE.md not found at <path>; rules are load-bearing for hard-constraint defaults. Resolve path or supply rules explicitly before re-running.
 
@@ -76,22 +76,38 @@ Do NOT emit the prompt or print the audit footer.
 
 Resolve `project_root` and `profile_key` together. Both feed Step 3 (ledger location) and Step 7.5 (constraint defaults).
 
+### 2.0 Machine profile (resolve FIRST — the single source of machine-specific roots)
+
+This skill runs on more than one machine (PC ⇄ laptop migrations are a fact of this operator's setup — see `PC-LAP-MIGRATION-LEDGER.md` at `{AI_ROOT}`). No step, table, or prompt in this skill may hardcode a machine-absolute path; they all use the tokens below, resolved at runtime by PROBING, never by assumption:
+
+| Token | Meaning | Resolution (probe, first hit wins) |
+|---|---|---|
+| `{HOME}` | current user's home dir | the runtime's `~` / `%USERPROFILE%` |
+| `{AI_ROOT}` | the AI work-tree root | first existing of `C:\AI`, `D:\AI` (Test-Path). Neither exists → ask the operator once: "Neither C:\AI nor D:\AI exists on this machine. Paste the AI work-tree root." BOTH exist (mid-migration) → prefer the one containing cwd; neither contains cwd → ask. |
+| `{CLAUDE_DIR}` | the agent config tree | `{HOME}\.claude` |
+| `{COMPLIANCE_REPO}` | the published rules/skills repo clone | `{HOME}\claude-compliance-by-D` (absence is fine — it only gates the `claude-skill-dev` trigger) |
+
+Print the resolved profile on one line (`machine profile: HOME=<…> AI_ROOT=<…>`) before continuing.
+
+**Migration rule:** a new machine means this table RESOLVES differently — it never means editing this skill. If you find yourself remapping paths in this file after a machine change, stop: the fix belongs in this block alone. *(Added 2026-07-27: the published copy shipped the prior machine's literal paths and they survived a full migration unnoticed until a push-day diff caught them.)*
+
 ### 2.1 Supported roots + resolution table
 
 | `profile_key` | Path-pattern trigger (any one matches) | `project_root` | Notes |
 |---|---|---|---|
-| `CU` | cwd is `C:\AI\CU` exactly, or any path under it that is NOT under one of the subroots below | `C:\AI\CU` | Default for the scanner project. |
-| `wpservice-saas` | cwd contains `wpservice-saas` as a path segment | `C:\AI\CU\AI Assets Scanner\wpservice-saas` (closest ancestor matching the segment) | WP plugin; ledger may be at the CU master location or the subroot. Step 3 multi-ledger scan handles both. |
-| `AI-Assets-Scanner` | cwd contains `AI-Assets-Scanner` as a path segment AND NOT `wpservice-saas` | `C:\AI\CU\AI Assets Scanner\AI-Assets-Scanner` (closest ancestor matching the segment) | WP plugin; same ledger note. |
-| `claude-skill-dev` | cwd is under `C:\Users\Korisnik\.claude` or `C:\Users\Korisnik\claude-compliance-by-D` (skill development sessions) | `<the matching root>` | Step 3 still runs; scan typically finds zero ledgers under this root, so it falls through to "0 ledgers found" → `d-focus-tasks` asks scan-or-blank per its default protocol. |
-| `other` | none of the above | operator-supplied | Prompt: "I couldn't identify a known project root from cwd `<cwd>`. Paste the project root path or accept the default `C:\AI\CU`." |
+| `CU` | cwd is `{AI_ROOT}\CU` exactly, or any path under it that is NOT under one of the subroots below | `{AI_ROOT}\CU` | Default for the scanner project. |
+| `wpservice-saas` | cwd contains `wpservice-saas` as a path segment | `{AI_ROOT}\CU\AI Assets Scanner\wpservice-saas` (closest ancestor matching the segment) | WP plugin; ledger may be at the CU master location or the subroot. Step 3 multi-ledger scan handles both. |
+| `AI-Assets-Scanner` | cwd contains `AI-Assets-Scanner` as a path segment AND NOT `wpservice-saas` | `{AI_ROOT}\CU\AI Assets Scanner\AI-Assets-Scanner` (closest ancestor matching the segment) | WP plugin; same ledger note. |
+| `claude-skill-dev` | cwd is under `{CLAUDE_DIR}` or `{COMPLIANCE_REPO}` (skill development sessions) | `<the matching root>` | Step 3 still runs; scan typically finds zero ledgers under this root, so it falls through to "0 ledgers found" → `d-focus-tasks` asks scan-or-blank per its default protocol. |
+| `other` | none of the above | operator-supplied | Prompt: "I couldn't identify a known project root from cwd `<cwd>`. Paste the project root path or accept the default `{AI_ROOT}\CU`." |
 
 ### 2.2 Resolution flow
 
-1. **Operator-supplied path in the invocation** → match against the table; if path falls under a known subroot, use that profile; if not, treat as `other`.
-2. **cwd-based match** → walk cwd ancestors against the table top-to-bottom; first match wins.
-3. **Session-activity fallback** → if cwd is at `C:\AI\CU` exactly but recent conversation activity (last ~30 turns) shows edits or file references under one of the subroots, ask: "cwd is at CU root but recent activity references `<subroot>`. Pick profile: (a) CU, (b) `<subroot>`."
-4. **Print resolved root + profile** before continuing. Operator can override with a single follow-up.
+1. **Resolve the machine profile (2.0)** and print it.
+2. **Operator-supplied path in the invocation** → match against the table; if path falls under a known subroot, use that profile; if not, treat as `other`.
+3. **cwd-based match** → walk cwd ancestors against the table top-to-bottom; first match wins.
+4. **Session-activity fallback** → if cwd is at `{AI_ROOT}\CU` exactly but recent conversation activity (last ~30 turns) shows edits or file references under one of the subroots, ask: "cwd is at CU root but recent activity references `<subroot>`. Pick profile: (a) CU, (b) `<subroot>`."
+5. **Print resolved root + profile** before continuing. Operator can override with a single follow-up.
 
 ## Step 3 — Locate ledger
 
