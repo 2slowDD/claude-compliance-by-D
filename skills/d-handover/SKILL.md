@@ -65,7 +65,7 @@ No step is skippable. If any step halts (operator-required answer, hard error), 
 
 ## Step 1 — Verify global CLAUDE.md exists
 
-Read `C:\Users\dalib\.claude\CLAUDE.md`. If missing or unreadable, halt with this exact error:
+Read `C:\Users\Korisnik\.claude\CLAUDE.md`. If missing or unreadable, halt with this exact error:
 
 > Global CLAUDE.md not found at <path>; rules are load-bearing for hard-constraint defaults. Resolve path or supply rules explicitly before re-running.
 
@@ -79,17 +79,17 @@ Resolve `project_root` and `profile_key` together. Both feed Step 3 (ledger loca
 
 | `profile_key` | Path-pattern trigger (any one matches) | `project_root` | Notes |
 |---|---|---|---|
-| `CU` | cwd is `D:\AI\CU` exactly, or any path under it that is NOT under one of the subroots below | `D:\AI\CU` | Default for the scanner project. |
-| `wpservice-saas` | cwd contains `wpservice-saas` as a path segment | `D:\AI\CU\AI Assets Scanner\wpservice-saas` (closest ancestor matching the segment) | WP plugin; ledger may be at the CU master location or the subroot. Step 3 multi-ledger scan handles both. |
-| `AI-Assets-Scanner` | cwd contains `AI-Assets-Scanner` as a path segment AND NOT `wpservice-saas` | `D:\AI\CU\AI Assets Scanner\AI-Assets-Scanner` (closest ancestor matching the segment) | WP plugin; same ledger note. |
-| `claude-skill-dev` | cwd is under `C:\Users\dalib\.claude` or `C:\Users\dalib\claude-compliance-by-D` (skill development sessions) | `<the matching root>` | Step 3 still runs; scan typically finds zero ledgers under this root, so it falls through to "0 ledgers found" → `d-focus-tasks` asks scan-or-blank per its default protocol. |
-| `other` | none of the above | operator-supplied | Prompt: "I couldn't identify a known project root from cwd `<cwd>`. Paste the project root path or accept the default `D:\AI\CU`." |
+| `CU` | cwd is `C:\AI\CU` exactly, or any path under it that is NOT under one of the subroots below | `C:\AI\CU` | Default for the scanner project. |
+| `wpservice-saas` | cwd contains `wpservice-saas` as a path segment | `C:\AI\CU\AI Assets Scanner\wpservice-saas` (closest ancestor matching the segment) | WP plugin; ledger may be at the CU master location or the subroot. Step 3 multi-ledger scan handles both. |
+| `AI-Assets-Scanner` | cwd contains `AI-Assets-Scanner` as a path segment AND NOT `wpservice-saas` | `C:\AI\CU\AI Assets Scanner\AI-Assets-Scanner` (closest ancestor matching the segment) | WP plugin; same ledger note. |
+| `claude-skill-dev` | cwd is under `C:\Users\Korisnik\.claude` or `C:\Users\Korisnik\claude-compliance-by-D` (skill development sessions) | `<the matching root>` | Step 3 still runs; scan typically finds zero ledgers under this root, so it falls through to "0 ledgers found" → `d-focus-tasks` asks scan-or-blank per its default protocol. |
+| `other` | none of the above | operator-supplied | Prompt: "I couldn't identify a known project root from cwd `<cwd>`. Paste the project root path or accept the default `C:\AI\CU`." |
 
 ### 2.2 Resolution flow
 
 1. **Operator-supplied path in the invocation** → match against the table; if path falls under a known subroot, use that profile; if not, treat as `other`.
 2. **cwd-based match** → walk cwd ancestors against the table top-to-bottom; first match wins.
-3. **Session-activity fallback** → if cwd is at `D:\AI\CU` exactly but recent conversation activity (last ~30 turns) shows edits or file references under one of the subroots, ask: "cwd is at CU root but recent activity references `<subroot>`. Pick profile: (a) CU, (b) `<subroot>`."
+3. **Session-activity fallback** → if cwd is at `C:\AI\CU` exactly but recent conversation activity (last ~30 turns) shows edits or file references under one of the subroots, ask: "cwd is at CU root but recent activity references `<subroot>`. Pick profile: (a) CU, (b) `<subroot>`."
 4. **Print resolved root + profile** before continuing. Operator can override with a single follow-up.
 
 ## Step 3 — Locate ledger
@@ -174,7 +174,7 @@ This step exists because a spec-only follow-up (`FU-…` filed in a spec §9 but
 
 Sources scanned, in order, until one returns a usable F-* priority list:
 
-1. **Memory** — grep `~/.claude/projects/<active-project>/memory/MEMORY.md` and individual memory files for filenames or content matching `*failure_priority*`, `F-SEC`, `F-DEG`, `F-MISS`, `F-COST$`, `F-THRU`, `F-CHECK-EFF`, `F-OVERFIT`, `F-IMPOSSIBLE`. **`<active-project>` derivation:** this slug is the agent runtime's project namespace (the directory name under `~/.claude/projects/`, e.g. `d--AI-ChatGPT` for this operator's primary working directory). It is NOT derived from `project_root` — when `profile_key=wpservice-saas` resolves `project_root` to `D:\AI\CU\AI Assets Scanner\wpservice-saas`, the memory still lives under the agent's startup slug (`d--AI-ChatGPT`), not under a per-subroot namespace. Read the slug from the runtime, not from `project_root`.
+1. **Memory** — grep `~/.claude/projects/<active-project>/memory/MEMORY.md` and individual memory files for filenames or content matching `*failure_priority*`, `F-SEC`, `F-DEG`, `F-MISS`, `F-COST$`, `F-THRU`, `F-CHECK-EFF`, `F-OVERFIT`, `F-IMPOSSIBLE`. **`<active-project>` derivation:** this slug is the agent runtime's project namespace (the directory name under `~/.claude/projects/`, e.g. `c--AI` for this operator's primary working directory). It is NOT derived from `project_root` — when `profile_key=wpservice-saas` resolves `project_root` to `C:\AI\CU\AI Assets Scanner\wpservice-saas`, the memory still lives under the agent's startup slug (`c--AI`), not under a per-subroot namespace. Read the slug from the runtime, not from `project_root`.
 2. **Project CLAUDE.md** — read `<project_root>\CLAUDE.md` if it exists; grep for the same patterns.
 3. **Recent specs** — scan `<project_root>\docs\product-docs\04-development\` for the 5 most recently modified files; grep for F-* patterns.
 
@@ -462,7 +462,7 @@ The fenced copy/paste block (the inline prompt) stays clean so the operator can 
 | F-* anchor memory >14 days old | Continue; flag `stale` in audit footer. |
 | Must-read paths don't exist | Inline warning next to each missing path; do not block emit. |
 | Topic-slug collision (existing file) | Ask: overwrite / -r2 / update-in-place / new slug; default `-r2`. |
-| Global CLAUDE.md not found at `C:\Users\dalib\.claude\CLAUDE.md` | Halt — rules are load-bearing; ask operator for path or to fix. |
+| Global CLAUDE.md not found at `C:\Users\Korisnik\.claude\CLAUDE.md` | Halt — rules are load-bearing; ask operator for path or to fix. |
 | MEMORY.md not found at expected project path | Continue; log in audit footer; F-* falls back to project CLAUDE.md or operator input. |
 | Empty conversation context (no current work topic) | Halt; ask operator to paste state summary; no fabrication. |
 | Complexity classifier disagrees with operator intent | Print classifier verdict + flags; honour operator override (`force load-bearing` / `force inline-only`). |
