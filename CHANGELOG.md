@@ -15,6 +15,18 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/d-handover` (eight structural anti-context-loss mechanisms) + machine-migration path remap
+
+- **Step 7.0 delegated intake** — when the operator delegates content ("ensure the next agent has all the needed details"), intake fills from session state with ONE batched confirmation instead of six sequential questions; everything auto-filled stays printed.
+- **Step 8.7 pre-emit gates** — 8.7.1: state facts (HEAD, commit count, push state, tree, test-gate cardinality) re-verified by command at emit time, P16 provenance on every fact (🟢 + check, or ⚠️ INHERITED — never bare); 8.7.2: live background-work halt (wait / close out / document as state-on-disk — agent handles are dangling pointers across sessions); 8.7.3: progressive-ledger corollary.
+- **REQUIRED template slots** — `{{ENV_PRECONDITIONS}}` (verify command + expected output + measured cost of forgetting) and `{{CLOSED_ITEMS_LIST}}` (rulings by name; accumulates across handovers — carry forward + append) in both templates; omission is a render failure, not a judgment call.
+- **Cross-cutting placeholder rules** — pickup-moment tags on every deferred item; oversized-file access mechanics generalized to every must-read entry; quote-anchored line citations.
+- **Step 5.5 → task-FU census** — six enumerated sources swept by grep, not recall (ledger register · spec FU sections · task/fix-round reports · in-code markers · predecessor handoffs · chat); carried list ordered by the receiving agent's consumption order (new Step 5.5.6, scheme named).
+- **Docs-debt closure pre-pass** — completion phrasing (`Tasks N–M complete`) added to the signal table; the immediately-prior handoff doc always auto-candidates as HISTORICAL when writing a successor; mid-write candidates classify `AMBIGUOUS — mid-write` and defer past the live-work halt.
+- **Audit footer** — new `state-verification` / `background-work` / `intake-mode` fields; `session-FU-sweep` now names sources + ordering scheme.
+- Grounding: every mechanism closes a failure observed live in the 2026-07-27 VFM SDD session; verified by two application-scenario subagent runs (the FU-ordering fix has a natural RED→GREEN pair — the pre-census run produced discovery order, the post-census run consumption order).
+- **chore:** the published copy's PC-era paths remapped (`C:\Users\dalib` → `C:\Users\Korisnik`, `D:\AI` → `C:\AI`, project slug `d--AI-ChatGPT` → `c--AI`) — the laptop is canonical post-migration; PC clone syncs back on pull.
+
 ### Changed — `claude-rules/d-assumption.md` + `skills/d-handover` (reconciled with the new P16 rule)
 
 🔴 **A direct contradiction between two shipped rules, found by the post-push ratification gate.** `d-assumption.md`'s Notes **deliberately** set the looser CONFIRMED bar: *"Hard data surfaced via memory or a subagent still qualifies [for 🟢], as long as a source exists that could be checked."* **That clause is what made the incident behind P16 technically compliant** — the agent said *"code-verified"*, a checkable source existed, so a 🟢 was arguably permitted. Left alone, the package would ship two rules that contradict each other and let the next reader pick whichever they prefer.
