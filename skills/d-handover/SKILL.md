@@ -55,9 +55,10 @@ No step is skippable. If any step halts (operator-required answer, hard error), 
 5.   Invoke d-focus-tasks                         (P11 pre-flight; Step 5)
 5.5. Session-discovered follow-up sweep           (Step 5.5 — sweep spawned FUs into ledger register)
 6.   Auto-detect F-* priority                     (Step 6)
-7.   Structured intake                            (Step 7)
+7.   Structured intake                            (Step 7; check Step 7.0 delegated-intake predicate FIRST)
 8.   Classify complexity                          (Step 8 — single post-intake pass)
 8.5. Docs-debt closure pre-pass                   (Step 8.5 — fires on closure-signal detection; operator-reviewable)
+8.7. Pre-emit state verification + live-work check (Step 8.7 — state facts from tool output only; halt on stranded background work)
 9.   Render templates                             (Step 9)
 10.  Final ledger touch                           (post-emit, if a new handoff doc was written; Step 10)
 11.  Print audit footer                           (Step 11)
@@ -155,16 +156,28 @@ Call `d-focus-tasks` with the current commit/plan/handover state to update `mast
 
 - If `d-focus-tasks` errors hard (permission, malformed ledger), halt and surface the error. Do not emit the handover prompt.
 
-## Step 5.5 — Session-discovered follow-up sweep (skip when `no_ledger=true`)
+## Step 5.5 — Task-FU census + session-discovered follow-up sweep (skip when `no_ledger=true`)
 
 The outgoing agent is the only one who knows the follow-ups it spawned this session. If they live only in a spec's "Follow-ups discovered" section, a memory file, or chat, the fresh agent (and every later agent) won't see them in the ledger register — the canonical "what's open" surface. Sweep them into the ledger **register body** (NOT the opening top-row prose) before emitting the prompt.
 
-1. **Collect** every follow-up surfaced this session: FUs filed in specs/plans this session, deferred items, "fix before X" notes, and anything the operator flagged as later/parallel. Source = the current conversation + files touched this session.
+**This is a CENSUS, not a memory dump.** "The FUs I remember spawning" under-collects — FUs related to the handed-over task live in MANY homes. Enumerate each source explicitly (grep, don't recall) and record which sources you swept:
+
+| FU source | How to sweep it |
+|---|---|
+| Ledger register rows for this workstream | Grep the register for the task's FU ids / topic keywords |
+| Spec follow-up sections (§10-style bundles, "Follow-ups discovered during this task") | Grep the active spec + plan |
+| Task/fix-round reports' follow-up + concerns sections | Grep the task workspace's `*-report.md` files |
+| In-code markers added this workstream (⚠️/TODO/tripwire comments naming a future decision) | Grep the branch diff for marker idioms |
+| Predecessor handoffs' parked / deferred / flip-time lists | The rN-1 doc (already a Step 8.5 candidate) |
+| The current conversation (operator "later/parallel" flags, deferred minors, "fix before X" notes) | Session review |
+
+1. **Collect** from every source above. An FU related to the task at hand that appears in NONE of {ledger register, the handover's carried list} after this step is the failure this census exists to prevent.
 2. **Dedupe** against the existing register rows by FU id / one-line intent (per the d-focus-tasks dedup discipline). Already-present → leave as-is (do not duplicate).
 3. **Write the missing ones** into the register section (the `## *Follow-up Register*` table, or the project's equivalent open-FU section — NOT the `> TOP ACTIVE ROW` opening, NOT `Last updated`). Each new row: id, `⏳ OPEN` + one-line state, priority, trigger/blocks. If the project has no dedicated FU/register section, create one **separate sub-section** (`### Session-discovered follow-ups`) under the active-work area rather than appending to the top-row prose.
 4. **This runs through `d-focus-tasks`** (Step 5 already invoked it; this sweep is additional rows under the same ledger write) — preserve history, never delete existing rows.
 5. **Carry the same list inline** into the handover (it becomes the §8.5 "Parallel open FUs" block of the handoff doc, or a `Parallel open FUs (resume after this task)` bullet group in an inline-only prompt) so the fresh agent sees them **without** needing to read the full ledger.
-6. Print one line: `[focus-tasks — swept N session FUs into register: <comma id list>; M already present]` (or `[focus-tasks — no session FUs to sweep]`).
+5.6. **Order the carried list the best way FOR THE TASK — the receiving agent's consumption order, never discovery order.** The ordering scheme: (1) items the FIRST ACTION depends on or that gate it; (2) items grouped by pickup moment, in the order the next agent's execution path reaches them (task-queue order → final-review items → flip-time items → housekeeping/parallel); (3) within a group, blocking before cosmetic. Name the scheme used in one line so the fresh agent knows the order is load-bearing, not arbitrary. A flat or chronological FU list forces the fresh agent to re-derive relevance — which is exactly the context the outgoing agent was supposed to transfer.
+6. Print one line: `[focus-tasks — FU census: sources swept <list>; swept N into register: <comma id list>; M already present; carried K ordered by <scheme>]` (or `[focus-tasks — FU census: no open FUs]`).
 
 **❌ Do NOT append swept FUs to the `> TOP ACTIVE ROW` / `Last updated` opening prose.** That bloats the opening (the recurring D-Master-Ledger-Trim context tax) AND buries the FUs where the register-reader won't find them. Swept FUs go in the register body table or a dedicated `### Session-discovered follow-ups` sub-section under the active-work area — never the opening.
 
@@ -174,7 +187,7 @@ This step exists because a spec-only follow-up (`FU-…` filed in a spec §9 but
 
 Sources scanned, in order, until one returns a usable F-* priority list:
 
-1. **Memory** — grep `~/.claude/projects/<active-project>/memory/MEMORY.md` and individual memory files for filenames or content matching `*failure_priority*`, `F-SEC`, `F-DEG`, `F-MISS`, `F-COST$`, `F-THRU`, `F-CHECK-EFF`, `F-OVERFIT`, `F-IMPOSSIBLE`. **`<active-project>` derivation:** this slug is the agent runtime's project namespace (the directory name under `~/.claude/projects/`, e.g. `c--AI` for this operator's primary working directory). It is NOT derived from `project_root` — when `profile_key=wpservice-saas` resolves `project_root` to `C:\AI\CU\AI Assets Scanner\wpservice-saas`, the memory still lives under the agent's startup slug (`c--AI`), not under a per-subroot namespace. Read the slug from the runtime, not from `project_root`.
+1. **Memory** — grep `~/.claude/projects/<active-project>/memory/MEMORY.md` and individual memory files for filenames or content matching `*failure_priority*`, `F-SEC`, `F-DEG`, `F-MISS`, `F-COST$`, `F-THRU`, `F-CHECK-EFF`, `F-OVERFIT`, `F-IMPOSSIBLE`. **`<active-project>` derivation:** this slug is the agent runtime's project namespace (the directory name under `~/.claude/projects/`, e.g. `d--AI-ChatGPT` for this operator's primary working directory). It is NOT derived from `project_root` — when `profile_key=wpservice-saas` resolves `project_root` to `C:\AI\CU\AI Assets Scanner\wpservice-saas`, the memory still lives under the agent's startup slug (`d--AI-ChatGPT`), not under a per-subroot namespace. Read the slug from the runtime, not from `project_root`.
 2. **Project CLAUDE.md** — read `<project_root>\CLAUDE.md` if it exists; grep for the same patterns.
 3. **Recent specs** — scan `<project_root>\docs\product-docs\04-development\` for the 5 most recently modified files; grep for F-* patterns.
 
@@ -185,6 +198,17 @@ Sources scanned, in order, until one returns a usable F-* priority list:
 > I couldn't auto-detect the F-* priority for this project. Paste the priority order (e.g. `F-SEC > F-DEG > F-MISS > F-COST$ > F-THRU > F-CHECK-EFF > F-OVERFIT > F-IMPOSSIBLE`) or skip to omit F-* from the handover.
 
 ## Step 7 — Structured intake
+
+### Step 7.0 — Delegated-intake path (check this predicate FIRST)
+
+**Observable predicate:** the operator's handover request delegates the content — phrasing like "ensure the next agent has all the needed details", "you fill in the details", "package everything it needs", or a standing directive given earlier in the session ("do a d-handover after task N"). A pasted state summary (the existing Triggers-section rule) is also delegation for Q2 specifically.
+
+**When the predicate fires:** do NOT ask Q1–Q6 one at a time. Instead:
+1. Fill every intake slot from session state — ledger lines, git output, and this session's recorded decisions. Facts still come from canonical sources (Step 8.7 verifies them); delegation changes WHO fills the slots, not where facts come from.
+2. Present ONE batched confirmation (AskUserQuestion-style) covering ONLY the genuinely open decisions — typically: complexity-classifier override, first-action choice if ambiguous, and Step 8.5 annotation approvals. Pre-filled slots the operator did not ask about are printed in the emitted prompt itself, which is their review surface.
+3. Everything the skill fills must still be VISIBLE and overridable — printed, never silent.
+
+**When it does not fire:** proceed with the sequential intake below unchanged. *(This path exists because a real handover request "do a /d-handover after task 8; ensure the following agent has all the needed details" collided with six sequential questions whose answers were already in session state — 2026-07-27.)*
 
 Ask one at a time. Multiple-choice where possible. Operator can answer "skip" on any non-mandatory question.
 
@@ -270,6 +294,7 @@ Trigger detection — keyword scan over intake Q2 (state-summary) for closure si
 | `ratified`, `approved` (when in completion context) | "spec ratified by d-review r2" |
 | `dropped`, `DROPPED`, `refuted`, `REFUTED`, `vindicated`, `VINDICATED` | "hypothesis REFUTED" |
 | `Step N of Bundle X` (bundle-progression closure) | "Step 1 of B1 shipped" |
+| `complete`, `COMPLETE`, `all complete`, `Tasks N–M complete` (completion context — a work phase finishing IS a closure event) | "Tasks 0–8 ALL COMPLETE" *(added 2026-07-27: this phrasing matched no pattern and the step only fired by agent judgment)* |
 
 If NONE match → step is a no-op; audit footer reads `docs-closure: skipped (no closure signals in Q2 summary)`.
 
@@ -288,6 +313,7 @@ When the step fires:
    - Memory files in `~/.claude/projects/<slug>/memory/` indexed in `MEMORY.md`, matching topic keywords
    - Evidence memos and verdict files in `<project_root>/debug-evidence/<date>/` referenced by any in-scope spec
    - Task plans in `<project_root>/CU Scanner Railway/.../tasks/` matching topic keywords
+2.5. **The immediately-prior handoff doc is ALWAYS a candidate when writing a successor.** If this handover writes `<slug>-handoff-rN` (or a dated successor to an existing handoff), the rN-1 doc enters the candidates list automatically, default classification HISTORICAL with a proposed "superseded by rN, do not act on its queue" annotation. The operator still approves via the 8.5.4 gate. *(Added 2026-07-27: the r1→r2→r3 chain each needed this annotation and it only happened by agent judgment.)*
 3. **De-duplicate** by absolute path.
 4. **Cap at ~20 candidates max** — beyond that, operator-time-cost outweighs benefit; surface a `>20 candidates detected — focus operator review on top N by relevance` warning and present only the top 20.
 
@@ -385,6 +411,7 @@ docs-closure: skipped (operator --skip-docs-closure flag)
 | Edit fails on one candidate | Log failure + skip; continue with remaining candidates; report in summary. |
 | Operator asks to halt mid-review | Honor; abort Step 8.5; continue to Step 9 with partial annotations applied. |
 | Stale-doc would require operator-only judgement (e.g., AI uncertain whether HISTORICAL or STALE) | Classify as `AMBIGUOUS` with both options; operator picks. |
+| Candidate is being written by LIVE background work (Step 8.5 runs before Step 8.7.2's live-work check, so this ordering interaction is reachable) | Classify `AMBIGUOUS — mid-write`; propose `skip N` now; after the 8.7.2 halt resolves (wait/close/document), re-run the pre-pass on that candidate alone. Never annotate a file another process is writing. |
 
 ### 8.5.9 What this step does NOT do
 
@@ -392,6 +419,37 @@ docs-closure: skipped (operator --skip-docs-closure flag)
 - Does not rewrite spec content — only adds annotations / status updates / cross-references at the top of files or in dedicated subsections.
 - Does not commit annotations to git. Product-docs is non-git; memory files are non-git. Operator commits any tracked-file annotations (task plans, repo specs) separately if desired.
 - Does not modify `master-tasks.md` (the ledger; that's d-focus-tasks's responsibility per Step 5).
+
+## Step 8.7 — Pre-emit state verification + live-work check
+
+Runs after intake/classification, immediately before rendering. Two halves, both mandatory (skipping either is the failure mode this step exists to close).
+
+### 8.7.1 State facts come from tool output, not recollection
+
+Every load-bearing state fact that will appear in the prompt or doc is re-verified NOW, by running the command, even if it was verified earlier in the session (P16 — the handover is a durable artifact another agent acts on):
+
+| Fact | Command (git tree; adapt per project) |
+|---|---|
+| HEAD SHA | `git log -1 --format=%h` |
+| Commit count vs base | `git rev-list --count <base>..HEAD` |
+| Push state | `git ls-remote --heads <remote>` (compare against the base SHA — proves "nothing pushed" rather than asserting it) |
+| Tree cleanliness | `git status --short` (name the expected untracked files) |
+| Test-gate state | The gate file's current cardinality (e.g. "8 inherited failures") re-read from the gate file itself |
+
+Cite the check beside the fact in the rendered output (the `🟢 re-verified <date>` idiom). **Any fact the outgoing agent did NOT verify first-hand is written `⚠️ INHERITED — from <source>`, never bare.** A handover with a stale HEAD or a wrong "nothing pushed" claim corrupts every downstream decision the fresh agent makes.
+
+### 8.7.2 Live background work check
+
+Enumerate in-flight work the fresh agent cannot see: background shell tasks, running subagents/monitors, suites mid-run (check for live worker processes). Then:
+
+- **Something is running →** halt and ask the operator: (a) wait for completion and fold the result into the handover, (b) close it out now, or (c) document it as **state-on-disk** — file paths, expected completion signal, and how to verify/resume — because agent handles and monitors DIE across sessions; an agent ID in a handover is a dangling pointer. Never emit silently over live work.
+- **Nothing running →** record `background-work: none` for the audit footer.
+
+*(Added 2026-07-27: a session with four interruptions showed every interruption killed live subagent monitors; work survived only because state was progressively written to disk. A handover emitted mid-flight would have stranded a running implementer invisibly.)*
+
+### 8.7.3 Progressive-ledger corollary (one line, load-bearing)
+
+If a handover-critical fact exists ONLY in conversation — not in the ledger, a report file, or git — that is a session-discipline gap to fix by writing it down NOW (Step 5/5.5 already ran; append), not something to reconstruct from memory into the prompt. The handover doc should assemble from durable lines, not from recollection.
 
 ## Step 9 — Render templates
 
@@ -410,6 +468,16 @@ Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templ
 - `{{HANDOFF_DOC_REF_PARENTHETICAL_OR_EMPTY}}`: ` (see handoff §5 for full list)` for load-bearing, empty string for inline-only.
 - `{{DO_NOT_LIST}}`: bullets from intake Q6.
 - `{{KICKOFF_INSTRUCTION}}`: 1-2 sentence kick-off, including which read-first item to start with and whether the first clarifying question is the fresh agent's to pick.
+- `{{ENV_PRECONDITIONS}}` **(REQUIRED — may be `- none` only when genuinely none):** the services/containers/tools that must be up before the fresh agent's first substantive command, each as: what to start · the verification command · the expected output · the measured cost of forgetting (e.g. `docker exec cu-redis-sdd redis-cli PING → PONG; Redis down = 20 suites / 153 tests fail spuriously`). Environment failures masquerade as code regressions; the cost line is what makes a fresh agent actually run the check.
+- `{{CLOSED_ITEMS_LIST}}` **(REQUIRED — may be `- none` only when the session closed nothing):** every operator ruling, ratification, adjudicated finding, and superseded disposition closed during or before the outgoing session, listed BY NAME as "do NOT re-litigate" entries. This is the highest-leverage context-loss guard the template has: a fresh agent that cannot see a decision was made will re-open it, and re-litigating a closed question costs more than any other handover failure. Pull candidates from the ledger's ruling lines; when a prior handover carried a closed-items list, carry it forward and APPEND this session's closures — closures accumulate, they do not expire.
+
+**Cross-cutting placeholder rules (apply to every slot above):**
+- **Provenance marking (P16, from Step 8.7.1):** every load-bearing state fact carries either `🟢` + the check that was run, or `⚠️ INHERITED — from <source>`. Never bare.
+- **Pickup-moment tagging:** every deferred, parked, or follow-up item carried in the prompt or doc names WHEN it gets picked up (`at task N` / `at final review` / `at flip time` / `housekeeping`). An untagged deferred item is invisible exactly when it becomes relevant — the r2 handoff's "§4 with pickup moments" structure is the reference implementation.
+- **Access mechanics, generalized (extends the ledger-only rule above):** at render time, measure EVERY must-read file (`wc -l` / byte size). Any file that would truncate a full Read gets a "read it like this" note on its entry (Grep / offset-limit ranges / N passes, with the relevant line ranges). Any file with pathological structure (huge single lines, BOM, binary sections) gets that named too. A fresh agent bouncing off a truncated read either misses content silently or burns context re-reading — both are handover failures.
+- **Line-number citations:** any `file:line` cite in the prompt or doc carries its anchor quote or a "re-anchor by quoted code" note when the target file is still being modified. Line numbers drift; quotes do not.
+
+**Handoff-doc-only placeholders (templates/handoff-doc.md):** `{{STATE_VERIFICATION_LINE}}` = the Step 8.7.1 commands run + date, one line under the Status header. `{{DEFERRED_WITH_PICKUP_MOMENTS}}` = the deferred/parked/FU inventory from the Step 5.5 census, every item tagged with its pickup moment per the cross-cutting rule and **ordered per Step 5.5.6 — the receiving agent's consumption order** (may point at the task ledger for the full list, but the pickup-moment STRUCTURE must be visible in the doc — grouped by moment in execution order, not a flat list).
 
 ### 9.2 Output writing
 
@@ -436,7 +504,7 @@ ledger pre-flight P11 line: [focus-tasks-ledger updated — handover prep — <l
 ledger post-emit P11 line: [focus-tasks-ledger updated — handover doc written — <ledger-path>] OR "skipped (inline-only handover)"
 complexity: <load-bearing | inline-only> (flags fired: <comma-list or "none">) (operator override: <yes/no>)
 docs-closure: <annotated>/<total-candidates> (skipped: <count>; up-to-date: <count>; failed: <count>) OR "skipped (no closure signals)" OR "skipped (operator --skip-docs-closure flag)" OR "force-run (operator --force-docs-closure flag)"
-session-FU-sweep: swept <N> (<comma id list>); <M> already present OR "none to sweep" OR "skipped (no-ledger flag)"
+session-FU-sweep: sources swept <list>; swept <N> (<comma id list>); <M> already present; carried <K> ordered by <scheme> OR "none to sweep" OR "skipped (no-ledger flag)"
 F-priority source: <path or "operator-supplied" or "none">
 F-priority freshness: <fresh | stale | n/a>
 must-read paths missing: <comma-list or "none">
@@ -444,6 +512,9 @@ project root: <path>
 profile_key: <CU | wpservice-saas | AI-Assets-Scanner | claude-skill-dev | other>
 ledger path: <path>
 additional-working-dirs: <available | unavailable>
+state-verification: <comma-list of commands run in Step 8.7.1, or "FAILED: <fact> unverifiable">
+background-work: <none | documented as state-on-disk: <paths> | waited for <task> | closed out <task>>
+intake-mode: <sequential | delegated (predicate: "<matched phrasing>")>
 ```
 
 The `ledger pre-flight P11 line` and `ledger post-emit P11 line` fields re-print the literal P11 confirmation lines (not paths only, not references). This means operator and any auditing reader can `grep "focus-tasks-ledger updated"` against either the live chat or the audit footer and find the same string twice for load-bearing handovers, once for inline-only.
@@ -489,10 +560,13 @@ A successful run produces:
    - Hard constraints bullets including F-* priority line (if detected or supplied)
    - Do-NOT list with ≥1 entry
    - Specific kickoff instruction naming the next-skill invocation
-4. An audit footer outside the fenced block per Step 11, with all 11 fields populated.
+   - **`{{ENV_PRECONDITIONS}}` and `{{CLOSED_ITEMS_LIST}}` slots rendered** (each may read `- none` only when genuinely empty — an omitted slot is a render failure, not a judgment call)
+   - **Provenance marks on load-bearing state facts** (🟢 + check, or ⚠️ INHERITED) and **pickup-moment tags on every deferred item** per Step 9.1's cross-cutting rules
+4. An audit footer outside the fenced block per Step 11, with every field in Step 11's fixed list populated (including `state-verification`, `background-work`, `intake-mode`).
+4.5. Step 8.7 ran: state facts in the emitted output trace to commands run in THIS step (not earlier recollection), and no live background work was silently stranded (halt-and-ask fired if anything was running).
 5. No silent decisions: every classifier verdict, ledger pick, and staleness flag is visible to the operator.
 
-6. Step 5.5 sweep complete: every follow-up spawned this session is either present in the ledger register (or a `### Session-discovered follow-ups` sub-section) OR explicitly deferred inline in the prompt — **no spec-only or chat-only FU orphans** left invisible to the register-reader. Verified via the `session-FU-sweep:` audit-footer line.
+6. Step 5.5 census complete: every FU **related to the handed-over task** — from ALL enumerated sources (ledger register, spec FU sections, task reports, in-code markers, predecessor handoffs, chat), not just session-spawned — is either present in the ledger register OR carried in the handover with its pickup moment; **no FU orphans in any source** left invisible to the register-reader. The carried list is **ordered per Step 5.5.6** (the receiving agent's consumption order, scheme named). Verified via the `session-FU-sweep:` audit-footer line, which names the sources swept and the ordering scheme.
 
 **Conditional ACs** (must hold when their precondition fires):
 

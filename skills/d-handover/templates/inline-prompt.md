@@ -1,7 +1,11 @@
 {{LEAD_PARAGRAPH}}
 
-Do NOT begin coding. Do the read-first sequence first, then invoke
-{{NEXT_SKILL}} and {{FIRST_ACTION_VERB}}.
+Do NOT begin coding. Do the environment preconditions and the read-first
+sequence first, then invoke {{NEXT_SKILL}} and {{FIRST_ACTION_VERB}}.
+
+## Environment preconditions (before anything else)
+
+{{ENV_PRECONDITIONS}}
 
 ## Read first (strict order)
 
@@ -21,6 +25,10 @@ Invoke {{NEXT_SKILL}}. Announce the skill at start.
 ## What NOT to do{{HANDOFF_DOC_REF_PARENTHETICAL_OR_EMPTY}}
 
 {{DO_NOT_LIST}}
+
+### Closed — do NOT re-litigate
+
+{{CLOSED_ITEMS_LIST}}
 
 ## Start
 
