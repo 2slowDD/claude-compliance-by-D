@@ -25,6 +25,7 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 - **Docs-debt closure pre-pass** — completion phrasing (`Tasks N–M complete`) added to the signal table; the immediately-prior handoff doc always auto-candidates as HISTORICAL when writing a successor; mid-write candidates classify `AMBIGUOUS — mid-write` and defer past the live-work halt.
 - **Audit footer** — new `state-verification` / `background-work` / `intake-mode` fields; `session-FU-sweep` now names sources + ordering scheme.
 - Grounding: every mechanism closes a failure observed live in the 2026-07-27 VFM SDD session; verified by two application-scenario subagent runs (the FU-ordering fix has a natural RED→GREEN pair — the pre-census run produced discovery order, the post-census run consumption order).
+- **Step 2 rebuilt on a probe-resolved machine profile** — `{HOME}`/`{AI_ROOT}`/`{CLAUDE_DIR}`/`{COMPLIANCE_REPO}` tokens resolved at runtime by Test-Path probing (mid-migration tie-break, ask-once fallback); no step, table, or prompt hardcodes a machine-absolute path anymore, and the in-file migration rule makes future machine changes a zero-edit event — closes the remap class the chore item below had to clean up.
 - **chore:** the published copy's PC-era paths remapped (`C:\Users\dalib` → `C:\Users\Korisnik`, `D:\AI` → `C:\AI`, project slug `d--AI-ChatGPT` → `c--AI`) — the laptop is canonical post-migration; PC clone syncs back on pull.
 
 ### Changed — `claude-rules/d-assumption.md` + `skills/d-handover` (reconciled with the new P16 rule)
