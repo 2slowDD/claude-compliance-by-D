@@ -205,7 +205,7 @@ Each subagent gets its own `ledger_session_state` initialized to `unset`. The pa
 `ledger=<path>` uses split-on-first-equals: everything after the first `=` (trimmed) is the path.
 
 Examples:
-- `ledger=D:\AI\CU\docs\product-docs\master-tasks.md` → path: `D:\AI\CU\docs\product-docs\master-tasks.md`
+- `ledger=C:\AI\CU\docs\product-docs\master-tasks.md` → path: `C:\AI\CU\docs\product-docs\master-tasks.md`
 - `ledger=/home/user/project/master-tasks.md` → path: `/home/user/project/master-tasks.md`
 - `-no-ledger` → state `off`
 
