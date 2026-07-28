@@ -8,7 +8,7 @@
 
 **Tech Stack:** Markdown skill instructions; no runtime code.
 
-**Spec source:** [2026-05-13-session-gating-design.md (R1)](C:\Users\dalib\.claude\skills\d-focus-tasks\specs\2026-05-13-session-gating-design.md) — d-review verdict `ready-to-plan`.
+**Spec source:** [2026-05-13-session-gating-design.md (R1)](C:\Users\Korisnik\.claude\skills\d-focus-tasks\specs\2026-05-13-session-gating-design.md) — d-review verdict `ready-to-plan`.
 
 **Ledger update for THIS plan's work:** none (small-skill workstream — per the spec being implemented, this is Option 3 path).
 
@@ -20,11 +20,11 @@ Files this plan creates or modifies:
 
 | Action | Path | Responsibility |
 |---|---|---|
-| Modify | `C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md` | Full rewrite — new session-gated behaviour, flag grammar, anchor lines, subagent rules, recovery algorithm |
-| Modify | `C:\Users\dalib\.claude\CLAUDE.md` | Replace P11 section with spec §11 text |
-| Modify | `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md` | Append SUPERSEDED block |
-| Modify | `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md` | Update index line for the superseded memory + add line for the new memory |
-| Create | `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md` | New reference memory documenting the gating model |
+| Modify | `C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md` | Full rewrite — new session-gated behaviour, flag grammar, anchor lines, subagent rules, recovery algorithm |
+| Modify | `C:\Users\Korisnik\.claude\CLAUDE.md` | Replace P11 section with spec §11 text |
+| Modify | `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md` | Append SUPERSEDED block |
+| Modify | `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md` | Update index line for the superseded memory + add line for the new memory |
+| Create | `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md` | New reference memory documenting the gating model |
 
 Notes:
 - Plan deliberately leaves the d-handover SKILL.md edit for when that skill is authored (per spec §12 + AC-INT-1). No file action here.
@@ -35,7 +35,7 @@ Notes:
 ## Task 1: Rewrite d-focus-tasks/SKILL.md
 
 **Files:**
-- Modify: `C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md` (full rewrite)
+- Modify: `C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md` (full rewrite)
 
 This task replaces the entire current SKILL.md content. The new content is given verbatim in Step 2 below.
 
@@ -43,14 +43,14 @@ This task replaces the entire current SKILL.md content. The new content is given
 
 Run:
 ```
-Read C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md
+Read C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md
 ```
 
 Expected: file exists, contains the "## Mandatory Project / Global Rule" section that the rewrite replaces.
 
 - [ ] **Step 2: Write the new SKILL.md content (full file replacement)**
 
-Use the Write tool against `C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md` with this exact content:
+Use the Write tool against `C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md` with this exact content:
 
 ````markdown
 ---
@@ -258,7 +258,7 @@ Each subagent gets its own `ledger_session_state` initialized to `unset`. The pa
 `ledger=<path>` uses split-on-first-equals: everything after the first `=` (trimmed) is the path.
 
 Examples:
-- `ledger=D:\AI\CU\docs\product-docs\master-tasks.md` → path: `D:\AI\CU\docs\product-docs\master-tasks.md`
+- `ledger=C:\AI\CU\docs\product-docs\master-tasks.md` → path: `C:\AI\CU\docs\product-docs\master-tasks.md`
 - `ledger=/home/user/project/master-tasks.md` → path: `/home/user/project/master-tasks.md`
 - `-no-ledger` → state `off`
 
@@ -344,10 +344,10 @@ This list will grow. New skills must follow the same convention.
 
 Run:
 ```
-Grep pattern="Session-state model" path="C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md"
-Grep pattern="ledger=<path>" path="C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md"
-Grep pattern="anchor-wins-by-absence" path="C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md"
-Grep pattern="Preserve historical entries" path="C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md"
+Grep pattern="Session-state model" path="C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md"
+Grep pattern="ledger=<path>" path="C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md"
+Grep pattern="anchor-wins-by-absence" path="C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md"
+Grep pattern="Preserve historical entries" path="C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md"
 ```
 
 Expected: all four greps return one match each. If any miss, redo Step 2.
@@ -361,13 +361,13 @@ Do NOT commit yet — Tasks 2 onwards land changes that are paired with this one
 ## Task 2: Replace P11 in CLAUDE.md
 
 **Files:**
-- Modify: `C:\Users\dalib\.claude\CLAUDE.md` (replace one section)
+- Modify: `C:\Users\Korisnik\.claude\CLAUDE.md` (replace one section)
 
 - [ ] **Step 1: Read current P11 section to capture its exact opening + closing boundaries**
 
 Run:
 ```
-Read C:\Users\dalib\.claude\CLAUDE.md
+Read C:\Users\Korisnik\.claude\CLAUDE.md
 ```
 
 Find the section starting with `## P11 — Focus Tasks Ledger` and ending immediately before the next `##` heading (currently `## P8 — Core Principles` — note the ordering preserves the existing numbering quirk).
@@ -410,9 +410,9 @@ Do not wait for the operator to invoke `d-focus-tasks` manually after each trigg
 
 Run:
 ```
-Grep pattern="Material followup" path="C:\Users\dalib\.claude\CLAUDE.md"
-Grep pattern="anchored in chat via" path="C:\Users\dalib\.claude\CLAUDE.md"
-Grep pattern="Preserve historical entries on every ledger edit" path="C:\Users\dalib\.claude\CLAUDE.md"
+Grep pattern="Material followup" path="C:\Users\Korisnik\.claude\CLAUDE.md"
+Grep pattern="anchored in chat via" path="C:\Users\Korisnik\.claude\CLAUDE.md"
+Grep pattern="Preserve historical entries on every ledger edit" path="C:\Users\Korisnik\.claude\CLAUDE.md"
 ```
 
 Expected: each grep returns exactly one match in the P11 section. If any miss, redo Step 2.
@@ -424,13 +424,13 @@ Expected: each grep returns exactly one match in the P11 section. If any miss, r
 ## Task 3: Annotate the superseded feedback memory
 
 **Files:**
-- Modify: `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md`
+- Modify: `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md`
 
 - [ ] **Step 1: Read the current memory file**
 
 Run:
 ```
-Read C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md
+Read C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md
 ```
 
 Expected: file has frontmatter + body explaining the rule. Body currently ends with the "How to apply" paragraph.
@@ -452,7 +452,7 @@ Rule generalized into d-focus-tasks session gating per `~/.claude/skills/d-focus
 
 Run:
 ```
-Grep pattern="SUPERSEDED 2026-05-13" path="C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md"
+Grep pattern="SUPERSEDED 2026-05-13" path="C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md"
 ```
 
 Expected: one match.
@@ -464,13 +464,13 @@ Expected: one match.
 ## Task 4: Update MEMORY.md index line for the superseded memory
 
 **Files:**
-- Modify: `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md`
+- Modify: `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md`
 
 - [ ] **Step 1: Locate the current index line**
 
 The line is:
 ```
-- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in D:\AI\CU\docs\product-docs\. Op 2026-05-13.
+- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in C:\AI\CU\docs\product-docs\. Op 2026-05-13.
 ```
 
 - [ ] **Step 2: Replace with the superseded-marked version**
@@ -479,14 +479,14 @@ Use the Edit tool with:
 - `old_string`: the line above (exactly as quoted)
 - `new_string`:
 ```
-- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in D:\AI\CU\docs\product-docs\. Op 2026-05-13. — SUPERSEDED 2026-05-13 by d-focus-tasks session gating.
+- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in C:\AI\CU\docs\product-docs\. Op 2026-05-13. — SUPERSEDED 2026-05-13 by d-focus-tasks session gating.
 ```
 
 - [ ] **Step 3: Verify**
 
 Run:
 ```
-Grep pattern="SUPERSEDED 2026-05-13 by d-focus-tasks session gating" path="C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md"
+Grep pattern="SUPERSEDED 2026-05-13 by d-focus-tasks session gating" path="C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md"
 ```
 
 Expected: one match.
@@ -498,11 +498,11 @@ Expected: one match.
 ## Task 5: Create the new reference memory
 
 **Files:**
-- Create: `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md`
+- Create: `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md`
 
 - [ ] **Step 1: Write the new memory file**
 
-Use the Write tool against `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md` with this exact content:
+Use the Write tool against `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md` with this exact content:
 
 ```markdown
 ---
@@ -540,7 +540,7 @@ Spec: `~/.claude/skills/d-focus-tasks/specs/2026-05-13-session-gating-design.md`
 
 Run:
 ```
-Read C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md
+Read C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md
 ```
 
 Expected: file exists with frontmatter `name: d-focus-tasks-session-gating` and `type: feedback`.
@@ -552,7 +552,7 @@ Expected: file exists with frontmatter `name: d-focus-tasks-session-gating` and 
 ## Task 6: Add new memory's index line to MEMORY.md
 
 **Files:**
-- Modify: `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md`
+- Modify: `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md`
 
 - [ ] **Step 1: Insert the new index line ABOVE the superseded memory's line**
 
@@ -560,20 +560,20 @@ The new line goes right above the line modified in Task 4. Use the Edit tool wit
 
 - `old_string`:
 ```
-- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in D:\AI\CU\docs\product-docs\. Op 2026-05-13. — SUPERSEDED 2026-05-13 by d-focus-tasks session gating.
+- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in C:\AI\CU\docs\product-docs\. Op 2026-05-13. — SUPERSEDED 2026-05-13 by d-focus-tasks session gating.
 ```
 
 - `new_string`:
 ```
 - [d-focus-tasks session gating](feedback_d_focus_tasks_session_gating.md) — Session-gated ledger tracking; 3-option prompt + anchor lines + CLI-arg no-ledger flag grammar + subagent token rules. 2026-05-13.
-- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in D:\AI\CU\docs\product-docs\. Op 2026-05-13. — SUPERSEDED 2026-05-13 by d-focus-tasks session gating.
+- [No CU ledger for global-skill design](feedback_no_cu_ledger_for_global_skill_design.md) — Skills under ~/.claude/skills/* don't trigger d-focus-tasks or CU master-tasks.md updates, even when specs live in C:\AI\CU\docs\product-docs\. Op 2026-05-13. — SUPERSEDED 2026-05-13 by d-focus-tasks session gating.
 ```
 
 - [ ] **Step 2: Verify**
 
 Run:
 ```
-Grep pattern="d-focus-tasks session gating" path="C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md"
+Grep pattern="d-focus-tasks session gating" path="C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md"
 ```
 
 Expected: two matches (one in the new index line, one in the SUPERSEDED tail of the older line).
@@ -590,8 +590,8 @@ This task is the spec §14 AC verification. No file edits — read-through + sce
 
 Run:
 ```
-Read C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md
-Read C:\Users\dalib\.claude\CLAUDE.md
+Read C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md
+Read C:\Users\Korisnik\.claude\CLAUDE.md
 ```
 
 - [ ] **Step 2: Walk through each AC and mark pass/fail**
@@ -622,7 +622,7 @@ For each AC below, locate the supporting section in SKILL.md (or CLAUDE.md for A
 - **AC-FLAG-4**: spec text contains "no-ledger" → NO match on commit trigger. (§Matching rule: arg string only)
 
 **Subagent ACs:**
-- **AC-SUB-1**: `ledger=D:\AI\CU\docs\product-docs\master-tasks.md` → `active(D:\AI\CU\docs\product-docs\master-tasks.md)`. (§Subagent inheritance Token grammar example)
+- **AC-SUB-1**: `ledger=C:\AI\CU\docs\product-docs\master-tasks.md` → `active(C:\AI\CU\docs\product-docs\master-tasks.md)`. (§Subagent inheritance Token grammar example)
 - **AC-SUB-2**: `-no-ledger` → `off`. (§Subagent inheritance Token grammar)
 - **AC-SUB-3**: BOTH tokens → `off` (no-ledger wins). (§Subagent inheritance Precedence)
 - **AC-SUB-4**: neither → prompt on first trigger. (§Subagent inheritance Absence)
@@ -660,8 +660,8 @@ This is a HOLD step. Per `feedback_git_local_default.md`, no commits without exp
 
 Run (separately, in parallel if possible):
 ```
-Bash: cd C:\Users\dalib\.claude && git status
-Bash: cd C:\Users\dalib\.claude && git diff --stat
+Bash: cd C:\Users\Korisnik\.claude && git status
+Bash: cd C:\Users\Korisnik\.claude && git diff --stat
 ```
 
 Expected files dirty: `skills/d-focus-tasks/SKILL.md`, `CLAUDE.md`, plus the three memory files (one new, two modified).
@@ -676,11 +676,11 @@ Prompt the operator with this exact question:
 All Task 1-7 edits complete and verified (21/22 ACs PASS, 1 deferred).
 
 Files changed:
-- C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md
-- C:\Users\dalib\.claude\CLAUDE.md
-- C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md (SUPERSEDED annotation)
-- C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md (new)
-- C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md (two index lines)
+- C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md
+- C:\Users\Korisnik\.claude\CLAUDE.md
+- C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md (SUPERSEDED annotation)
+- C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_d_focus_tasks_session_gating.md (new)
+- C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md (two index lines)
 
 Repo layout per `git status` above: <fill in>.
 

@@ -3,7 +3,7 @@
 **Date:** 2026-05-13
 **Revision:** R1 (d-review feedback applied 2026-05-13)
 **Status:** spec draft, awaiting operator review
-**Spec for:** `C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md` (rewrite) + `C:\Users\dalib\.claude\CLAUDE.md` P11 (rewrite) + `C:\Users\dalib\.claude\skills\d-handover\SKILL.md` (conditional edit on apply).
+**Spec for:** `C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md` (rewrite) + `C:\Users\Korisnik\.claude\CLAUDE.md` P11 (rewrite) + `C:\Users\Korisnik\.claude\skills\d-handover\SKILL.md` (conditional edit on apply).
 **Ledger update for this design work:** none — small-skill workstream; defaults to Option 3 (no ledger).
 
 **R1 changelog:** §6 flag grammar tightened to CLI-arg-only matching; §4.1 state-recovery contract added; §8.2 Option 2 row added; §10 subagent token changed to `ledger=<path>` with precedence rule; §11 dropped-P11-clauses migrated; §7/§8.1/§9/§13/§14 ambiguities resolved.
@@ -23,7 +23,7 @@ Additional pain: future skills (`d-handover` being the next one) will also want 
 3. Cheap mid-session escape hatch when work pivots to an unrelated task.
 4. Consistent no-ledger flag grammar across all participating skills, with no false-positive matches on file paths, doc text, or commit messages.
 5. Zero hardcoded project list inside the skill — adding a new project means dropping a `master-tasks.md` at its root and confirming when prompted.
-6. Backwards-compatible with the existing CU ledger at `D:\AI\CU\docs\product-docs\master-tasks.md`.
+6. Backwards-compatible with the existing CU ledger at `C:\AI\CU\docs\product-docs\master-tasks.md`.
 7. Preserve the two currently-load-bearing P11 behaviours: history preservation (no row deletion) and missing-ledger handling.
 
 ## 3. Non-goals
@@ -258,7 +258,7 @@ Each subagent gets its own independent `ledger_session_state`, initialized to `u
 The `ledger=<path>` token uses split-on-first-equals: everything after the first `=` (trimmed) is the path. Paths may contain `=` only after the first one (rare; documented edge case).
 
 **Examples:**
-- `ledger=D:\AI\CU\docs\product-docs\master-tasks.md` → path: `D:\AI\CU\docs\product-docs\master-tasks.md` ✓
+- `ledger=C:\AI\CU\docs\product-docs\master-tasks.md` → path: `C:\AI\CU\docs\product-docs\master-tasks.md` ✓
 - `ledger=/home/user/project/master-tasks.md` → path: `/home/user/project/master-tasks.md` ✓
 - `-no-ledger` → state `off` ✓
 
@@ -339,7 +339,7 @@ Do not delete; this is the canonical pointer from MEMORY.md.
 
 ### 13.2 MEMORY.md index update
 
-Update the corresponding line in `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md` to add `— SUPERSEDED 2026-05-13` at the end of the description. Do not delete the index entry.
+Update the corresponding line in `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\MEMORY.md` to add `— SUPERSEDED 2026-05-13` at the end of the description. Do not delete the index entry.
 
 ### 13.3 New memory after implementation lands
 
@@ -390,7 +390,7 @@ The implementation plan is "done" when the following ACs verify:
 
 ### Subagent ACs (R1: new)
 
-- **AC-SUB-1**: subagent prompt with `ledger=D:\AI\CU\docs\product-docs\master-tasks.md` starts in `active(D:\AI\CU\docs\product-docs\master-tasks.md)` — Windows path preserved intact.
+- **AC-SUB-1**: subagent prompt with `ledger=C:\AI\CU\docs\product-docs\master-tasks.md` starts in `active(C:\AI\CU\docs\product-docs\master-tasks.md)` — Windows path preserved intact.
 - **AC-SUB-2**: subagent prompt with `-no-ledger` starts in `off`.
 - **AC-SUB-3**: subagent prompt with BOTH `ledger=<path>` AND `-no-ledger` starts in `off` (no-ledger precedence).
 - **AC-SUB-4**: subagent prompt with neither token runs §8.1 prompt on first qualifying trigger.

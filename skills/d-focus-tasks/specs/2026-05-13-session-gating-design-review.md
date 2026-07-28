@@ -1,11 +1,11 @@
 # D-review: d-focus-tasks — Session Gating + Project Routing Design (R1)
-**Reviewed:** 2026-05-13 (R1) · **Spec:** `C:\Users\dalib\.claude\skills\d-focus-tasks\specs\2026-05-13-session-gating-design.md` · **Verdict:** ready-to-plan
+**Reviewed:** 2026-05-13 (R1) · **Spec:** `C:\Users\Korisnik\.claude\skills\d-focus-tasks\specs\2026-05-13-session-gating-design.md` · **Verdict:** ready-to-plan
 
 ## 1. Context Scanned
 - Files read:
-  - `C:\Users\dalib\.claude\skills\d-focus-tasks\specs\2026-05-13-session-gating-design.md` (R1)
-  - `C:\Users\dalib\.claude\skills\d-focus-tasks\SKILL.md` (skill being rewritten)
-  - `C:\Users\dalib\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md` (memory disposition target)
+  - `C:\Users\Korisnik\.claude\skills\d-focus-tasks\specs\2026-05-13-session-gating-design.md` (R1)
+  - `C:\Users\Korisnik\.claude\skills\d-focus-tasks\SKILL.md` (skill being rewritten)
+  - `C:\Users\Korisnik\.claude\projects\d--AI-ChatGPT\memory\feedback_no_cu_ledger_for_global_skill_design.md` (memory disposition target)
   - `~/.claude/CLAUDE.md` (P11 — via global instructions in context)
 - Carried-forward unverifiable assumptions (unchanged from R0):
   - Compaction agents preserve the `[focus-tasks-session — …]` anchor line verbatim. §4.1 now makes loss safe-by-design (re-prompt rather than misroute) — risk accepted explicitly.
