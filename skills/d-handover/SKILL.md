@@ -440,9 +440,27 @@ docs-closure: skipped (operator --skip-docs-closure flag)
 
 Runs after intake/classification, immediately before rendering. Two halves, both mandatory (skipping either is the failure mode this step exists to close).
 
+### 8.7.0 Tree identity is FACT 0 — resolve WHICH tree before verifying anything ABOUT it
+
+**Every check in 8.7.1 is a fact about a tree already assumed to be the right one.** Verify them against the wrong checkout and each one comes back true, correctly cited, and useless — the error is upstream of all of them and inherits silently into every downstream decision. So tree identity is resolved and verified FIRST, and it is verified **by content**, never by folder name, "primary"/"main" convention, or the path that happens to be in the previous handover.
+
+**Fires whenever the project has more than one checkout or worktree of the same repo.** Detect, don't assume:
+
+| Fact | Command |
+|---|---|
+| How many trees exist | `git worktree list` (also look for sibling clones beside the repo root) |
+| Which tree is at the target ref | for each: `git -C "<path>" rev-list --left-right --count <target-ref>...HEAD` — `0	0` means identical |
+| **Content probe (the load-bearing one)** | `grep -c "<symbol the work depends on>" "<path>/<file>"` and/or `wc -l "<path>/<file>"` — a symbol that MUST exist if this is the right tree |
+
+Write the resolved tree into the handover as an explicit, cited line — path **and** branch **and** HEAD **and** divergence-vs-target **and** the content probe that proves it. Naming a path alone is a claim, not a fact.
+
+**Also name the decoys.** If a differently-named tree looks authoritative (shorter path, the repo's own name doubled, the one the last handover used), say so and say why it is NOT — otherwise the fresh agent rediscovers the trap at their own cost.
+
+*(Added 2026-08-15. Trip record: a handover named the repo's own top-level checkout as the place to do the work. Every tree fact it gave was correct and first-hand verified — branch, HEAD, and a stale local default branch vs the remote one — and it was still the wrong tree. That checkout held a 159-line, 4-export copy of the target module while the remote default branch had 356 lines and 8 exports, so the planned export-surface pin would have pinned a surface that does not exist on the default branch — and passed while doing it. Measured at the time: 40 worktrees, 38 distinct HEADs, exactly ONE sitting at the remote default branch. Picking by name is a 1-in-40 shot. The tell that should have fired: many worktrees, plus a brief that names a path without naming a content probe.)*
+
 ### 8.7.1 State facts come from tool output, not recollection
 
-Every load-bearing state fact that will appear in the prompt or doc is re-verified NOW, by running the command, even if it was verified earlier in the session (P16 — the handover is a durable artifact another agent acts on):
+Every load-bearing state fact that will appear in the prompt or doc is re-verified NOW, by running the command, even if it was verified earlier in the session (P16 — the handover is a durable artifact another agent acts on). **Run 8.7.0 first** — these are all facts *about* the tree it resolves:
 
 | Fact | Command (git tree; adapt per project) |
 |---|---|
@@ -485,6 +503,7 @@ Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templ
 - `{{DO_NOT_LIST}}`: bullets from intake Q6.
 - `{{KICKOFF_INSTRUCTION}}`: 1-2 sentence kick-off, including which read-first item to start with and whether the first clarifying question is the fresh agent's to pick.
 - `{{ENV_PRECONDITIONS}}` **(REQUIRED — may be `- none` only when genuinely none):** the services/containers/tools that must be up before the fresh agent's first substantive command, each as: what to start · the verification command · the expected output · the measured cost of forgetting (e.g. `docker exec cu-redis-sdd redis-cli PING → PONG; Redis down = 20 suites / 153 tests fail spuriously`). Environment failures masquerade as code regressions; the cost line is what makes a fresh agent actually run the check.
+- `{{TREE_IDENTITY_VERIFIED}}` **(REQUIRED — never empty; `- single checkout, no worktrees: <path>` is the minimum, and only after `git worktree list` proved it):** the output of Step 8.7.0. For every repo the fresh agent will touch, one row carrying **path · branch · HEAD · divergence vs the target ref · the content probe that proves it** (`grep -c "<symbol>"` / `wc -l`, with the number seen). Then, separately, **the decoys**: any differently-named tree that looks authoritative (shorter path, the repo name doubled, the path the last handover used) with one line on why it is NOT — a stale branch, an old HEAD, a smaller file. Rationale: a path alone is a claim; and unlike every other placeholder here, a wrong value cannot be caught by the other checks, because branch/HEAD/push-state/clean-tree all return TRUE against the wrong checkout. Omitting this is the same class of failure as omitting `{{ENV_PRECONDITIONS}}`, except it fails silently instead of loudly.
 - `{{CLOSED_ITEMS_LIST}}` **(REQUIRED — may be `- none` only when the session closed nothing):** every operator ruling, ratification, adjudicated finding, and superseded disposition closed during or before the outgoing session, listed BY NAME as "do NOT re-litigate" entries. This is the highest-leverage context-loss guard the template has: a fresh agent that cannot see a decision was made will re-open it, and re-litigating a closed question costs more than any other handover failure. Pull candidates from the ledger's ruling lines; when a prior handover carried a closed-items list, carry it forward and APPEND this session's closures — closures accumulate, they do not expire.
 
 **Cross-cutting placeholder rules (apply to every slot above):**
@@ -576,10 +595,10 @@ A successful run produces:
    - Hard constraints bullets including F-* priority line (if detected or supplied)
    - Do-NOT list with ≥1 entry
    - Specific kickoff instruction naming the next-skill invocation
-   - **`{{ENV_PRECONDITIONS}}` and `{{CLOSED_ITEMS_LIST}}` slots rendered** (each may read `- none` only when genuinely empty — an omitted slot is a render failure, not a judgment call)
+   - **`{{TREE_IDENTITY_VERIFIED}}`, `{{ENV_PRECONDITIONS}}` and `{{CLOSED_ITEMS_LIST}}` slots rendered** (each may read `- none` only when genuinely empty — an omitted slot is a render failure, not a judgment call). For `{{TREE_IDENTITY_VERIFIED}}` specifically: it names a **content probe with the number seen**, not just a path — a row without a probe does not satisfy this criterion, because it cannot distinguish the right tree from a stale one.
    - **Provenance marks on load-bearing state facts** (🟢 + check, or ⚠️ INHERITED) and **pickup-moment tags on every deferred item** per Step 9.1's cross-cutting rules
 4. An audit footer outside the fenced block per Step 11, with every field in Step 11's fixed list populated (including `state-verification`, `background-work`, `intake-mode`).
-4.5. Step 8.7 ran: state facts in the emitted output trace to commands run in THIS step (not earlier recollection), and no live background work was silently stranded (halt-and-ask fired if anything was running).
+4.5. Step 8.7 ran: **8.7.0 resolved tree identity by content BEFORE any state fact was gathered** (`git worktree list` run, the working tree proven by a content probe, decoy trees named); state facts in the emitted output trace to commands run in THIS step (not earlier recollection); and no live background work was silently stranded (halt-and-ask fired if anything was running).
 5. No silent decisions: every classifier verdict, ledger pick, and staleness flag is visible to the operator.
 
 6. Step 5.5 census complete: every FU **related to the handed-over task** — from ALL enumerated sources (ledger register, spec FU sections, task reports, in-code markers, predecessor handoffs, chat), not just session-spawned — is either present in the ledger register OR carried in the handover with its pickup moment; **no FU orphans in any source** left invisible to the register-reader. The carried list is **ordered per Step 5.5.6** (the receiving agent's consumption order, scheme named). Verified via the `session-FU-sweep:` audit-footer line, which names the sources swept and the ordering scheme.

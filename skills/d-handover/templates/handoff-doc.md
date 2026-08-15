@@ -9,6 +9,16 @@
 
 ## 0. Environment preconditions + read first (strict order, before any action)
 
+**Working tree — verify BEFORE your first read or edit:**
+<!-- Step 8.7.0: path AND branch AND HEAD AND divergence-vs-target AND the content probe that proves it. Name the decoy trees too. -->
+{{TREE_IDENTITY_VERIFIED}}
+
+> A path here is a claim, not a fact. Confirm the tree carries the code you think it does — by CONTENT, not by folder name:
+> `git -C "<path>" rev-list --left-right --count <target-ref>...HEAD` (`0  0` == identical), `git -C "<path>" worktree list`,
+> and `grep -c "<symbol that MUST exist>" "<path>/<file you will touch>"`.
+> Branch, HEAD, push state and a clean tree all come back TRUE against the wrong checkout — only the content probe catches it.
+> If the probe disagrees with this doc, STOP and re-resolve the tree before anything else.
+
 **Environment (start/verify these first):**
 {{ENV_PRECONDITIONS}}
 
