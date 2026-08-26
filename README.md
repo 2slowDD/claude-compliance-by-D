@@ -155,7 +155,7 @@ No CLAUDE.md edit required (but you can add one if you want a hard trigger like 
 
 A portable Codex / Claude Code skill for maintaining `docs/product-docs/master-tasks.md` as the current project ledger across commits, handovers, plans, specs, architecture changes, and followups.
 
-Use it when fresh agents need project bearings, after successful local commits, during remote-only commit reconciliation, after approved plans/specs/architecture changes, and before handovers.
+Use it when fresh agents need project bearings, after successful local commits, during remote-only commit reconciliation, after approved plans/specs (the revision that CLEARS external d-review — intermediate fold rounds do not write) / architecture changes, and before handovers.
 
 **Session gating (v0.11.0):** the first qualifying trigger in any agent session emits a 3-option prompt (select a different ledger / create new / no ledger this session). The operator's choice is anchored in chat for the rest of the session; subsequent triggers update silently. Multiple parallel projects coexist because each session locks to one ledger choice. Mid-session overrides: `/d-focus-tasks -no-ledger` (deactivate), `/d-focus-tasks` (re-prompt), `/d-focus-tasks <path>` (switch). Participating skills (e.g., `d-handover`) can suppress one invocation via a `-no-ledger` flag on their own command line. The flag is CLI-arg-only matched (regex `(?:^|\s)--?no[-\s]ledger(?:$|\s)` against the invocation arg string), so file paths like `tests/no-ledger-helpers.test.js` cannot accidentally trigger suppression.
 

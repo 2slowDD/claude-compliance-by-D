@@ -12,7 +12,7 @@ Use this rule in project instructions (`AGENTS.md`, `CLAUDE.md`) and global agen
 Several events can require updating a project's ledger:
 - Successful local commit
 - Remote-only commit reconciliation
-- Approved plan / spec / architectural change / material followup
+- Approved plan / spec / architectural change / material followup — for a spec or plan, "approved" = **the revision that CLEARS external d-review** (`ready-to-plan` / operator go). **Intermediate fold rounds (rN `needs-revision` → Rev N+1 → re-review) do NOT write the ledger** — not the folding agent, not the d-review agent; the chain lives in the spec header's chain line + the `…-review-rN.md` files (operator ruling 2026-08-26). A handover mid-chain records the current Rev once (handover trigger); a fold that surfaces a material followup files that followup's row, not the revision.
 - Handover prep (before writing a handover prompt)
 
 **"Material followup"** = a followup item that introduces a new spec/plan, materially shifts the project's task graph, or changes its risk profile. Routine cleanup (typo fixes, lint, comment-only changes, single-line obvious fixes that introduce no new test surface) is NOT material.

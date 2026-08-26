@@ -15,7 +15,7 @@ Run this skill after:
 - A successful local commit.
 - A remote-only commit/push if its SHA is not already logged.
 - Every handover, before writing the handover prompt.
-- Approval of any plan, spec, architectural change, or material followup (see definition in the Focus Tasks Ledger Rule).
+- Approval of a plan or spec — **the revision that CLEARS external d-review** (`ready-to-plan` / operator go) — or an architectural change or material followup (see definition in the Focus Tasks Ledger Rule). **NOT every revision (operator ruling 2026-08-26):** an intermediate fold round (rN `needs-revision` → Rev N+1 → external re-review) does NOT write the ledger — neither the folding agent nor the d-review agent. The round chain is already recoverable from the spec header's chain line (`r1 4C/6M/7m · r2 …`) and the sibling `…-review-rN.md` files; a per-round ledger paragraph is exactly the top-row bloat the Read/Write Protocol below forbids. Two cases still write, because they are OTHER triggers: a **handover** mid-chain records the current Rev / pending round once (handover trigger); a fold that surfaces a **material followup** (a new live-product finding, a new spec or lane) files THAT followup's row — not the revision.
 - Fresh-agent start when the user points to this skill or ledger.
 - Invocation from another participating skill (e.g., `d-handover` without a no-ledger flag).
 
@@ -226,6 +226,7 @@ When state is `active(<path>)` and a trigger fires:
 - Remote-only commit: check the ledger first; add only if no matching SHA exists.
 - Handover with no commit: record `commit: none yet`, status `active` / `followup` / `pending decision`; update same row when committed.
 - Do not paste long specs. Link paths, summarize in one short purpose sentence.
+- **One row per spec/plan, written once at the clearing revision (operator ruling 2026-08-26).** Never append a per-round paragraph for an intermediate revision; when the spec clears, update its row once with the final Rev, the round-chain line, and the next action (approval / writing-plans).
 - **Preserve historical entries — never delete completed milestones or finished phases.** Old entries remain archived (status-marked) in the same file. The Edit tool's red/green diff visualization on a row being updated or split is normal; no row vanishes from the file as a result of an edit.
 - Emit `[focus-tasks-ledger updated — <trigger> — <path>]` on success.
 

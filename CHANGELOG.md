@@ -15,6 +15,11 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/d-focus-tasks` + `claude-rules/d-focus-tasks.md` (spec-revision trigger narrowed)
+
+- **"Approved plan / spec" now means the revision that CLEARS external d-review** (`ready-to-plan` / operator go). Intermediate fold rounds (rN `needs-revision` → Rev N+1 → re-review) no longer write the ledger — neither the folding agent nor the d-review agent. Grounding: the Inc-3 FU-C4-PER-SCRIPT chain (r1–r6, 2026-08-21 → 2026-08-26) accreted one multi-KB ledger paragraph per round onto a single row — exactly the top-row bloat the Read/Write Protocol forbids — while the same chain was fully recoverable from the spec header's chain line + the `…-review-rN.md` files. Operator ruling 2026-08-26.
+- Update rules: one row per spec/plan, written once at the clearing revision. A mid-chain handover still records the current Rev once (handover trigger); a fold that surfaces a material followup files that followup's row, not the revision.
+
 ### Changed — `skills/d-handover` (nine structural anti-context-loss mechanisms) + machine-migration path remap
 
 - **Step 7.0 delegated intake** — when the operator delegates content ("ensure the next agent has all the needed details"), intake fills from session state with ONE batched confirmation instead of six sequential questions; everything auto-filled stays printed.
