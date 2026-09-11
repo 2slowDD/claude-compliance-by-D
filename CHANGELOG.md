@@ -15,6 +15,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/wp-compliance` (Rule 21: exact guard shape)
+
+- **The direct-access guard must be one of the two shapes Plugin Check recognises, with no extra condition.** A compound guard that lets the PHP command line through for tests (`! defined( 'ABSPATH' ) && 'cli' !== PHP_SAPI`) still blocks web requests, but Plugin Check reports it as `missing_direct_file_access_protection`. Rule 21 now says so, with a sanitized example of a test harness that defines `ABSPATH` itself and fails on an early stop. The dispatch, pre-code and release checklists carry the same wording. Grounding: a Plugin Check report, 2026-09-11.
+
 ### Changed — `skills/d-focus-tasks` + `claude-rules/d-focus-tasks.md` (spec-revision trigger narrowed)
 
 - **"Approved plan / spec" now means the revision that CLEARS external d-review** (`ready-to-plan` / operator go). Intermediate fold rounds (rN `needs-revision` → Rev N+1 → re-review) no longer write the ledger — neither the folding agent nor the d-review agent. Grounding: the Inc-3 FU-C4-PER-SCRIPT chain (r1–r6, 2026-08-21 → 2026-08-26) accreted one multi-KB ledger paragraph per round onto a single row — exactly the top-row bloat the Read/Write Protocol forbids — while the same chain was fully recoverable from the spec header's chain line + the `…-review-rN.md` files. Operator ruling 2026-08-26.

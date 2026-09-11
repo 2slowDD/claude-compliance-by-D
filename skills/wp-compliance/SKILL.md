@@ -30,7 +30,7 @@ When using subagent-driven development (superpowers:subagent-driven-development 
 ## WP Compliance (mandatory)
 
 Run through this checklist before writing any code:
-- Every PHP file starts with an ABSPATH guard (`defined( 'ABSPATH' ) || exit;`)
+- Every PHP file starts with a plain ABSPATH guard (`defined( 'ABSPATH' ) || exit;`), with no extra condition such as a CLI exception for tests (Rule 21)
 - All $_GET/$_POST/$_REQUEST/$_COOKIE/$_SERVER/REST/AJAX input validated at entry
 - Output escaped at render time, context-specific (esc_html, esc_attr, esc_url, wp_kses)
 - Capability check in place for every privileged action
@@ -53,7 +53,7 @@ Safe order: validate input → sanitize when needed → check capability → ver
 
 Run through this before writing any code. Every item must be addressed:
 
-- [ ] Every PHP file starts with `defined( 'ABSPATH' ) || exit;` (or equivalent guard)
+- [ ] Every PHP file starts with `defined( 'ABSPATH' ) || exit;` or `if ( ! defined( 'ABSPATH' ) ) { exit; }` — exactly that shape, no extra condition (Rule 21)
 - [ ] All `$_GET`, `$_POST`, `$_REQUEST`, `$_COOKIE`, `$_SERVER`, REST/AJAX input validated at entry
 - [ ] Output escaped at render time, context-specific (`esc_html`, `esc_attr`, `esc_url`, `wp_kses`, etc.)
 - [ ] Capability check in place for every privileged action
@@ -244,6 +244,16 @@ Two stacked annotations can look fine to `php -l` and to a human reviewer — th
 **21. Every plugin PHP file must abort when loaded directly.**
 Add `defined( 'ABSPATH' ) || exit;` (or `if ( ! defined( 'ABSPATH' ) ) exit;`) at the very top of every PHP file — main bootstrap, class files, REST handlers, AJAX handlers, template partials, trait files, autoloaded files, include-only helpers. No exceptions. Plugin Check reports `missing_direct_file_access_protection` as an ERROR. A misconfigured web server that serves raw `.php` files from the plugin directory (Apache without mod_php wired correctly, a misrouted nginx `location` block, a file copied to a debug path) will dump file contents to anyone — leaking class structure, SQL templates, and occasionally secrets from development. Cost: one line. Value: zero information disclosure when the server misbehaves. *(flagged 2026-04-22 after Plugin Check audit)*
 
+**Exact shape, no extra condition.** Plugin Check recognises only a top-level `defined( 'ABSPATH' ) || exit;` (or `die`), or an `if ( ! defined( 'ABSPATH' ) ) { exit; }` whose whole condition is the negated `defined()` call. A compound guard such as `if ( ! defined( 'ABSPATH' ) && 'cli' !== PHP_SAPI ) { exit; }` — typically added so a test harness can `require` the file under plain PHP CLI — is reported as `missing_direct_file_access_protection`, even though it still blocks web requests. Keep the plain guard and let the test stand in for WordPress instead:
+
+```php
+// tests/example-harness.php — define what WordPress would, BEFORE loading the file.
+define( 'ABSPATH', __DIR__ . '/' );
+require __DIR__ . '/../includes/class-example.php';
+```
+
+A harness that loads a guarded file must also fail on an early stop: an `exit` inside the required file ends the run with status 0 and no output, which a shell runner (`php "$f" || echo FAIL`) scores as a pass. Register a shutdown function that exits non-zero unless the harness reached its end marker. *(tightened 2026-09-11 after Plugin Check report)*
+
 **22. Parameterize LIKE wildcards; never hardcode them inside a prepared query.**
 Pass the wildcard pattern as a `%s` parameter built from `$wpdb->esc_like()`. Never write `LIKE 'prefix.%'` inside a `$wpdb->prepare()` template.
 
@@ -393,7 +403,7 @@ validate input → sanitize when needed → check capability → verify nonce �
 
 Before releasing or committing, confirm you are NOT:
 
-- [ ] Shipping any PHP file without an ABSPATH guard at the top
+- [ ] Shipping any PHP file without a plain ABSPATH guard at the top (no extra condition — a CLI exception for tests fails Plugin Check)
 - [ ] Echoing raw data anywhere
 - [ ] Using request values in SQL
 - [ ] Hardcoding LIKE wildcards inside a prepared query
