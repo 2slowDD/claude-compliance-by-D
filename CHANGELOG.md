@@ -15,10 +15,11 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
-### Changed — `skills/d-review` (chat-output contract + verdict markers)
+### Changed — `skills/d-review` (chat-output contract, verdict markers, count discipline)
 
 - **The inline chat block is now a fixed four-part shape:** title, review-file path, `VERDICT:`, `Counts:`, plus per-item scrutiny answers only when the invocation named specific items. §5 previously prescribed a "Top 3 Critical/Major" list and an inline findings summary; both are now explicitly forbidden in the block, because the block is relayed by copy/paste to the spec’s origin agent and everything already in the review file is manual cleanup for the relayer. The `Counts:` line is mandatory on every review, all five figures present.
 - **The verdict carries a colour marker** — 🔴 `needs-revision`, 🟢 `ready-to-plan`, 🟡 `blocked-on-context` — in the chat block, the review file’s header, its §4 Verdict, and §6’s rubric. A marker rather than ANSI escapes or markdown emphasis, so it survives being pasted into another agent’s prompt. Grounding: operator rulings, 2026-09-18.
+- **A finding that states a count must survive a form-complete sweep (new §2a).** Searching a punctuated term (`optName:`) matches one syntactic form and is blind to shorthand forwarding and parameter declarations, so a threaded value undercounts silently — and the wrong number reads as authoritative. §2a requires the bare identifier, the raw hit count, and a partition of every hit (origination / declaration / forwarding / use); an empty cell where the mechanism requires a member means the sweep is wrong, not the code. Grounding: a review that published "four edit points" for a surface with ten, 2026-09-18.
 
 ### Changed — `skills/wp-compliance` (Rule 21: exact guard shape)
 

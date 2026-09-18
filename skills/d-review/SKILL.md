@@ -29,9 +29,23 @@ Execute these in order. Do not skip steps.
 3. **Log unverifiable assumptions** as you read — every claim the spec makes that depends on unseen context (other specs, parent project, external systems). These go into the review file.
 4. **Apply the 8 review dimensions** (Section 3) across the spec.
 5. **Classify each finding by severity** (Critical / Major / Minor / Nit).
-6. **Write the review file** to the path in Section 4.
-7. **Print the inline summary** (Section 5).
-8. **Emit the verdict** (Section 6).
+6. **Sweep-check every count you are about to publish** (§2a) — before the finding is written, not after.
+7. **Write the review file** to the path in Section 4.
+8. **Print the inline chat output** (Section 5).
+9. **Emit the verdict** (Section 6).
+
+### 2a. Counts in a finding must survive a form-complete sweep
+
+⚠️ **Trip record 2026-09-18.** A finding asserted that an option threaded through three hops had **four** edit points. The real number was ten. The sweep had been run — but with the term `optName:` *including the colon*, which matches an explicit property and is structurally blind to shorthand forwarding (`optName,`) and to the parameter declaration (`optName = null,`). Dropping the colon returned three times the hits. The wrong number was published as a Critical, in a review whose whole job is catching that class of error.
+
+Whenever a finding is going to state **how many** of something exist — call sites, edit points, emit sites, exits, handlers, consumers, flags:
+
+- **Search the bare identifier, never a punctuated form.** `foo` — not `foo:`, not `foo =`, not `foo(`. Punctuation encodes ONE syntactic form; the thing you are counting usually takes several. In JS alone: explicit property `foo: x`, shorthand `foo,`, parameter default `foo = null,`, destructuring `{ foo }`, and the uses.
+- **State the raw hit count, then classify every hit** — origination / declaration / forwarding / use. A count you have not partitioned is not yet a finding. Publish the partition, not just the total.
+- **Read the shape as evidence.** "Four hits, all origination, zero declarations, zero forwardings" is impossible for an option that is threaded — the declaration must exist somewhere. If a partition has an empty cell where the mechanism requires a member, the sweep is wrong, not the code.
+- One claim per labelled command, uncapped and unpiped, so the output that produced the number is the output you cite.
+
+This applies to a count you assert **and** to a count the spec asserts that you are about to confirm or contradict. Getting it wrong in a review is worse than getting it wrong in a spec: the author will act on it.
 
 ## 3. Review Dimensions
 
