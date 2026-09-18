@@ -62,7 +62,7 @@ Use the **Write** tool. Never paste the full review content inline in chat — o
 
 ```markdown
 # D-review: <spec title>
-**Reviewed:** <YYYY-MM-DD> · **Spec:** <path or "inline"> · **Verdict:** <ready-to-plan | needs-revision | blocked-on-context>
+**Reviewed:** <YYYY-MM-DD> · **Spec:** <path or "inline"> · **Verdict:** <🟢 ready-to-plan | 🔴 needs-revision | 🟡 blocked-on-context>
 
 ## 1. Context Scanned
 - Files read: <list>
@@ -97,7 +97,7 @@ Use the **Write** tool. Never paste the full review content inline in chat — o
 ### Missing Acceptance Criteria
 
 ## 4. Verdict
-**<ready-to-plan | needs-revision | blocked-on-context>**
+**<🟢 ready-to-plan | 🔴 needs-revision | 🟡 blocked-on-context>**
 
 <1–3 sentences of reasoning.>
 
@@ -110,33 +110,42 @@ If **blocked-on-context** — what I need before I can fairly review:
 - ...
 ```
 
-## 5. Inline Chat Summary
+## 5. Inline Chat Output
 
-After writing the file, print a compact summary. Keep it ≤15 lines.
+⚠️ **Operator rulings 2026-09-18 (2nd trip — this section previously prescribed a Top-3 list and an inline findings summary, and caused the over-write it now forbids; the counts line was reinstated by a follow-up ruling the same day).** The operator relays this block by copy/paste to the spec's origin agent. Anything the origin agent does not need is noise they have to delete by hand.
+
+After writing the file, print **ONE fenced block** containing **exactly** these parts and nothing else:
 
 ```
-D-review: <spec title>
-File: <review file path>
+D-review — <spec name> <Rev N>
+Review file: <review file path>
+VERDICT: <🟢 ready-to-plan | 🔴 needs-revision | 🟡 blocked-on-context>
+Counts: Critical <n> · Major <n> · Minor <n> · Nits <n> · Unverifiable assumptions <n>
 
-Severity counts: Critical <n> · Major <n> · Minor <n> · Nits <n>
-Top 3 Critical/Major:
-1. <terse one-liner>
-2. ...
-3. ...
-
-Unverifiable assumptions: <n>
-Verdict: <ready-to-plan | needs-revision | blocked-on-context>
+<If — and only if — the operator named specific scrutiny items in the invocation:>
+YOUR <N> SCRUTINY ITEMS
+1 <terse answer>
+2 <terse answer>
+…
 ```
 
-If there are no Critical and no Major findings, collapse "Top 3" to a single line: *"No Critical or Major findings."*
+The `VERDICT:` line carries a **colour marker before the verdict word** (operator ruling 2026-09-18 — "red if needs correction, green if ready to write plans"): 🔴 `needs-revision`, 🟢 `ready-to-plan`, 🟡 `blocked-on-context`. A marker, not ANSI escapes and not markdown emphasis — the block is copy/pasted into another agent's prompt, where escape sequences become garbage and `**bold**` inside a fence is literal. The marker is also the house convention (🔴/🟢/🟡 throughout CLAUDE.md and the memory rules). Never emit the verdict word without its marker, and never let the marker disagree with §6's rubric.
+
+The `Counts:` line is **required on every review**, immediately under `VERDICT:`, in exactly that order and separator style (` · `), all five figures always present — a zero is written `0`, never omitted. It is the operator's triage signal; it is the ONLY aggregate the block carries.
+
+**Never put in the block:** a findings list at any severity, a "Top 3 to fix first", a carry-without-re-review list, next-step suggestions, or any prose that is already in the review file. The findings live in the file; the block exists to get the origin agent to the file with a verdict, the counts, and answers to what was asked.
+
+If the operator named no scrutiny items, the block is four lines.
+
+**Below the block, outside it:** optionally a very short operator-only note (a ruling they must make, a claim I could not verify, a ledger/skip notice). Never inside the block.
 
 ## 6. Verdict Rubric
 
 Pick exactly one. Be honest — this is the whole point of the skill.
 
-- **`ready-to-plan`** — Zero Critical findings. Any Major findings are either resolvable during implementation planning or explicitly accepted in the spec. Safe to hand to `writing-plans`.
-- **`needs-revision`** — ≥1 Critical finding **or** ≥3 Major findings that would cause rework. Spec author should revise the spec before planning.
-- **`blocked-on-context`** — The spec cannot be fairly reviewed without information outside the visible context (unseen parent spec, unclear API contract, missing requirements doc). State exactly what context is needed, then stop. Do **not** guess.
+- 🟢 **`ready-to-plan`** — Zero Critical findings. Any Major findings are either resolvable during implementation planning or explicitly accepted in the spec. Safe to hand to `writing-plans`.
+- 🔴 **`needs-revision`** — ≥1 Critical finding **or** ≥3 Major findings that would cause rework. Spec author should revise the spec before planning.
+- 🟡 **`blocked-on-context`** — The spec cannot be fairly reviewed without information outside the visible context (unseen parent spec, unclear API contract, missing requirements doc). State exactly what context is needed, then stop. Do **not** guess.
 
 ## 7. Tone & Discipline
 
