@@ -207,7 +207,15 @@ Sources scanned, in order, until one returns a usable F-* priority list:
 2. **Project CLAUDE.md** — read `<project_root>\CLAUDE.md` if it exists; grep for the same patterns.
 3. **Recent specs** — scan `<project_root>\docs\product-docs\04-development\` for the 5 most recently modified files; grep for F-* patterns.
 
-**Staleness check:** if the detected anchor memory file has a date older than **14 days** from today (parsed from filename or content), tag the result `stale` in the audit footer; do not block emit. (14d picked because the project's memory cadence is ~daily; 14d gives one re-anchor cycle before flagging.)
+**Freshness check — compare to CANON, never to the calendar.** A memory file holding the F-* ladder is a CACHE of a canonical project doc; its edit date says nothing about whether it is right. *(Changed 2026-09-18. The previous rule flagged the anchor `stale` once its date passed 14 days. On the CU project that rule failed in BOTH directions: the cache carried a superseded ladder from 2026-06-17 to 2026-08-26 while being edited on 2026-07-14 — so it read "fresh" exactly when it was wrong — and afterwards it fired every 14 days on a correct ladder whose canon had not changed, training readers to ignore it.)*
+
+1. **Find the canon.** The anchor memory usually names it (e.g. `01-product/success-failure-metrics.md` §2 priority-order line). If it names none, grep `<project_root>\docs\product-docs\` for a line matching `F-SEC.*>.*F-DEG`. No canon found → tag `no-canon` and go to step 4.
+2. **Compare.** Extract the ladder from the canon line and from the memory (same regex); normalise by stripping backticks and whitespace. **This is one command — run it, do not deliberate (P16 cheap-check-first).**
+3. **Tag the result:**
+   - identical → `fresh (matches canon <path>:<line>, canon last updated <date>)`. Render the F-priority line in the prompt as 🟢 with that check cited.
+   - different → `MISMATCH`. **HALT before emit**, show both ladders side by side, and ask the operator which is right. Never emit a handover on a ladder that disagrees with its canon; after the ruling, correct the memory file and cite the canon line in it.
+4. **`no-canon` fallback (the only case where age is used):** if the memory's date is older than 14 days tag `unverifiable-aged`, render the F-priority line as `⚠️ INHERITED — from <memory path>, no canon doc found to verify against`, and do not block emit.
+5. **Never write "consistent with earlier handovers" as support.** Handovers copy their ladder from each other, so agreement between them cannot discriminate a right ladder from a wrong one.
 
 **Fallback:** if no source returns a list, ask:
 
@@ -543,7 +551,7 @@ complexity: <load-bearing | inline-only> (flags fired: <comma-list or "none">) (
 docs-closure: <annotated>/<total-candidates> (skipped: <count>; up-to-date: <count>; failed: <count>) OR "skipped (no closure signals)" OR "skipped (operator --skip-docs-closure flag)" OR "force-run (operator --force-docs-closure flag)"
 session-FU-sweep: sources swept <list>; swept <N> (<comma id list>); <M> already present; carried <K> ordered by <scheme> OR "none to sweep" OR "skipped (no-ledger flag)"
 F-priority source: <path or "operator-supplied" or "none">
-F-priority freshness: <fresh | stale | n/a>
+F-priority freshness: <fresh (matches canon <path>:<line>) | MISMATCH (halted) | unverifiable-aged (no canon) | n/a>
 must-read paths missing: <comma-list or "none">
 project root: <path>
 profile_key: <CU | wpservice-saas | AI-Assets-Scanner | claude-skill-dev | other>
@@ -567,7 +575,7 @@ The fenced copy/paste block (the inline prompt) stays clean so the operator can 
 | Multiple ledgers found, no decisive heuristic winner | Show numbered list (path + last-modified + top-row preview); operator picks. |
 | Ledger row ↔ session topic mismatch | Halt; ask whether ledger needs updating or work is sub-thread; resume after answer. |
 | F-* auto-detection finds nothing | Ask operator to paste or skip. |
-| F-* anchor memory >14 days old | Continue; flag `stale` in audit footer. |
+| F-* ladder in memory ≠ the canon doc's ladder | HALT before emit; show both; operator rules; correct the memory. (Age alone is NOT a failure — see Step 6.) |
 | Must-read paths don't exist | Inline warning next to each missing path; do not block emit. |
 | Topic-slug collision (existing file) | Ask: overwrite / -r2 / update-in-place / new slug; default `-r2`. |
 | Global CLAUDE.md not found at `C:\Users\Korisnik\.claude\CLAUDE.md` | Halt — rules are load-bearing; ask operator for path or to fix. |

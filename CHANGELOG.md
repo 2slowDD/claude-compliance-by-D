@@ -15,6 +15,12 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/d-handover` (Step 6: F-\* ladder freshness is a canon comparison, not a date check)
+
+- **Step 6 now compares the F-\* ladder in the anchor memory against the canonical project doc** instead of flagging the memory `stale` once its edit date passes 14 days. A memory file holding the ladder is a *cache*; its edit date says nothing about whether it is right. Identical → `fresh (matches canon <path>:<line>)` and the prompt's F-priority line is rendered 🟢 with that check cited. Different → **MISMATCH, halt before emit**, both ladders shown, operator rules. Age is used only when no canon doc exists (`unverifiable-aged` → the line renders `⚠️ INHERITED`).
+- **"Consistent with earlier handovers" is explicitly rejected as support** for a ladder: handovers copy their ladder from one another, so their agreement cannot discriminate a right ladder from a wrong one.
+- Grounding: the old rule failed in both directions on a live project — the cache carried a superseded ladder for ten weeks while being edited mid-window (so a date check read "fresh" exactly when it was wrong), and afterwards fired every 14 days on a correct ladder whose canon had not moved. Replaying the mid-window date against the new rule yields MISMATCH; today it yields fresh.
+
 ### Changed — `skills/d-review` (chat-output contract, verdict markers, count discipline)
 
 - **The inline chat block is now a fixed four-part shape:** title, review-file path, `VERDICT:`, `Counts:`, plus per-item scrutiny answers only when the invocation named specific items. §5 previously prescribed a "Top 3 Critical/Major" list and an inline findings summary; both are now explicitly forbidden in the block, because the block is relayed by copy/paste to the spec’s origin agent and everything already in the review file is manual cleanup for the relayer. The `Counts:` line is mandatory on every review, all five figures present.

@@ -185,6 +185,8 @@ A Claude Code skill that packages a saturated-context session into a copy/paste-
 - For load-bearing handovers (architectural pivots, paused plans, F-* trade-off tables), also writes a `<date>-<slug>-handoff.md` document under `docs/product-docs/04-development/` that the inline prompt points at.
 - A two-line P11 confirmation strip (`[focus-tasks-ledger updated — handover prep — <path>]`) so the operator can verify the ledger update fired without grepping diffs.
 
+**Halts before emit:** global CLAUDE.md missing, ledger ↔ session topic mismatch, live background work, and — since v0.12 — the F-\* ladder in memory disagreeing with its canon doc (Step 6 compares them; it never emits a handover on a ladder its canon contradicts).
+
 **What it does NOT do:** push to remote (P9 stands), commit the handoff doc (operator commits), invent project state, skip `d-focus-tasks` (unless the `-no-ledger` flag is set — see below), or invoke the next-skill on the fresh agent's behalf.
 
 Composes with `d-focus-tasks` (hard sub-step) and the `github-push-warning` rule (P9 gate applies if the fresh agent's next action will eventually push).
