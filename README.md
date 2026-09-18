@@ -23,6 +23,7 @@ Fifteen tools are included:
 | `claude-rules/d-master-ledger-trim.md` | CLAUDE.md rule | Keeps the master task-ledger (`master-tasks.md`) lean at the top — relocates aged `Last updated` history + superseded top-active-rows into a linked archive via a verified, conservation-checked scripted move (reorganize, never delete) |
 | `claude-rules/elastic-model-routing.md` | CLAUDE.md rule | Routes each task to the minimum-sufficient Claude model (frontier / reasoner / worker, resolved live by capability so it survives renames); auto-sizes subagents, nudges the main session, never uses Haiku |
 | `claude-rules/verify-before-amplify.md` | CLAUDE.md rule | A 🟢 CONFIRMED tag means *you* ran the check — forbids republishing a source's "verified" as your own. Gates on **propagation into the record**, not on disagreement |
+| `claude-rules/graded-decision-rubric.md` | CLAUDE.md rule | Bans the open "how should I proceed?" — on a complex choice Claude ranks the approaches against five ordered criteria (F-\*, goal, new problems, reuse, simplicity) and leads with a 🟢/🔴/🟡-graded recommendation. Never permission to skip asking |
 
 ---
 
@@ -411,6 +412,40 @@ See [`claude-rules/verify-before-amplify.md`](claude-rules/verify-before-amplify
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/verify-before-amplify.md`.
+
+---
+
+## 16 — Graded Decision Rubric (never hand over an open question)
+
+A CLAUDE.md instruction for the moment Claude is about to ask *"how should I proceed?"*. On a complex choice, that question hands you work Claude was better placed to do — it has the code, the ledger, the failure metrics and the measurements in front of it, and you do not. This rule makes Claude **do the ranking first and lead with the answer**, so you ratify or override a worked recommendation instead of reconstructing the analysis yourself.
+
+It does **not** make Claude autonomous. It still asks. It just never asks empty-handed.
+
+**The failure it prevents — outsourcing the prioritisation.** Claude measures something, sees two or three ways forward, and converts that into an open offer: *"want me to look into X?"*, *"say the word and I'll check Y"*. Each is individually polite and collectively a tax — you end up holding several undecided threads and ranking them from a position with less information than Claude had.
+
+**When it fires — both conditions together:** ≥ 2 defensible approaches exist, **and** picking wrong costs rework, touches shipped behaviour, or is awkward to reverse. One obvious way, a trivially reversible pick, or a naming/formatting choice → Claude just acts. A graded table on a variable name is noise, and noise is how a rule gets ignored.
+
+**The rubric — five criteria, strictly ranked.** Each only decides the call when everything above it is level:
+
+1. **F-\* impact** — pros/cons against the project's failure metrics, resolved by the project's **F-priority order**, naming the metric and direction.
+2. **Goal alignment** — the ledger's active row / stated end goal. No ledger → the project's stated goal (README / spec / task framing), and Claude says which it used.
+3. **New problems introduced** — new failure surface, new call sites, clashes with existing functionality or the goal. Cons here routinely beat pros on 1–2.
+4. **Reuse** — is something already doing this, and can it be reused **without breaking its other callers**? Requires a grep, not a recollection.
+5. **Simplicity** — tiebreak **only**, when 1–4 are level. It never overrides a criterion above it.
+
+**Output:** a recommendation carrying 🟢 / 🔴 / 🟡 per criterion with a one-line basis each, and **the criterion that decided it** named — that last part is what lets you overrule Claude intelligently.
+
+⚠️ **Scope boundary with the ask-plainly discipline.** This rule governs *what the question looks like*, never *whether it is asked*. Every operator-owned decision — customer-visible output, billing or credit accounting, policy, anything irreversible, anything moving F-DEG — is still asked explicitly with a plain-language explanation first. The rubric supplies the recommendation inside that question and is **never permission to skip it**. 🔴 *"The rubric was unambiguous, so I proceeded"* is precisely the abuse this clause blocks: a rubric result is an argument, not an authorisation.
+
+**Composes with §15 (verify-before-amplify):** the grades are load-bearing claims, so a 🟢 on *reuse* means Claude ran the grep and a 🟢 on *goal alignment* means it read the ledger row. Unchecked reasoning is ⚠️, never 🟢 — otherwise the grades are decoration.
+
+**The tell it was skipped:** a message ending in *"want me to…?"* / *"say the word"* / *"if you'd like, I can…"* with no recommendation attached.
+
+See [`claude-rules/graded-decision-rubric.md`](claude-rules/graded-decision-rubric.md) for the full rule text, a worked example, and install instructions.
+
+### Quick install
+
+Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/graded-decision-rubric.md`.
 
 ---
 

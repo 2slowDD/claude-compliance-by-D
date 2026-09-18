@@ -264,6 +264,26 @@ Options:
 
 ---
 
+## [0.12.0] — 2026-09-18
+
+### Added — `claude-rules/graded-decision-rubric.md` (new CLAUDE.md rule)
+
+Bans the open *"how should I proceed?"*. When Claude faces a complex choice it must rank the approaches itself and lead with a graded recommendation, rather than handing the operator an undecided question.
+
+**The failure it prevents:** outsourcing prioritisation the agent was better placed to do. Claude measures something, sees two or three ways forward, and converts that into an open offer (*"want me to look into X?"*, *"say the word and I'll check Y"*). Each is individually polite and collectively a tax — the operator ends up ranking several threads from a position with less information than the agent had. Real instance recorded in the rule: three such offers in a single CU Scanner evidence session, each made *after* the agent had already measured the numbers that would decide it.
+
+**Trigger — both conditions together:** ≥ 2 defensible approaches exist, AND picking wrong costs rework / touches shipped behaviour / is awkward to reverse. One obvious way, a trivially reversible pick, or a naming/formatting choice → just act. This keeps graded tables off trivia.
+
+**The rubric — five criteria, strictly ranked** (each decides only when everything above it is level): 1. F-\* impact, resolved by the project's F-priority order · 2. goal alignment against the ledger's active row (no ledger → the project's stated goal, named) · 3. new problems introduced · 4. reuse of existing code without breaking its other callers · 5. simplicity, as a tiebreak only.
+
+**Output:** 🟢 / 🔴 / 🟡 per criterion with a one-line basis, plus the criterion that decided it named explicitly — so the operator can overrule the recommendation on its actual load-bearing point.
+
+⚠️ **Scope boundary — this does NOT relax the ask-plainly discipline.** The rule governs *what the question looks like*, never *whether it is asked*. Operator-owned decisions (customer-visible output, billing/credit accounting, policy, irreversible actions, anything moving F-DEG) are still asked explicitly with a plain-language explanation first. *"The rubric was unambiguous, so I proceeded"* is the abuse the clause blocks: a rubric result is an argument, not an authorisation.
+
+**Composes with §15 (verify-before-amplify):** the grades are load-bearing claims, so a 🟢 on *reuse* requires the grep to have been run and a 🟢 on *goal alignment* requires the ledger row to have been read. Unchecked reasoning is ⚠️, never 🟢.
+
+Installed as **P19** in `~/.claude/CLAUDE.md`; carried into `/d-handover` prompts so fresh agents inherit it.
+
 ## [0.11.1] — 2026-05-13
 
 ### Fixed — `skills/d-handover/SKILL.md`
