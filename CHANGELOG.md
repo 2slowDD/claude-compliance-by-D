@@ -15,6 +15,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/wp-compliance` (Rule 29: hook callbacks take `mixed`)
+
+- **A non-nullable `string`/`int`/`array` parameter on an `add_action`/`add_filter` callback is an uncaught `TypeError` waiting for a caller that passes null.** Core reads hook arguments out of arrays and objects other plugins wrote; an absent key arrives as null, and coercive mode does not rescue it into a user-defined function. Core itself usually degrades to a `WP_Error` where a typed callback throws, so the callback converts a skipped operation into a fatal — and on update/cron hooks that fatal lands between a maintenance flag being set and cleared, leaving the state stuck. Adds the mandatory falsification test: call the callback with null in each parameter position and assert it returns the first argument unmodified.
+
 ### Changed — `skills/d-handover` (Step 6: F-\* ladder freshness is a canon comparison, not a date check)
 
 - **Step 6 now compares the F-\* ladder in the anchor memory against the canonical project doc** instead of flagging the memory `stale` once its edit date passes 14 days. A memory file holding the ladder is a *cache*; its edit date says nothing about whether it is right. Identical → `fresh (matches canon <path>:<line>)` and the prompt's F-priority line is rendered 🟢 with that check cited. Different → **MISMATCH, halt before emit**, both ladders shown, operator rules. Age is used only when no canon doc exists (`unverifiable-aged` → the line renders `⚠️ INHERITED`).
