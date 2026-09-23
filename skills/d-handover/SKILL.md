@@ -398,7 +398,29 @@ Load `templates/inline-prompt.md` and (if Step 8 classified load-bearing) `templ
 - **Access mechanics, generalized (extends the ledger-only rule above):** at render time, measure EVERY must-read file (`wc -l` / byte size). Any file that would truncate a full Read gets a "read it like this" note on its entry (Grep / offset-limit ranges / N passes, with the relevant line ranges). Any file with pathological structure (huge single lines, BOM, binary sections) gets that named too. A fresh agent bouncing off a truncated read either misses content silently or burns context re-reading — both are handover failures.
 - **Line-number citations:** any `file:line` cite in the prompt or doc carries its anchor quote or a "re-anchor by quoted code" note when the target file is still being modified. Line numbers drift; quotes do not.
 
-**Handoff-doc-only placeholders (templates/handoff-doc.md):** `{{STATE_VERIFICATION_LINE}}` = the Step 8.7.1 commands run + date, one line under the Status header. `{{DEFERRED_WITH_PICKUP_MOMENTS}}` = the deferred/parked/FU inventory from the Step 5.5 census, every item tagged with its pickup moment per the cross-cutting rule and **ordered per Step 5.5.6 — the receiving agent's consumption order** (may point at the task ledger for the full list, but the pickup-moment STRUCTURE must be visible in the doc — grouped by moment in execution order, not a flat list).
+### 9.3 Handoff-doc-only placeholders (`templates/handoff-doc.md`)
+
+Load-bearing handovers only. Every slot below must render — the doc is the surface the fresh agent reads when the inline prompt is not enough, so an unfilled slot there costs more than one in the inline prompt. The `_DETAILED` / `_LONG` slots are the expanded twins of their inline counterparts: same source, fuller text, because the doc has no length pressure and is read once rather than scanned.
+
+| Placeholder | Filled with |
+|---|---|
+| `{{TITLE}}` | `<Topic slug in prose> — handoff` (from intake Q1). |
+| `{{DATE}}` | Date authored, `YYYY-MM-DD`. |
+| `{{AUTHOR_NOTE}}` | One line naming the outgoing session — what it did, not who it was (e.g. "SDD run, Tasks 0-8"). |
+| `{{STATUS_LINE}}` | Current state in one line: what is done, what is in flight, what is blocked. |
+| `{{STATE_VERIFICATION_LINE}}` | The Step 8.7.1 commands run + date, one line under the Status header. |
+| `{{READ_FIRST_NUMBERED_LIST_LONG}}` | The Q4 must-read sequence with a 1-2 sentence purpose per entry (the inline variant gets one line each). Same order, same ledger-first rule, same access mechanics from §9.1. |
+| `{{PICKING_UP_PARAGRAPH}}` | Intake Q2 expanded to a paragraph — what the work is and where it stopped. |
+| `{{FIRST_ACTION_PARAGRAPH}}` | Intake Q3 expanded: the skill to invoke, the action, and what "done" looks like for that first action. |
+| `{{FRAMING_BODY}}` | The carried framing — options on the table, decisions already made and why, the shape of the problem. This is the slot `{{CARRY_OVER_FRAMING_OR_EMPTY}}` points at from the inline prompt. |
+| `{{F_STAR_TRADEOFF_TABLE_OR_EMPTY}}` | The F-\* trade-off table when Step 8 flag 1 fired (≥2 quantified F-\* deltas); empty string otherwise. |
+| `{{HARD_CONSTRAINTS_DETAILED}}` | The selected Step 7.5 constraints in full — **this is the render target for the P12 / P13 / P16 / P19 block in Step 7.5**, plus any profile-specific rows the operator kept from the table. The inline prompt carries bullets and defers to CLAUDE.md; the doc carries the text, because a doc is read without CLAUDE.md necessarily open beside it. |
+| `{{DO_NOT_LIST_DETAILED}}` | Intake Q6 with the reason attached to each entry — a do-NOT without its reason gets re-litigated. |
+| `{{CLOSED_ITEMS_LIST}}` | Same slot and same accumulate-and-append rule as §9.1. |
+| `{{DEFERRED_WITH_PICKUP_MOMENTS}}` | The deferred/parked/FU inventory from the Step 5.5 census, every item tagged with its pickup moment per the cross-cutting rule and **ordered per Step 5.5.6 — the receiving agent's consumption order** (may point at the task ledger for the full list, but the pickup-moment STRUCTURE must be visible in the doc — grouped by moment in execution order, not a flat list). |
+| `{{KICKOFF_INSTRUCTION_DETAILED}}` | The kickoff expanded: first read, first command, and the first decision the fresh agent owns. |
+
+`{{TREE_IDENTITY_VERIFIED}}` and `{{ENV_PRECONDITIONS}}` appear in both templates and carry the same contract in each (§9.1).
 
 ### 9.2 Output writing
 
