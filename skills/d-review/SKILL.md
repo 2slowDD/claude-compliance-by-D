@@ -36,7 +36,7 @@ Execute these in order. Do not skip steps.
 
 ### 2a. Counts in a finding must survive a form-complete sweep
 
-⚠️ **Trip record 2026-09-18.** A finding asserted that an option threaded through three hops had **four** edit points. The real number was ten. The sweep had been run — but with the term `optName:` *including the colon*, which matches an explicit property and is structurally blind to shorthand forwarding (`optName,`) and to the parameter declaration (`optName = null,`). Dropping the colon returned three times the hits. The wrong number was published as a Critical, in a review whose whole job is catching that class of error.
+⚠️ **A punctuated search term silently under-counts.** Searching `optName:` *with the colon* matches an explicit property and is structurally blind to shorthand forwarding (`optName,`) and to the parameter declaration (`optName = null,`) — dropping the colon can return three times the hits. That is how an option threaded through three hops gets published as having **four** edit points when it has ten, as a Critical, in a review whose whole job is catching that class of error.
 
 Whenever a finding is going to state **how many** of something exist — call sites, edit points, emit sites, exits, handlers, consumers, flags:
 

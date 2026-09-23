@@ -31,7 +31,7 @@ Match the case-insensitive regex `(?:^|\s)--?no[-\s]ledger(?:$|\s)` against the 
 - **Skip Step 5** (d-focus-tasks pre-flight). No `d-focus-tasks` invocation; no pre-flight P11 confirmation line.
 - **Skip Step 5.5** (session-discovered FU sweep). No ledger to sweep into; the spawned-FU list is still carried inline in the prompt as a "Parallel open FUs" block (operator's responsibility to home them later).
 - **Skip Step 10** (final ledger touch). No post-emit P11 line either.
-- **In Step 7.4** (must-read sequence intake): the ledger-row auto-pre-fill is **omitted**. The operator supplies all must-read entries manually (the prompt still requires ≥1 entry from intake Q4 as before).
+- **In intake Q4** (must-read sequence, Step 7): the ledger-row auto-pre-fill is **omitted**. The operator supplies all must-read entries manually (the prompt still requires ≥1 entry from intake Q4 as before).
 - **In Step 9.1** (`{{READ_FIRST_NUMBERED_LIST}}` placeholder): omit the ledger-row-first prefix; the list contains only the operator's Q4 entries.
 - **In Step 11 audit footer:**
   - `ledger pre-flight P11 line` → `skipped (no-ledger flag)`
@@ -45,7 +45,7 @@ This clause exists because the operator may need to produce a handover prompt fo
 
 ## Execution Sequence
 
-No step is skippable. If any step halts (operator-required answer, hard error), do NOT emit the prompt until the halt is resolved.
+Run the steps in order. Six are conditionally skippable, and only by an explicit gate: Steps 3, 4, 5, 5.5 and 10 when the `no_ledger` flag matched (see Pre-flight), and Step 8.5 when no closure signal fires or `--skip-docs-closure` was passed. Nothing else may be skipped. If any step halts (operator-required answer, hard error), do NOT emit the prompt until the halt is resolved.
 
 ```
 1.   Verify global CLAUDE.md exists               (Step 1 below)
@@ -192,12 +192,12 @@ The outgoing agent is the only one who knows the follow-ups it spawned this sess
 3. **Write the missing ones** into the register section (the `## *Follow-up Register*` table, or the project's equivalent open-FU section — NOT the `> TOP ACTIVE ROW` opening, NOT `Last updated`). Each new row: id, `⏳ OPEN` + one-line state, priority, trigger/blocks. If the project has no dedicated FU/register section, create one **separate sub-section** (`### Session-discovered follow-ups`) under the active-work area rather than appending to the top-row prose.
 4. **This runs through `d-focus-tasks`** (Step 5 already invoked it; this sweep is additional rows under the same ledger write) — preserve history, never delete existing rows.
 5. **Carry the same list inline** into the handover (it becomes the §8.5 "Parallel open FUs" block of the handoff doc, or a `Parallel open FUs (resume after this task)` bullet group in an inline-only prompt) so the fresh agent sees them **without** needing to read the full ledger.
-5.6. **Order the carried list the best way FOR THE TASK — the receiving agent's consumption order, never discovery order.** The ordering scheme: (1) items the FIRST ACTION depends on or that gate it; (2) items grouped by pickup moment, in the order the next agent's execution path reaches them (task-queue order → final-review items → flip-time items → housekeeping/parallel); (3) within a group, blocking before cosmetic. Name the scheme used in one line so the fresh agent knows the order is load-bearing, not arbitrary. A flat or chronological FU list forces the fresh agent to re-derive relevance — which is exactly the context the outgoing agent was supposed to transfer.
-6. Print one line: `[focus-tasks — FU census: sources swept <list>; swept N into register: <comma id list>; M already present; carried K ordered by <scheme>]` (or `[focus-tasks — FU census: no open FUs]`).
+6. **Order the carried list the best way FOR THE TASK — the receiving agent's consumption order, never discovery order.** The ordering scheme: (1) items the FIRST ACTION depends on or that gate it; (2) items grouped by pickup moment, in the order the next agent's execution path reaches them (task-queue order → final-review items → flip-time items → housekeeping/parallel); (3) within a group, blocking before cosmetic. Name the scheme used in one line so the fresh agent knows the order is load-bearing, not arbitrary. A flat or chronological FU list forces the fresh agent to re-derive relevance — which is exactly the context the outgoing agent was supposed to transfer.
+7. Print one line: `[focus-tasks — FU census: sources swept <list>; swept N into register: <comma id list>; M already present; carried K ordered by <scheme>]` (or `[focus-tasks — FU census: no open FUs]`).
 
 **❌ Do NOT append swept FUs to the `> TOP ACTIVE ROW` / `Last updated` opening prose.** That bloats the opening (the recurring D-Master-Ledger-Trim context tax) AND buries the FUs where the register-reader won't find them. Swept FUs go in the register body table or a dedicated `### Session-discovered follow-ups` sub-section under the active-work area — never the opening.
 
-This step exists because a spec-only follow-up (`FU-…` filed in a spec §9 but never propagated to the ledger) is invisible at the register — caught 2026-05-29 by operator double-check.
+This step exists because a spec-only follow-up (`FU-…` filed in a spec §9 but never propagated to the ledger) is invisible at the register — the one surface later agents actually read.
 
 ## Step 6 — Auto-detect F-* priority
 
@@ -207,7 +207,7 @@ Sources scanned, in order, until one returns a usable F-* priority list:
 2. **Project CLAUDE.md** — read `<project_root>\CLAUDE.md` if it exists; grep for the same patterns.
 3. **Recent specs** — scan `<project_root>\docs\product-docs\04-development\` for the 5 most recently modified files; grep for F-* patterns.
 
-**Freshness check — compare to CANON, never to the calendar.** A memory file holding the F-* ladder is a CACHE of a canonical project doc; its edit date says nothing about whether it is right. *(Changed 2026-09-18. The previous rule flagged the anchor `stale` once its date passed 14 days. On the CU project that rule failed in BOTH directions: the cache carried a superseded ladder from 2026-06-17 to 2026-08-26 while being edited on 2026-07-14 — so it read "fresh" exactly when it was wrong — and afterwards it fired every 14 days on a correct ladder whose canon had not changed, training readers to ignore it.)*
+**Freshness check — compare to CANON, never to the calendar.** A memory file holding the F-* ladder is a CACHE of a canonical project doc; its edit date says nothing about whether it is right. *An age-based check fails in both directions: a cache edited recently can still carry a superseded ladder — reading "fresh" exactly when it is wrong — while a correct ladder whose canon never changed trips the alarm on a fixed cadence until readers learn to ignore it.*
 
 1. **Find the canon.** The anchor memory usually names it (e.g. `01-product/success-failure-metrics.md` §2 priority-order line). If it names none, grep `<project_root>\docs\product-docs\` for a line matching `F-SEC.*>.*F-DEG`. No canon found → tag `no-canon` and go to step 4.
 2. **Compare.** Extract the ladder from the canon line and from the memory (same regex); normalise by stripping backticks and whitespace. **This is one command — run it, do not deliberate (P16 cheap-check-first).**
@@ -232,7 +232,7 @@ Sources scanned, in order, until one returns a usable F-* priority list:
 2. Present ONE batched confirmation (AskUserQuestion-style) covering ONLY the genuinely open decisions — typically: complexity-classifier override, first-action choice if ambiguous, and Step 8.5 annotation approvals. Pre-filled slots the operator did not ask about are printed in the emitted prompt itself, which is their review surface.
 3. Everything the skill fills must still be VISIBLE and overridable — printed, never silent.
 
-**When it does not fire:** proceed with the sequential intake below unchanged. *(This path exists because a real handover request "do a /d-handover after task 8; ensure the following agent has all the needed details" collided with six sequential questions whose answers were already in session state — 2026-07-27.)*
+**When it does not fire:** proceed with the sequential intake below unchanged. *This path exists because a delegating request — "do a /d-handover after task 8; ensure the following agent has all the needed details" — collides with six sequential questions whose answers are already in session state.*
 
 Ask one at a time. Multiple-choice where possible. Operator can answer "skip" on any non-mandatory question.
 
@@ -281,7 +281,7 @@ Keyed off `profile_key` from Step 2 (not on raw path matching). Each profile pre
 
 **Full menu** (operator picks beyond defaults): P9 push gate, P10 wp-compliance, P11 ledger, P12 d-assumption tagging, P13 d-test-assumptions (Phase 1 pre-lock-in + Phase 2 post-implementation), no-Railway-state-changes, HOLD-before-code-execution, HOLD-before-push, P5 elegance, P6 autonomous bug fixing, P8 simplicity-first, P19 graded-decision-rubric (never hand over an open question), cache-bust on JS/CSS enqueue change.
 
-**Preferences (NOT hard constraints — surface via free-text intake Q6 if relevant)**: env-var additions require justification per CLAUDE.md (preference; not a ban). New env vars ARE allowed if justified; "no new env vars" is NOT a hard rule. (Removed from defaults + full menu 2026-05-13 PM per operator clarification.)
+**Preferences (NOT hard constraints — surface via free-text intake Q6 if relevant)**: env-var additions require justification per CLAUDE.md (preference; not a ban). New env vars ARE allowed if justified; "no new env vars" is NOT a hard rule, and it is deliberately absent from both the defaults and the full menu.
 
 ## Step 8 — Classify complexity (load-bearing vs inline-only)
 
@@ -454,7 +454,7 @@ The fenced copy/paste block (the inline prompt) stays clean so the operator can 
 | F-* ladder in memory ≠ the canon doc's ladder | HALT before emit; show both; operator rules; correct the memory. (Age alone is NOT a failure — see Step 6.) |
 | Must-read paths don't exist | Inline warning next to each missing path; do not block emit. |
 | Topic-slug collision (existing file) | Ask: overwrite / -r2 / update-in-place / new slug; default `-r2`. |
-| Global CLAUDE.md not found at `C:\Users\Korisnik\.claude\CLAUDE.md` | Halt — rules are load-bearing; ask operator for path or to fix. |
+| Global CLAUDE.md not found at `{CLAUDE_DIR}\CLAUDE.md` | Halt — rules are load-bearing; ask operator for path or to fix. |
 | MEMORY.md not found at expected project path | Continue; log in audit footer; F-* falls back to project CLAUDE.md or operator input. |
 | Empty conversation context (no current work topic) | Halt; ask operator to paste state summary; no fabrication. |
 | Complexity classifier disagrees with operator intent | Print classifier verdict + flags; honour operator override (`force load-bearing` / `force inline-only`). |
@@ -484,16 +484,16 @@ A successful run produces:
    - **`{{TREE_IDENTITY_VERIFIED}}`, `{{ENV_PRECONDITIONS}}` and `{{CLOSED_ITEMS_LIST}}` slots rendered** (each may read `- none` only when genuinely empty — an omitted slot is a render failure, not a judgment call). For `{{TREE_IDENTITY_VERIFIED}}` specifically: it names a **content probe with the number seen**, not just a path — a row without a probe does not satisfy this criterion, because it cannot distinguish the right tree from a stale one.
    - **Provenance marks on load-bearing state facts** (🟢 + check, or ⚠️ INHERITED) and **pickup-moment tags on every deferred item** per Step 9.1's cross-cutting rules
 4. An audit footer outside the fenced block per Step 11, with every field in Step 11's fixed list populated (including `state-verification`, `background-work`, `intake-mode`).
-4.5. Step 8.7 ran: **8.7.0 resolved tree identity by content BEFORE any state fact was gathered** (`git worktree list` run, the working tree proven by a content probe, decoy trees named); state facts in the emitted output trace to commands run in THIS step (not earlier recollection); and no live background work was silently stranded (halt-and-ask fired if anything was running).
-5. No silent decisions: every classifier verdict, ledger pick, and staleness flag is visible to the operator.
+5. Step 8.7 ran: **8.7.0 resolved tree identity by content BEFORE any state fact was gathered** (`git worktree list` run, the working tree proven by a content probe, decoy trees named); state facts in the emitted output trace to commands run in THIS step (not earlier recollection); and no live background work was silently stranded (halt-and-ask fired if anything was running).
+6. No silent decisions: every classifier verdict, ledger pick, and staleness flag is visible to the operator.
 
-6. Step 5.5 census complete: every FU **related to the handed-over task** — from ALL enumerated sources (ledger register, spec FU sections, task reports, in-code markers, predecessor handoffs, chat), not just session-spawned — is either present in the ledger register OR carried in the handover with its pickup moment; **no FU orphans in any source** left invisible to the register-reader. The carried list is **ordered per Step 5.5.6** (the receiving agent's consumption order, scheme named). Verified via the `session-FU-sweep:` audit-footer line, which names the sources swept and the ordering scheme.
+7. Step 5.5 census complete: every FU **related to the handed-over task** — from ALL enumerated sources (ledger register, spec FU sections, task reports, in-code markers, predecessor handoffs, chat), not just session-spawned — is either present in the ledger register OR carried in the handover with its pickup moment; **no FU orphans in any source** left invisible to the register-reader. The carried list is **ordered per Step 5.5.6** (the receiving agent's consumption order, scheme named). Verified via the `session-FU-sweep:` audit-footer line, which names the sources swept and the ordering scheme.
 
 **Conditional ACs** (must hold when their precondition fires):
 
-6. **Multi-ledger disambiguation** — if Step 3 finds ≥2 ledgers and no decisive heuristic winner, print a numbered list (path + last-modified + first-200-chars of top active row) and halt pending operator pick.
-7. **Step 4 mismatch halt format** — when keyword-overlap is <2, print the exact phrasing: `The ledger's top active row reads: "<row>". The current session has been working on "<inferred-topic>". Is this current work a sub-thread of the active row, or does the ledger need updating before I write the handover prompt?` (Verbatim text; only the two `<...>` slots vary.)
-8. **Operator override of classifier** — when operator passes `force load-bearing` or `force inline-only` after the classifier verdict prints, respect the override and log `operator override: yes` in the audit footer field. Without override, the field reads `no`.
-9. **First-action "other (free text)"** — collect both `{{NEXT_SKILL}}` and `{{FIRST_ACTION_VERB}}` before rendering; if either is missing, halt and re-ask rather than rendering with placeholders.
-10. **Global CLAUDE.md missing** — Step 1 halts with the exact error string; audit footer is NOT printed (no emit).
-11. **`additional-working-dirs: unavailable`** — when runtime does not expose the additional-working-directories block, still produce a valid prompt using paths (1) + (2) of Step 3 and log the unavailability in the audit footer.
+C1. **Multi-ledger disambiguation** — if Step 3 finds ≥2 ledgers and no decisive heuristic winner, print a numbered list (path + last-modified + first-200-chars of top active row) and halt pending operator pick.
+C2. **Step 4 mismatch halt format** — when keyword-overlap is <2, print the exact phrasing: `The ledger's top active row reads: "<row>". The current session has been working on "<inferred-topic>". Is this current work a sub-thread of the active row, or does the ledger need updating before I write the handover prompt?` (Verbatim text; only the two `<...>` slots vary.)
+C3. **Operator override of classifier** — when operator passes `force load-bearing` or `force inline-only` after the classifier verdict prints, respect the override and log `operator override: yes` in the audit footer field. Without override, the field reads `no`.
+C4. **First-action "other (free text)"** — collect both `{{NEXT_SKILL}}` and `{{FIRST_ACTION_VERB}}` before rendering; if either is missing, halt and re-ask rather than rendering with placeholders.
+C5. **Global CLAUDE.md missing** — Step 1 halts with the exact error string; audit footer is NOT printed (no emit).
+C6. **`additional-working-dirs: unavailable`** — when runtime does not expose the additional-working-directories block, still produce a valid prompt using paths (1) + (2) of Step 3 and log the unavailability in the audit footer.
