@@ -195,8 +195,8 @@ Composes with `d-focus-tasks` (hard sub-step) and the `github-push-warning` rule
 
 Invoke as `/d-handover -no-ledger ...` (or `/d-handover -no ledger ...`, `--no-ledger`, `--no ledger` — all case-insensitive). The flag suppresses the **entire ledger interaction** for that single invocation:
 
-- Steps 3 (locate ledger), 4 (ledger/session mismatch check), 5 (`d-focus-tasks` pre-flight), and 10 (final ledger touch) all skip.
-- The ledger top row is omitted from the auto-pre-filled must-read list (Step 7.4 / placeholder `{{READ_FIRST_NUMBERED_LIST}}`).
+- Steps 3 (locate ledger), 4 (ledger/session mismatch check), 5 (`d-focus-tasks` pre-flight), 5.5 (FU census) and 10 (final ledger touch) all skip.
+- The ledger top row is omitted from the auto-pre-filled must-read list (intake Q4 / placeholder `{{READ_FIRST_NUMBERED_LIST}}`).
 - The Step 11 audit footer reads `skipped (no-ledger flag)` for both ledger P11 line fields and the `ledger path` field.
 - The handover prompt is still emitted normally in its single fenced code block.
 
