@@ -55,7 +55,7 @@ No step is skippable. If any step halts (operator-required answer, hard error), 
 5.   Invoke d-focus-tasks                         (P11 pre-flight; Step 5)
 5.5. Session-discovered follow-up sweep           (Step 5.5 — sweep spawned FUs into ledger register)
 6.   Auto-detect F-* priority                     (Step 6)
-7.   Structured intake                            (Step 7; check Step 7.0 delegated-intake predicate FIRST)
+7.   Structured intake                            (Step 7; evaluate the Step 7.1 delegated-intake predicate before Q1)
 8.   Classify complexity                          (Step 8 — single post-intake pass)
 8.5. Docs-debt closure pre-pass                   (Step 8.5 — fires on closure-signal detection; operator-reviewable)
 8.7. Pre-emit state verification + live-work check (Step 8.7 — state facts from tool output only; halt on stranded background work)
@@ -89,7 +89,7 @@ This skill runs on more than one machine (PC ⇄ laptop migrations are a fact of
 
 Print the resolved profile on one line (`machine profile: HOME=<…> AI_ROOT=<…>`) before continuing.
 
-**Migration rule:** a new machine means this table RESOLVES differently — it never means editing this skill. If you find yourself remapping paths in this file after a machine change, stop: the fix belongs in this block alone. *(Added 2026-07-27: the published copy shipped the prior machine's literal paths and they survived a full migration unnoticed until a push-day diff caught them.)*
+**Migration rule:** a new machine means this table RESOLVES differently — it never means editing this skill. If you find yourself remapping paths in this file after a machine change, stop: the fix belongs in this block alone. Literal paths written into a skill survive a machine migration unnoticed — they fail silently on the new machine rather than erroring at the point of the mistake.
 
 ### 2.1 Supported roots + resolution table
 
@@ -223,7 +223,7 @@ Sources scanned, in order, until one returns a usable F-* priority list:
 
 ## Step 7 — Structured intake
 
-### Step 7.0 — Delegated-intake path (check this predicate FIRST)
+### Step 7.1 — Delegated-intake path (evaluate this predicate before Q1)
 
 **Observable predicate:** the operator's handover request delegates the content — phrasing like "ensure the next agent has all the needed details", "you fill in the details", "package everything it needs", or a standing directive given earlier in the session ("do a d-handover after task N"). A pasted state summary (the existing Triggers-section rule) is also delegation for Q2 specifically.
 
@@ -300,151 +300,27 @@ A handover is **load-bearing** (writes a `.md` doc in addition to inline prompt)
 
 Print the classifier result + which flags fired, so the operator can override (`force load-bearing` / `force inline-only`).
 
-## Step 8.5 — Docs-debt closure pre-pass (added 2026-05-13 PM)
+## Step 8.5 — Docs-debt closure pre-pass
 
 **Goal**: detect and remediate stale-doc state for any just-closed-or-superseded work-track BEFORE emitting the handover prompt. Fresh agents picking up the new work-track shouldn't be misled by upstream docs (specs / memos / plans / kickoff handoffs) that still reflect a pre-closure state.
 
-This step exists because closure events (work-track parking, supersession, rollback, ratification, refutation) leave a trail of related artifacts that need annotation: a spec marked "shipped" when it was just rolled back, a parking memo that still says "parked" when the work has unparked, a kickoff handoff that doesn't yet point at the closure spec. Without this pass, every closure-handover requires manual operator follow-up to fix the doc graph — exactly the friction the operator surfaced 2026-05-13 PM ("I'd like the handover skill also triggers the proper doc debt closure, so I don't have to do this again").
+Closure events (work-track parking, supersession, rollback, ratification, refutation) leave a trail of related artifacts that need annotation: a spec marked "shipped" when it was just rolled back, a parking memo that still says "parked" when the work has unparked, a kickoff handoff that doesn't yet point at the closure spec. Without this pass, every closure-handover leaves the operator to fix the doc graph by hand.
 
-### 8.5.1 When this step fires
+**Full procedure — read it when the step fires:** `references/docs-debt-prepass.md` (candidate discovery, the four-state staleness classification, the operator-review gate and its response grammar, apply/verify passes, audit-footer shapes, failure modes).
 
-Trigger detection — keyword scan over intake Q2 (state-summary) for closure signals:
+**Fires when** intake Q2 (state-summary) carries a closure signal — `closed` / `superseded` / `rolled back` / `parked` / `unparked` / `obsolete` / `deprecated` / `ratified` / `dropped` / `refuted` / `vindicated` / `Step N of Bundle X` / a completion phrasing such as `Tasks 0–8 ALL COMPLETE` (a work phase finishing IS a closure event). Full signal table in the reference.
 
-| Signal pattern | Example |
-|---|---|
-| `closed`, `CLOSED`, `work-track closed`, `work-track closure` | "wrapper-redesign work-track CLOSED" |
-| `superseded`, `SUPERSEDED`, `supersede` | "rev 2.1 SUPERSEDED by …" |
-| `rolled back`, `rollback`, `revert` | "rollback shipped at `2a1b59d`" |
-| `parked`, `PARKED`, `unparked`, `UNPARKED` | "Phase 2 UNPARKED" |
-| `obsolete`, `OBSOLETE`, `deprecated`, `DEPRECATED` | "Tasks 11-18 obsolete" |
-| `ratified`, `approved` (when in completion context) | "spec ratified by d-review r2" |
-| `dropped`, `DROPPED`, `refuted`, `REFUTED`, `vindicated`, `VINDICATED` | "hypothesis REFUTED" |
-| `Step N of Bundle X` (bundle-progression closure) | "Step 1 of B1 shipped" |
-| `complete`, `COMPLETE`, `all complete`, `Tasks N–M complete` (completion context — a work phase finishing IS a closure event) | "Tasks 0–8 ALL COMPLETE" *(added 2026-07-27: this phrasing matched no pattern and the step only fired by agent judgment)* |
-
-If NONE match → step is a no-op; audit footer reads `docs-closure: skipped (no closure signals in Q2 summary)`.
+If none match → no-op; audit footer reads `docs-closure: skipped (no closure signals in Q2 summary)`.
 
 **Operator overrides** (CLI-style args on d-handover invocation, parsed per the no-ledger flag grammar pattern):
 - `--skip-docs-closure` or `-skip-docs-closure` → skip this step regardless of detection
 - `--force-docs-closure` or `-force-docs-closure` → run this step even when no signals match
 
-### 8.5.2 Candidate-doc discovery
+**The step is gated on the operator.** It proposes annotations, prints the numbered candidates list, and waits — it never edits a doc unprompted, never renames a file, never rewrites spec content, never commits, and never touches `master-tasks.md` (that is d-focus-tasks, Step 5). Response grammar and the rest of the procedure: `references/docs-debt-prepass.md`.
 
-When the step fires:
-
-1. **Touched-files this session** — start with files the agent has read, edited, written, or staged in the current turn AND prior turns of the current agent session. Per the d-focus-tasks "touched paths" definition.
-2. **Walk the work-track artifact graph** outward from each touched file:
-   - Specs in `<project_root>/docs/product-docs/04-development/` matching topic keywords from intake Q1 (topic slug) or intake Q2 (state summary)
-   - Sibling d-reviews matching `<spec-name>-review*.md` patterns in the same folder
-   - Memory files in `~/.claude/projects/<slug>/memory/` indexed in `MEMORY.md`, matching topic keywords
-   - Evidence memos and verdict files in `<project_root>/debug-evidence/<date>/` referenced by any in-scope spec
-   - Task plans in `<project_root>/CU Scanner Railway/.../tasks/` matching topic keywords
-2.5. **The immediately-prior handoff doc is ALWAYS a candidate when writing a successor.** If this handover writes `<slug>-handoff-rN` (or a dated successor to an existing handoff), the rN-1 doc enters the candidates list automatically, default classification HISTORICAL with a proposed "superseded by rN, do not act on its queue" annotation. The operator still approves via the 8.5.4 gate. *(Added 2026-07-27: the r1→r2→r3 chain each needed this annotation and it only happened by agent judgment.)*
-3. **De-duplicate** by absolute path.
-4. **Cap at ~20 candidates max** — beyond that, operator-time-cost outweighs benefit; surface a `>20 candidates detected — focus operator review on top N by relevance` warning and present only the top 20.
-
-### 8.5.3 Staleness classification
-
-For each candidate doc, classify into ONE of four states:
-
-| State | Detection signal | Action |
-|---|---|---|
-| **STALE** | Top-of-file `Status:` header (or `**Status:**` line) predates the closure event AND its wording contradicts the new state. Example: spec says "SHIPPED" when work-track has now rolled back. | Propose status-header annotation. |
-| **NEEDS-CROSS-REF** | Doc references an upstream artifact (by path) whose state has changed in this session; downstream's reference is stale or missing. Example: parking memo references mobile-determinism work which has now closed; cross-ref to closure spec missing. | Propose adding cross-reference. |
-| **HISTORICAL** | Doc is intentionally pre-closure (kickoff handoffs, intermediate d-reviews, in-progress brainstorm artifacts). Should NOT be edited to claim current-state; should gain a "(HISTORICAL — superseded by …)" header annotation that redirects future readers. | Propose historical annotation. |
-| **UP-TO-DATE** | Doc's status header / cross-refs already reflect the closure. (This catches docs operator may have already annotated manually mid-session.) | No edit; report as up-to-date. |
-
-### 8.5.4 Operator-review gate
-
-Print a numbered candidates list with classification + proposed annotation summary:
-
-```
-Docs-debt closure pre-pass — N candidates detected:
-
-1. <relative-path> — STALE
-   Reason: <one-line reason>
-   Proposed annotation (top of file):
-   <2-line preview of proposed status header text>
-
-2. <relative-path> — NEEDS-CROSS-REF
-   Reason: missing pointer to <upstream-path>'s current state
-   Proposed annotation: <one-line insert preview>
-
-3. <relative-path> — HISTORICAL
-   Reason: kickoff handoff for now-closed work-track
-   Proposed annotation: add (HISTORICAL — superseded by <closure-spec>) note
-
-4. <relative-path> — UP-TO-DATE
-   (no edit; manually annotated already)
-
-How to respond:
-- "all" → apply all proposed annotations
-- "1,3" or "1-3" → apply only these
-- "none" → skip docs-closure for this handover; flag in audit footer
-- "edit N: <text>" → operator pastes desired annotation for candidate N
-- "skip N" → mark candidate N as deliberately-unannotated for this pass
-```
-
-Wait for operator response. Honor exactly. Do not silently expand scope.
-
-### 8.5.5 Apply approved annotations
-
-For each approved candidate:
-1. Read the file (required by Edit tool).
-2. Identify insertion point — usually the top-of-file `Status:` line or a "## N. Disposition update" subsection.
-3. Apply annotation, preserving historical content (per d-focus-tasks "preserve historical entries" discipline). Don't delete pre-closure text; add the post-closure annotation.
-4. For each successfully applied annotation, log: `docs-closure: annotated <path>`.
-5. If an Edit fails (file not found, conflict, etc.), log the failure + skip; do NOT halt the d-handover flow.
-
-### 8.5.6 Verification pass
-
-After applying, print summary:
-
-```
-docs-closure pre-pass complete:
-- annotated: <count> (paths listed above)
-- skipped (operator declined): <count>
-- up-to-date (no edit needed): <count>
-- failed (errors): <count, with error reasons>
-- candidates total: <count>
-```
-
-### 8.5.7 Audit footer addition
-
-In Step 11 audit footer, ADD a new field:
-
-```
-docs-closure: <annotated>/<total-candidates> (skipped: <count>; up-to-date: <count>; failed: <count>)
-```
-
-OR when step is a no-op:
-```
-docs-closure: skipped (signals not detected in Q2 summary)
-```
-
-OR when explicitly bypassed:
-```
-docs-closure: skipped (operator --skip-docs-closure flag)
-```
-
-### 8.5.8 Failure modes + escape valves
-
-| Failure | Behaviour |
-|---|---|
-| No closure signals AND no operator force | Skip step; audit footer reflects no-op. Do NOT prompt. |
-| >20 candidates detected | Cap at 20 by relevance score (recency of edit, keyword-overlap with Q2); surface warning. |
-| Operator declines all (`none`) | Skip step; flag in audit footer. Continue to Step 9 render. |
-| Edit fails on one candidate | Log failure + skip; continue with remaining candidates; report in summary. |
-| Operator asks to halt mid-review | Honor; abort Step 8.5; continue to Step 9 with partial annotations applied. |
-| Stale-doc would require operator-only judgement (e.g., AI uncertain whether HISTORICAL or STALE) | Classify as `AMBIGUOUS` with both options; operator picks. |
-| Candidate is being written by LIVE background work (Step 8.5 runs before Step 8.7.2's live-work check, so this ordering interaction is reachable) | Classify `AMBIGUOUS — mid-write`; propose `skip N` now; after the 8.7.2 halt resolves (wait/close/document), re-run the pre-pass on that candidate alone. Never annotate a file another process is writing. |
-
-### 8.5.9 What this step does NOT do
-
-- Does not rename files (filename changes are operator-judgement; flag in summary if observed but don't act).
-- Does not rewrite spec content — only adds annotations / status updates / cross-references at the top of files or in dedicated subsections.
-- Does not commit annotations to git. Product-docs is non-git; memory files are non-git. Operator commits any tracked-file annotations (task plans, repo specs) separately if desired.
-- Does not modify `master-tasks.md` (the ledger; that's d-focus-tasks's responsibility per Step 5).
+Report the outcome in the Step 11 audit footer as
+`docs-closure: <annotated>/<total-candidates> (skipped: <count>; up-to-date: <count>; failed: <count>)`,
+or `docs-closure: skipped (<reason>)` when the step no-ops or is bypassed.
 
 ## Step 8.7 — Pre-emit state verification + live-work check
 
@@ -466,7 +342,7 @@ Write the resolved tree into the handover as an explicit, cited line — path **
 
 **Also name the decoys.** If a differently-named tree looks authoritative (shorter path, the repo's own name doubled, the one the last handover used), say so and say why it is NOT — otherwise the fresh agent rediscovers the trap at their own cost.
 
-*(Added 2026-08-15. Trip record: a handover named the repo's own top-level checkout as the place to do the work. Every tree fact it gave was correct and first-hand verified — branch, HEAD, and a stale local default branch vs the remote one — and it was still the wrong tree. That checkout held a 159-line, 4-export copy of the target module while the remote default branch had 356 lines and 8 exports, so the planned export-surface pin would have pinned a surface that does not exist on the default branch — and passed while doing it. Measured at the time: 40 worktrees, 38 distinct HEADs, exactly ONE sitting at the remote default branch. Picking by name is a 1-in-40 shot. The tell that should have fired: many worktrees, plus a brief that names a path without naming a content probe.)*
+*Why a content probe, not a path: every tree fact about the wrong checkout can be correct and first-hand verified — branch, HEAD, local-vs-remote default — and the checkout still be the wrong one. A stale checkout can hold a 159-line, 4-export copy of a module whose default-branch version has 356 lines and 8 exports; an export-surface pin written against it pins a surface that does not exist, and passes while doing it. A repo here has run 40 worktrees across 38 distinct HEADs with exactly ONE at the remote default branch — picking by name is a 1-in-40 shot. **The tell:** many worktrees, plus a brief that names a path without naming a content probe.*
 
 ### 8.7.1 State facts come from tool output, not recollection
 
@@ -489,7 +365,7 @@ Enumerate in-flight work the fresh agent cannot see: background shell tasks, run
 - **Something is running →** halt and ask the operator: (a) wait for completion and fold the result into the handover, (b) close it out now, or (c) document it as **state-on-disk** — file paths, expected completion signal, and how to verify/resume — because agent handles and monitors DIE across sessions; an agent ID in a handover is a dangling pointer. Never emit silently over live work.
 - **Nothing running →** record `background-work: none` for the audit footer.
 
-*(Added 2026-07-27: a session with four interruptions showed every interruption killed live subagent monitors; work survived only because state was progressively written to disk. A handover emitted mid-flight would have stranded a running implementer invisibly.)*
+*Why this check exists: an interruption kills live subagent monitors, so work survives only where state was progressively written to disk. A handover emitted mid-flight strands a running implementer invisibly.*
 
 ### 8.7.3 Progressive-ledger corollary (one line, load-bearing)
 

@@ -293,8 +293,21 @@ The ledger is loaded into context every session and read FIRST by every fresh ag
 - **Mark stale-but-kept entries** rather than deleting: when a row turns out shipped/closed/wrong, update its status in place (and link the correcting commit/evidence), preserving the original text.
 
 ### Trim / archive mechanics (when the opening bloats)
-- Move aged opening blocks into the in-file `## Superseded Top-Active-Row History`, or for even-older generations into a companion `master-tasks-archive.md` (newest-first, verbatim, with a forward `📁 Archive:` pointer in the live file and a back-pointer in the archive).
-- **Back up first.** Product-docs ledger trees are often NOT git-tracked — a timestamped `.bak` copy is the only safety net. Before any scripted edit: take the `.bak`, run abort-before-write conservation asserts (every moved block present verbatim in the output; nothing duplicated into the opening; body unchanged), then verify counts after the write. Reading the bloated single-line top row may exceed a read tool's token cap — use a sandbox/script to slice it.
+
+The ledger is the first read for every fresh agent and is loaded into context, so an overgrown opening is a recurring context tax. **Trim the opening, not the body.**
+
+**Fires:** on operator request to trim/reduce/lean the ledger opening (or `d-master-ledger-trim`); OR proactively when the live ledger has materially bloated (≈ >50 KB / >1000 lines; the `Last updated` header has become one accreted multi-entry paragraph; the `Previous top active row` stack exceeds ~5 superseded entries) — surface + offer, never trim silently.
+
+**Action — reorganize, NEVER delete.** Move aged opening blocks into the in-file `## Superseded Top-Active-Row History`, or for older generations into a companion `master-tasks-archive.md` (created if absent), newest-first, verbatim, under labeled sections:
+- `Last updated` history — keep ONLY the newest entry in the live file; move the chained `Earlier…/Prior…` tail.
+- The stacked `Previous top active row` entries + `HISTORICAL` notes in the opening.
+- The `Archived milestone progression` section + other already-historical opening blocks.
+
+Live file keeps: title, `TOP ACTIVE ROW` banner, lean (newest-only) `Last updated`, orientation lines, the CURRENT top active row, and the entire working body (How-To-Read, Current Work Queue, registers, Recent Commit Ledger). Wire a `📁 Archive:` forward-pointer in the live file and a back-pointer in the archive.
+
+**Mechanism — back up first.** Product-docs ledger trees are often NOT git-tracked, so a timestamped `.bak` copy is the only safety net; bloated entries are often single physical lines too large to load for Edit/Write, so reading the top row may exceed a read tool's token cap — slice it in a sandbox/script. A scripted transform runs **only after operator OK** (it may override a no-script-write policy and it mutates a load-bearing file), and ALWAYS with: (1) the `.bak` as the first write; (2) abort-before-write conservation asserts — index-coverage (no line dropped), exact split-concat for any intra-line split, each moved block verbatim-in-archive and absent-from-live (guard the empty-string `includes('')` trap), body preserved verbatim; (3) a before/after size report naming what moved.
+
+**Do NOT:** delete any content; reorder the working body (trim only the opening / already-historical sections); run the script without the backup + the conservation asserts; treat this as a push event when the ledger sits in an untracked product-docs tree (it is local hygiene — no commit/push unless the ledger lives in a tracked repo).
 
 ## Participating skills convention
 

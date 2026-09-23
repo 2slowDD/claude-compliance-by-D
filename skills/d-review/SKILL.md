@@ -1,5 +1,5 @@
 ---
-name: D-review
+name: d-review
 description: Use when reviewing a spec or design doc that belongs to a larger project. Performs a staff-engineer review flagging gaps, inconsistencies, ambiguity, errors, improvements, testability issues, risks, and missing acceptance criteria — ending with a go/no-go verdict. Triggers on "review this spec", "check my spec", "D-review", or when the user pastes or points at a design doc for critique.
 ---
 
@@ -126,7 +126,7 @@ If **blocked-on-context** — what I need before I can fairly review:
 
 ## 5. Inline Chat Output
 
-⚠️ **Operator rulings 2026-09-18 (2nd trip — this section previously prescribed a Top-3 list and an inline findings summary, and caused the over-write it now forbids; the counts line was reinstated by a follow-up ruling the same day).** The operator relays this block by copy/paste to the spec's origin agent. Anything the origin agent does not need is noise they have to delete by hand.
+The operator relays this block by copy/paste into the spec's origin agent's prompt. Anything the origin agent does not need is noise they delete by hand — so the block carries the verdict, the counts, the file path, and answers to what was asked, and nothing else.
 
 After writing the file, print **ONE fenced block** containing **exactly** these parts and nothing else:
 
@@ -143,7 +143,7 @@ YOUR <N> SCRUTINY ITEMS
 …
 ```
 
-The `VERDICT:` line carries a **colour marker before the verdict word** (operator ruling 2026-09-18 — "red if needs correction, green if ready to write plans"): 🔴 `needs-revision`, 🟢 `ready-to-plan`, 🟡 `blocked-on-context`. A marker, not ANSI escapes and not markdown emphasis — the block is copy/pasted into another agent's prompt, where escape sequences become garbage and `**bold**` inside a fence is literal. The marker is also the house convention (🔴/🟢/🟡 throughout CLAUDE.md and the memory rules). Never emit the verdict word without its marker, and never let the marker disagree with §6's rubric.
+The `VERDICT:` line carries a **colour marker before the verdict word** — 🔴 `needs-revision`, 🟢 `ready-to-plan`, 🟡 `blocked-on-context` — so the state reads at a glance: red means correct it, green means write the plans. A marker, not ANSI escapes and not markdown emphasis — the block is copy/pasted into another agent's prompt, where escape sequences become garbage and `**bold**` inside a fence is literal. The marker is also the house convention (🔴/🟢/🟡 throughout CLAUDE.md and the memory rules). Never emit the verdict word without its marker, and never let the marker disagree with §6's rubric.
 
 The `Counts:` line is **required on every review**, immediately under `VERDICT:`, in exactly that order and separator style (` · `), all five figures always present — a zero is written `0`, never omitted. It is the operator's triage signal; it is the ONLY aggregate the block carries.
 
