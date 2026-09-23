@@ -20,6 +20,8 @@ When the live `master-tasks.md` opening has bloated, relocate the historical/sup
 
 ## The procedure (the load-bearing part)
 
+> **Canonical copy:** `skills/d-focus-tasks/SKILL.md` → "Trim / archive mechanics". The summary below is kept here so the rule reads standalone; if the two ever disagree, the skill wins.
+
 The bloated entries are frequently **single physical lines too large to load** for the Edit/Write tools (e.g., a `Last updated` line that has grown to tens of thousands of characters — one line). Editing in place is then impossible (no loadable `old_string`), and a full Write can't reconstruct unloadable content. The only reliable mechanism is a **verified scripted text transform**, and it MUST be done safely:
 
 1. **Get operator OK first.** A scripted file-write may override a "never write files via script" tooling policy, and it mutates a load-bearing file — so confirm before running. (This is a hard-to-reverse, high-blast-radius action.)
@@ -50,7 +52,7 @@ Keep the live master ledger (`master-tasks.md`) lean at the top. The ledger is t
 - The `Archived milestone progression` section + other already-historical opening blocks.
 Live file keeps: title, `TOP ACTIVE ROW` banner, lean (newest-only) `Last updated`, orientation lines, the CURRENT top active row, and the entire working body (How-To-Read, Current Work Queue, registers, Recent Commit Ledger). Trim the opening, not the body.
 
-**Mechanism:** bloated entries are often single physical lines too large to load for Edit/Write. Use a VERIFIED scripted transform — only after operator OK (it may override a no-script-write policy + mutates a load-bearing file), and ALWAYS with: (1) a `.bak` backup as the first write; (2) abort-before-write conservation asserts — index-coverage (no line dropped), exact split-concat for any intra-line split, each moved block verbatim-in-archive + absent-from-live (guard the empty-string `includes('')` trap), body preserved verbatim; (3) report before/after sizes + what moved. Wire a `📁 Archive:` forward-pointer in the live file + a back-pointer in the archive.
+**Mechanism + full procedure:** see `skills/d-focus-tasks/SKILL.md` → "Trim / archive mechanics". This rule file carries the trigger and the Do-NOT list; the skill owns the ledger and the transform.
 
 **Do NOT:** delete any content; reorder the working body (trim only the opening / already-historical sections); run the script without the backup + the conservation asserts; treat this as a push event if the ledger is in an untracked product-docs tree (it is local hygiene — no commit/push unless the ledger lives in a tracked repo).
 ```

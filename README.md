@@ -207,18 +207,21 @@ Use this when the work being handed off is unrelated to any project ledger — e
 **Step 1 — Copy the skill files**
 
 ```bash
-mkdir -p ~/.claude/skills/d-handover/templates
+mkdir -p ~/.claude/skills/d-handover/templates ~/.claude/skills/d-handover/references
 cp skills/d-handover/SKILL.md ~/.claude/skills/d-handover/SKILL.md
 cp skills/d-handover/templates/inline-prompt.md ~/.claude/skills/d-handover/templates/inline-prompt.md
 cp skills/d-handover/templates/handoff-doc.md ~/.claude/skills/d-handover/templates/handoff-doc.md
+cp skills/d-handover/references/docs-debt-prepass.md ~/.claude/skills/d-handover/references/docs-debt-prepass.md
 ```
 
 On Windows (PowerShell):
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\d-handover\templates"
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\d-handover\references"
 Copy-Item "skills\d-handover\SKILL.md" "$env:USERPROFILE\.claude\skills\d-handover\SKILL.md"
 Copy-Item "skills\d-handover\templates\inline-prompt.md" "$env:USERPROFILE\.claude\skills\d-handover\templates\inline-prompt.md"
 Copy-Item "skills\d-handover\templates\handoff-doc.md" "$env:USERPROFILE\.claude\skills\d-handover\templates\handoff-doc.md"
+Copy-Item "skills\d-handover\references\docs-debt-prepass.md" "$env:USERPROFILE\.claude\skills\d-handover\references\docs-debt-prepass.md"
 ```
 
 **Step 2 — Verify**
