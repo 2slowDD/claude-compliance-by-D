@@ -15,6 +15,15 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/wp-compliance` (Rules 30–34, from a WordPress.org submission audit)
+
+- **Rule 30 — verify the declared minimum PHP version.** Syntax newer than `Requires PHP` (readonly properties, `true` types) is a fatal error on older PHP that only shows on the first request loading the class. Verify statically with PHPCompatibility 10.x (9.3.5 cannot see PHP 8.1+ features) and at runtime with tests on the minimum PHP in CI.
+- **Rule 31 — no outbound request before the user opts in** (WordPress.org guideline 7), with the External services readme section checked against real payloads and a `->never()` test for the no-opt-in state.
+- **Rule 32 — uninstall deletes what you own, never a prefix you share** with another component; closure-wrapped `uninstall.php`, `wp_unschedule_hook()`, secrets removed, falsifiable test.
+- **Rule 33 — content hashes in tests must not depend on line endings** (extends Rule 28).
+- **Rule 34 — readme.txt headers as the directory parses them:** major-only `Tested up to`, usernames in `Contributors`, section limits in words, license normalization.
+- Pre-code checklist, subagent compliance block and Quick Release Checklist gain the matching items; banner and README now say 34 rules.
+
 ### Changed — `skills/d-handover`, `skills/d-focus-tasks`, `skills/d-review` (prompt-audit cleanup)
 
 - **Dated `*(Added <date>: …)*` parentheticals removed across `d-handover`** — a prompt is read by an agent that never saw the prior version, so a changelog of the rule's own history implies alternatives that do not exist. Three were rewritten to the behaviour they encode; the Step 8.7.0 one keeps its mechanism (a stale checkout holding a 159-line/4-export copy of a module whose default-branch version has 356 lines and 8 exports; 40 worktrees across 38 HEADs making name-picking a 1-in-40 shot) and loses the incident framing.

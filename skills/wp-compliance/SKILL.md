@@ -4,7 +4,7 @@ description: WordPress plugin security compliance. Invoke before writing, editin
 type: rigid
 ---
 
-> **[WP Code Compliance applied — 29 rules active]**
+> **[WP Code Compliance applied — 34 rules active]**
 
 This skill is rigid. Follow every rule exactly. Do not skip or relax any item.
 
@@ -42,6 +42,8 @@ Run through this checklist before writing any code:
 - No hardcoded API keys, tokens, or credentials
 - No eval(), unserialize() on untrusted data, or dynamic includes from user input
 - Every add_action/add_filter callback parameter is `mixed` (or nullable), normalized inside the body — a non-nullable `string`/`int`/`array` type on a hook callback is an uncatchable fatal waiting for a caller that passes null (Rule 29)
+- No syntax newer than the plugin header's `Requires PHP` — `readonly`, enums, `never`, `true`/`null` types are fatals on older PHP (Rule 30)
+- No outbound HTTP request before the user explicitly opts in — not on activation, `admin_init`, page load or cron (Rule 31)
 - Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 Safe order: validate input → sanitize when needed → check capability → verify nonce → perform action safely → escape output late
@@ -66,6 +68,8 @@ Run through this before writing any code. Every item must be addressed:
 - [ ] No hardcoded API keys, tokens, or credentials
 - [ ] No `eval()`, `unserialize()` on untrusted data, or dynamic includes from user input
 - [ ] Every hook callback parameter is `mixed` (or nullable) and normalized in the body — never a non-nullable `string`/`int`/`array` type (Rule 29)
+- [ ] No syntax newer than the header's `Requires PHP` (Rule 30)
+- [ ] No outbound HTTP request before an explicit user opt-in (Rule 31)
 - [ ] Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 ---
@@ -142,6 +146,24 @@ Do not let request parameters decide remote URLs, webhook targets, download loca
 **14. Do not eval, unserialize, or execute user-controlled content.**
 Do not use `eval()`, dynamic includes from user input, shell execution functions, or `unserialize()` on untrusted data. These are high-risk patterns that can get a plugin rejected or pulled if exploited.
 
+**31. Do not contact an external service before the user opts in.**
+WordPress.org guideline 7: a plugin may not call an external server — key registration, "phone home", telemetry, balance or license checks — until the user has explicitly agreed. Activation hooks, `admin_init`, `plugins_loaded`, cron events and page-load AJAX are not consent.
+
+- The opt-in is a deliberate action (a button, saving an API key), placed next to a plain statement of what is sent and to whom, with links to the service's terms and privacy policy.
+- Gate every automatic call (a balance refresh on page load, a readiness check, a heartbeat poll) on the opt-in state: no key saved means no request.
+- A retry cron may exist only because the opt-in scheduled it.
+- List every service under `== External services ==` in readme.txt: what data is sent, when, and to which host. Check each claim against the real request payload, not against memory; operational events and "hashed" fields count as data sent.
+
+```php
+// Wrong — calls the service the moment the plugin is activated.
+register_activation_hook( __FILE__, array( 'My_Plugin_Keys', 'register_free_key' ) );
+
+// Right — only an administrator's click, with nonce + capability, triggers it.
+add_action( 'wp_ajax_my_plugin_request_key', array( $ajax, 'request_key' ) );
+```
+
+Test it: in the no-opt-in state, mock every `wp_remote_*` function with `->never()` and call the page-load handlers. *(flagged 2026-09-26 after WordPress.org compliance audit)*
+
 ---
 
 ### 5 — Secrets, Logs & Cleanup
@@ -154,6 +176,14 @@ Do not hardcode API keys, license secrets, or private tokens. Do not print them 
 
 **17. Do not ignore uninstall and cleanup security.**
 Do not leave behind unsafe options, cron jobs, temp files, logs, or custom tables with sensitive data after uninstall. Uninstall routines must include proper permission checks.
+
+**32. On uninstall, delete what you own — never a prefix you share.**
+If another component (a companion plugin, a service plugin, an older product line) uses the same option prefix, `DELETE … WHERE option_name LIKE 'prefix\_%'` also deletes its data on every site where both are installed. List option and transient names explicitly; use a wildcard only for per-record keys that are unambiguously yours (`prefix_job_%`).
+
+- Wrap the body of `uninstall.php` in a closure — `( static function () { … } )();` — so it defines no global variables for PrefixAllGlobals to flag.
+- Clear every scheduled hook with `wp_unschedule_hook()`.
+- Delete stored secrets (API keys, tokens, claim tokens) too; a secret left after deletion is Rule 10's failure in a place nobody looks.
+- Test it falsifiably: assert the shared-prefix wildcard never appears in the executed SQL, and confirm the test goes red when you put one back. *(flagged 2026-09-26 after WordPress.org compliance audit)*
 
 **18. Do not hide problems with phpcs ignores if the code is actually unsafe.**
 Do not silence Plugin Check or PHPCS warnings unless the warning is a genuine false positive you can justify. The real fix is usually the right fix.
@@ -428,6 +458,53 @@ Five things make this worse than an ordinary type bug:
 
 ---
 
+### 6 — Compatibility & Release
+
+**30. Verify the declared minimum PHP version — do not assume it.**
+`Requires PHP` in the plugin header is a promise. Syntax newer than that version is a fatal error on older PHP, usually on the first request that autoloads the class rather than at activation, so the plugin appears to install fine. Common offenders: `readonly` properties, enums, `never` and first-class callables (8.1); `true`/`null`/`false` as standalone or union types with `true`, readonly classes (8.2); typed class constants (8.3).
+
+```php
+// Wrong for Requires PHP: 8.0 — both lines are fatal on 8.0.
+public function __construct( private readonly string $api_key ) {}
+public function run(): true|\WP_Error { /* … */ }
+
+// Right — identical behavior on 8.2+, and it loads on 8.0.
+public function __construct( private string $api_key ) {}
+public function run(): bool|\WP_Error { /* … */ }
+```
+
+Verify it two ways, because each misses what the other catches:
+1. **Static:** PHPCompatibility **10.x** over every shipped file (`--runtime-set testVersion 8.0-`). The last stable release, 9.3.5, predates PHP 8.1 and reports none of the features above.
+2. **Runtime:** run the test suite on the minimum PHP version in CI. Pin dev dependencies to it (`composer config platform.php 8.0.30`), or `composer install` itself fails there.
+
+If the code genuinely needs newer PHP, raise the header rather than the code. *(flagged 2026-09-26 after a plugin declaring PHP 8.0 was found to fatal on 8.0 and 8.1)*
+
+**33. Content hashes in tests must not depend on line endings.**
+Rule 28's second trap. A test that pins `hash( 'sha256', file_get_contents( $file ) )` passes on the machine that computed it and fails wherever git checks the file out with other line endings (`core.autocrlf` gives CRLF on Windows; CI gets LF). Normalize before hashing. If the existing pins were computed from CRLF, normalize to CRLF so every pinned value stays valid without rewriting it:
+
+```php
+private static function as_crlf( string $src ): string {
+	return str_replace( "\n", "\r\n", str_replace( "\r\n", "\n", $src ) );
+}
+```
+
+Add `.gitattributes` with `* text=auto eol=lf` so the repository stays consistent. *(flagged 2026-09-26 after a fingerprint test passed on Windows and failed on Linux CI)*
+
+**34. Write readme.txt headers the way the directory parses them.**
+The WordPress.org readme parser and Plugin Check validate these; the plugin page shows whatever you write, so a wrong value can look accepted and still fail the check.
+
+- `Tested up to:` major version only (`6.8`, not `6.8.1`). Plugin Check reduces the latest WordPress release to its major version and reports a patch number as `invalid_tested_upto_minor`, an error.
+- `Stable tag:` identical to the plugin header `Version:`.
+- `Contributors:` WordPress.org **usernames** (the slug in `profiles.wordpress.org/<username>/`), not display names.
+- Short description at most 150 characters. Each section at most 2,500 **words** (FAQ and Changelog 5,000); unknown sections such as External services are merged into Description and count against it.
+- `License:` must normalize to the same identifier as the plugin header (`GPL-2.0-or-later` and `GPLv2 or later` both normalize to `GPL2`).
+- `Text Domain` equals the plugin slug: lowercase letters, digits and hyphens only.
+- At most 5 tags; later ones are ignored.
+
+Check with the directory's readme parser before release, not by eye. *(flagged 2026-09-26 after WordPress.org compliance audit)*
+
+---
+
 ## Safe Default Order
 
 Every WordPress action should follow this sequence:
@@ -456,6 +533,11 @@ Before releasing or committing, confirm you are NOT:
 - [ ] Ignoring Plugin Check warnings without justification
 - [ ] Typing a hook callback parameter as non-nullable `string`/`int`/`array` instead of `mixed` + a check in the body
 - [ ] Shipping files with mixed CRLF/LF line endings (`Internal.LineEndings.Mixed`)
+- [ ] Declaring a `Requires PHP` that PHPCompatibility 10 and a test run on that PHP version have not verified
+- [ ] Contacting an external service before the user opts in, or an External services section that does not match the real payloads
+- [ ] Wildcard-deleting, on uninstall, an option prefix another component shares
+- [ ] Pinning file hashes in tests without normalizing line endings
+- [ ] A `Tested up to` with a patch number, or readme headers not checked with the readme parser
 
 ---
 
