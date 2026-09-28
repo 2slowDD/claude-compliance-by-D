@@ -4,7 +4,7 @@ description: WordPress plugin security compliance. Invoke before writing, editin
 type: rigid
 ---
 
-> **[WP Code Compliance applied — 34 rules active]**
+> **[WP Code Compliance applied — 36 rules active]**
 
 This skill is rigid. Follow every rule exactly. Do not skip or relax any item.
 
@@ -180,10 +180,12 @@ Do not leave behind unsafe options, cron jobs, temp files, logs, or custom table
 **32. On uninstall, delete what you own — never a prefix you share.**
 If another component (a companion plugin, a service plugin, an older product line) uses the same option prefix, `DELETE … WHERE option_name LIKE 'prefix\_%'` also deletes its data on every site where both are installed. List option and transient names explicitly; use a wildcard only for per-record keys that are unambiguously yours (`prefix_job_%`).
 
+An explicit list is not enough on its own: a name copied from an older version can still be the other component's. Diff the list against the other component's real option names (grep its source for `get_option`/`update_option`/`set_transient`), and keep that list of foreign names in a test that fails on any overlap, by exact name or by LIKE prefix. A value you cache from another component (a URL, a token) goes under your own key, never under the same name it uses, so the two cannot collide in the first place.
+
 - Wrap the body of `uninstall.php` in a closure — `( static function () { … } )();` — so it defines no global variables for PrefixAllGlobals to flag.
 - Clear every scheduled hook with `wp_unschedule_hook()`.
 - Delete stored secrets (API keys, tokens, claim tokens) too; a secret left after deletion is Rule 10's failure in a place nobody looks.
-- Test it falsifiably: assert the shared-prefix wildcard never appears in the executed SQL, and confirm the test goes red when you put one back. *(flagged 2026-09-26 after WordPress.org compliance audit)*
+- Test it falsifiably: assert the shared-prefix wildcard never appears in the executed SQL, and confirm the test goes red when you put one back. *(flagged 2026-09-26 after WordPress.org compliance audit; tightened 2026-09-28 after an explicit list still carried a companion plugin's configuration key and its uninstall took the companion's service down)*
 
 **18. Do not hide problems with phpcs ignores if the code is actually unsafe.**
 Do not silence Plugin Check or PHPCS warnings unless the warning is a genuine false positive you can justify. The real fix is usually the right fix.
@@ -503,6 +505,21 @@ The WordPress.org readme parser and Plugin Check validate these; the plugin page
 
 Check with the directory's readme parser before release, not by eye. *(flagged 2026-09-26 after WordPress.org compliance audit)*
 
+**35. Never hand-print `<style>` or `<script>` tags; go through the enqueue API.**
+The WordPress.org reviewers' tooling flags every literal `<style` or `<script` echoed from PHP, including ones Plugin Check's sniffs let through. Use the function for the case:
+
+| What you are printing | Function |
+|---|---|
+| Inline CSS with a stylesheet to attach to | `wp_add_inline_style( $handle, $css )` |
+| Inline CSS with no stylesheet | `wp_register_style( $handle, false )` + `wp_enqueue_style( $handle )` + `wp_add_inline_style()` |
+| Inline JS | `wp_add_inline_script( $handle, $js )` |
+| A data block (`type="application/json"`, templates) | `wp_print_inline_script_tag( $data, array( 'type' => 'application/json', 'id' => '…' ) )` |
+
+Core wraps the payload of `wp_print_inline_script_tag()` in newlines and adds one after the closing tag. Anything that parses that output, and any test that pins it, must tolerate the whitespace: extract with a regex that allows attributes in any order and trim the payload, never `substr()` on a fixed prefix. Search the whole plugin for `<style` and `<script` before submitting; the reviewer asks you to. *(flagged 2026-09-28 after a WordPress.org review round)*
+
+**36. The admin menu title is an identifier; rename it with the plugin.**
+`add_menu_page()`'s menu title is not just a label: WordPress builds the page hook names from `sanitize_title()` of it (`{title-slug}_page_{submenu-slug}`), and those hooks are what `admin_enqueue_scripts` handlers and `get_current_screen()->id` checks compare against. Renaming the plugin, or its slug, without renaming the menu title makes the comparisons fail silently: the plugin's own screens load without their CSS and JS, and screen-scoped notices never show. Change the two together, keep a comment on the `add_menu_page()` call saying the title is load-bearing, and cover one enqueue in a test that derives the expected hook from the title rather than hard-coding it. *(flagged 2026-09-28 after a WordPress.org review rename)*
+
 ---
 
 ## Safe Default Order
@@ -538,6 +555,8 @@ Before releasing or committing, confirm you are NOT:
 - [ ] Wildcard-deleting, on uninstall, an option prefix another component shares
 - [ ] Pinning file hashes in tests without normalizing line endings
 - [ ] A `Tested up to` with a patch number, or readme headers not checked with the readme parser
+- [ ] Echoing a literal `<style>` or `<script>` tag instead of using the enqueue API (Rule 35)
+- [ ] Renaming a plugin or slug without renaming the menu title the page hooks derive from (Rule 36)
 
 ---
 

@@ -15,6 +15,13 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/wp-compliance` (Rules 35–36; Rule 32 tightened, from a WordPress.org review round)
+
+- **Rule 35 — never hand-print `<style>`/`<script>`;** table of the enqueue function per case, including a file-less style handle and `wp_print_inline_script_tag()` for data blocks, with the whitespace core adds to that output.
+- **Rule 36 — the admin menu title is an identifier:** page hook names derive from it, so a rename must change the title with the slug or the plugin's screens lose their assets silently.
+- **Rule 32 tightened:** an explicit uninstall list must be diffed against the other component's real option names and guarded by a test; cached copies of another component's values go under your own key.
+- Quick Release Checklist gains the two items; banner and README now say 36 rules.
+
 ### Added — `skills/wp-compliance` (Rules 30–34, from a WordPress.org submission audit)
 
 - **Rule 30 — verify the declared minimum PHP version.** Syntax newer than `Requires PHP` (readonly properties, `true` types) is a fatal error on older PHP that only shows on the first request loading the class. Verify statically with PHPCompatibility 10.x (9.3.5 cannot see PHP 8.1+ features) and at runtime with tests on the minimum PHP in CI.
