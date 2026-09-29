@@ -564,6 +564,7 @@ Every screen the plugin renders, in every state it can be in (empty, typical, lo
 - **Audit on a width ladder**, not one desktop size: 1920, 1440, 1366, 1280, 1200, 1100, 1024, 900, 782 (the wp-admin breakpoint), 600, 480, 390, 360. The 1100–1440 band matters most: the wp-admin sidebar is still open, so content cards are at their narrowest before the layout switches. Use realistic long data: long domains and URLs, long status text, many rows.
 - **Automate four checks per screen and width:** the page does not scroll horizontally (`scrollWidth <= clientWidth`); no element extends past its card or container; no `overflow-x: auto|scroll` element actually scrolls; no button or link-button has `scrollWidth > clientWidth` (a clipped label is invisible to overflow checks). Then look at the screenshots: checks cannot see a layout that fits but reads wrong.
 - **Also check spill and tooltips:** a table cell whose content is wider than the cell (`scrollWidth > clientWidth` with visible overflow) is drawing over its neighbour; header help markers (`?`) are the usual culprit. Open every tooltip by keyboard focus, as a user would, and assert it opens, stays inside the viewport, is not clipped by an `overflow` ancestor, and does not cover its own trigger. Tooltips shown in a single viewport-level popover must be measured there, not at their hidden in-page source.
+- **Check that text does not collide.** Compare the drawn boxes of every visible text run (`Range.getClientRects()` on each text node) and flag any two from different elements that overlap. Box-level checks miss content moved by `position: relative` offsets, transforms or negative margins: the element's layout box stays put while its text lands on a neighbour.
 - **Make the audit fail loudly.** A state the script could not reach (a results screen that did not restore, a screen behind a login that failed) must count as a failure, not a pass.
 - **Known causes:**
   - a fixed `min-width` on a table;
@@ -572,6 +573,7 @@ Every screen the plugin renders, in every state it can be in (empty, typical, lo
   - a two-column CSS grid on an element that can have more than two children, so the extra children wrap into the grid's rows;
   - component breakpoints keyed to the window when the component's width depends on a sidebar (use a container query on the component instead).
   - `white-space: nowrap` table headers with an absolutely positioned help marker: let headers wrap and keep the marker inline.
+  - percentage nudges such as `position: relative; left: 10%` used for alignment: they ignore neighbours; use margins or flex/grid alignment.
 - **Wide tables:** fit by wrapping first. Below a card-width threshold, switch each row to a compact labelled card: `data-label` on every cell, shown by `::before` above the value, the row itself a `repeat(auto-fill, minmax(…))` grid so values sit side by side (one value per full-width line wastes the card on tablets), the primary cell (URL, name) spanning the full width, and wide values spanning two tracks. A test can assert every cell carries a label. *(flagged 2026-09-29 after a responsive audit of a plugin's admin screens)*
 
 ---

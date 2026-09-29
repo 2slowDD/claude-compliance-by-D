@@ -15,6 +15,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/wp-compliance` (Rule 40: text-collision check)
+
+- New check: compare the drawn boxes of every text run and flag overlaps between different elements; box-level checks cannot see content moved by relative offsets, transforms or negative margins. Percentage alignment nudges (`position: relative; left: N%`) added to the known causes.
+
 ### Changed — `skills/wp-compliance` (Rule 40 tightened)
 
 - Width ladder adds 1366/1200/1100 (the band where the wp-admin sidebar leaves cards narrowest); new checks for table-cell spill and for tooltips opened by keyboard focus (opens, stays in the viewport, not clipped, does not cover its trigger, measured at the viewport-level popover when one is used); `nowrap` headers with absolutely positioned help markers added to the known causes; narrow tables become compact labelled grid cards instead of one value per line.
