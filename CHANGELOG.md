@@ -15,6 +15,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/wp-compliance` (Rule 40: layout stability)
+
+- New check: record each component's layout mode per width and fail on more than one switch as the window narrows; test both sides of every wp-admin width jump (admin menu fold at 960px, removal at 782px, plugin sidebars). Breakpoints go at the component's measured minimum; sidebars move by available width via a container query on the parent.
+
 ### Changed — `skills/wp-compliance` (Rule 40: text-collision check)
 
 - New check: compare the drawn boxes of every text run and flag overlaps between different elements; box-level checks cannot see content moved by relative offsets, transforms or negative margins. Percentage alignment nudges (`position: relative; left: N%`) added to the known causes.
