@@ -4,7 +4,7 @@ description: WordPress plugin security compliance. Invoke before writing, editin
 type: rigid
 ---
 
-> **[WP Code Compliance applied — 36 rules active]**
+> **[WP Code Compliance applied — 39 rules active]**
 
 This skill is rigid. Follow every rule exactly. Do not skip or relax any item.
 
@@ -44,6 +44,8 @@ Run through this checklist before writing any code:
 - Every add_action/add_filter callback parameter is `mixed` (or nullable), normalized inside the body — a non-nullable `string`/`int`/`array` type on a hook callback is an uncatchable fatal waiting for a caller that passes null (Rule 29)
 - No syntax newer than the plugin header's `Requires PHP` — `readonly`, enums, `never`, `true`/`null` types are fatals on older PHP (Rule 30)
 - No outbound HTTP request before the user explicitly opts in — not on activation, `admin_init`, page load or cron (Rule 31)
+- One prefix of five or more characters on every global name: namespace, functions, classes, constants, options, transients, hooks, AJAX actions, REST namespace, handles, JS objects, page slugs (Rule 37)
+- `is_plugin_active()`/`get_plugins()`/`get_plugin_data()` and other `wp-admin/includes/` functions: require the include first when the code can run outside wp-admin (Rule 38)
 - Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 Safe order: validate input → sanitize when needed → check capability → verify nonce → perform action safely → escape output late
@@ -70,6 +72,8 @@ Run through this before writing any code. Every item must be addressed:
 - [ ] Every hook callback parameter is `mixed` (or nullable) and normalized in the body — never a non-nullable `string`/`int`/`array` type (Rule 29)
 - [ ] No syntax newer than the header's `Requires PHP` (Rule 30)
 - [ ] No outbound HTTP request before an explicit user opt-in (Rule 31)
+- [ ] Every global name uses the plugin's one prefix of five or more characters (Rule 37)
+- [ ] Admin-only functions outside wp-admin are preceded by loading their `wp-admin/includes/` file (Rule 38)
 - [ ] Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 ---
@@ -520,6 +524,38 @@ Core wraps the payload of `wp_print_inline_script_tag()` in newlines and adds on
 **36. The admin menu title is an identifier; rename it with the plugin.**
 `add_menu_page()`'s menu title is not just a label: WordPress builds the page hook names from `sanitize_title()` of it (`{title-slug}_page_{submenu-slug}`), and those hooks are what `admin_enqueue_scripts` handlers and `get_current_screen()->id` checks compare against. Renaming the plugin, or its slug, without renaming the menu title makes the comparisons fail silently: the plugin's own screens load without their CSS and JS, and screen-scoped notices never show. Change the two together, keep a comment on the `add_menu_page()` call saying the title is load-bearing, and cover one enqueue in a test that derives the expected hook from the title rather than hard-coding it. *(flagged 2026-09-28 after a WordPress.org review rename)*
 
+
+**37. One distinct prefix on every global name — and a migration when you change it.**
+WordPress.org rejects prefixes of four characters or fewer and counts every name that lacks the plugin's prefix. "Every name" means all of these, not only functions and classes: the PHP namespace, global functions and classes, `define()` constants, options, transients, cron hooks, custom actions and filters, `wp_ajax_` actions, nonce actions, the REST namespace, script and style handles, `wp_localize_script()` object names, and admin page slugs. Pick one prefix of five or more characters that belongs to this plugin alone (a product-line prefix shared by several of your plugins still collides between them), and use it in the matching form everywhere: `myplug_` for PHP names and data, `MyPlug\` for the namespace, `MYPLUG_` for constants, `myplug-` for handles and slugs, `myPlug…` for JS objects. Do not wrap your functions or classes in `function_exists()` / `class_exists()` checks; reviewers treat that as hiding a collision.
+
+Renaming the prefix of a plugin that already has users is a data migration, not a search-and-replace:
+- Keep one list mapping every stored name (options, per-item option prefixes, transients, cron hooks) to its old name, and read it from both the migration and `uninstall.php`, so nothing is moved but never deleted, or deleted but never moved.
+- Move options in place (rename the row, keeping value and autoload) from that explicit list. If another component still uses the old prefix, never select by the old prefix alone: fetch candidates, then move only names on the list (see Rule 32). Re-schedule pending cron events under the new hook names, or they fire into hooks nothing listens to.
+- Leave wire names alone: URL parameters, request headers, HTML markers and remote API paths that another system reads. Say in the review reply why they keep their spelling.
+- After a scripted rename, check the edges regex boundaries miss: an old prefix directly after `_` or `-` (such as `wp_ajax_oldprefix_…`) is not matched by a `\b`/lookbehind rule. Test that every AJAX action the JS sends has a registered `wp_ajax_` handler; a mismatch fails silently with admin-ajax answering `0`.
+- Point Plugin Check's `PrefixAllGlobals` configuration at the new prefix only, so a leftover old name becomes an error. *(flagged 2026-09-29 after a WordPress.org review round)*
+
+**38. Load the admin include before calling an admin-only function outside wp-admin.**
+Functions such as `is_plugin_active()`, `get_plugins()` and `get_plugin_data()` (in `wp-admin/includes/plugin.php`), `WP_Filesystem()` and `download_url()` (`file.php`), `media_handle_upload()` (`media.php`) and `dbDelta()` (`upgrade.php`) exist only after that file is loaded, which WordPress does for admin requests. Code that also runs on the front end, in REST, cron or a token-authenticated request fails with "Call to undefined function". Guard every call site:
+
+```php
+if ( ! function_exists( 'is_plugin_active' ) ) {
+    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+```
+
+Put the guard in one helper and call it at the top of every function that uses these helpers; a source-level test can assert that each such function calls it first. Test on the oldest WordPress in `Requires at least`: newer core versions load some of these files on every request, which hides the bug on current sites and on your own. *(flagged 2026-09-29 after a WordPress.org review round)*
+
+**39. Test on a clean install of the oldest supported WordPress, with WP_DEBUG, through every entry point.**
+Reviewers install the plugin on a clean site with `WP_DEBUG` on and follow the paths the code declares. Do the same before every submission: on the `Requires at least` version and on the current one, with `WP_DEBUG` and `WP_DEBUG_LOG` on,
+- activate and confirm zero bytes of output;
+- open every admin screen of the plugin, plus the dashboard and the Plugins screen;
+- hit each non-admin entry point the plugin handles: front-end requests with and without its tokens or query flags, its REST routes, cron events, AJAX actions;
+- use realistic data and deliberately incomplete records (a missing array key in a stored record is a warning on every page load);
+- confirm `debug.log` has no line from the plugin, the plugin's stylesheet loads only on its own screens, and any CSS that does load elsewhere targets only the plugin's own classes. Scope rules inside the plugin's stylesheet to its container too: a bare `.notice` or `.wrap` rule restyles WordPress's own notices on those screens.
+
+Test a copy of the release build, not a directory you rebuild while the site runs: WordPress deactivates a plugin whose main file disappears for a moment, and every later check then passes because the plugin is off. *(flagged 2026-09-29 after a WordPress.org review round)*
+
 ---
 
 ## Safe Default Order
@@ -557,6 +593,9 @@ Before releasing or committing, confirm you are NOT:
 - [ ] A `Tested up to` with a patch number, or readme headers not checked with the readme parser
 - [ ] Echoing a literal `<style>` or `<script>` tag instead of using the enqueue API (Rule 35)
 - [ ] Renaming a plugin or slug without renaming the menu title the page hooks derive from (Rule 36)
+- [ ] A global name without the plugin's prefix, a prefix of four characters or fewer, or a prefix rename without a migration of stored data and cron events (Rule 37)
+- [ ] Calling an admin-only function on a front-end, REST, cron or token request without loading its include (Rule 38)
+- [ ] Submitting without a WP_DEBUG pass on a clean install of the oldest supported WordPress through every entry point, with an empty plugin section in debug.log (Rule 39)
 
 ---
 

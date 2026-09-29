@@ -15,6 +15,13 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/wp-compliance` (Rules 37–39, from a WordPress.org review round)
+
+- **Rule 37 — one distinct prefix on every global name,** listing everything reviewers count (namespace, constants, options, transients, cron and custom hooks, AJAX and nonce actions, REST namespace, handles, localized JS objects, page slugs); five characters or more; no `function_exists()` wrappers. Renaming the prefix of a shipped plugin is a data migration: one old↔new name list shared by the migration and uninstall, rename rows in place from an explicit list, re-schedule cron events, keep wire names, check regex-boundary misses and JS↔`wp_ajax_` action parity, point `PrefixAllGlobals` at the new prefix only.
+- **Rule 38 — load the admin include before calling an admin-only function outside wp-admin** (`is_plugin_active()`, `get_plugins()`, `get_plugin_data()`, `WP_Filesystem()`, `download_url()`, `media_handle_upload()`, `dbDelta()`); newer core loads some of these everywhere, which hides the fatal, so test on the oldest supported version.
+- **Rule 39 — clean-install WP_DEBUG pass on the oldest and current supported WordPress through every entry point,** with incomplete stored records, an empty plugin section in debug.log, stylesheet only on own screens, container-scoped CSS; test a copy of the build, since WordPress deactivates a plugin whose main file briefly disappears.
+- Pre-code checklist, subagent compliance block and Quick Release Checklist gain the matching items; banner and README now say 39 rules.
+
 ### Added — `skills/wp-compliance` (Rules 35–36; Rule 32 tightened, from a WordPress.org review round)
 
 - **Rule 35 — never hand-print `<style>`/`<script>`;** table of the enqueue function per case, including a file-less style handle and `wp_print_inline_script_tag()` for data blocks, with the whitespace core adds to that output.
