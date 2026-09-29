@@ -15,6 +15,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/wp-compliance` (Rule 40 tightened)
+
+- Width ladder adds 1366/1200/1100 (the band where the wp-admin sidebar leaves cards narrowest); new checks for table-cell spill and for tooltips opened by keyboard focus (opens, stays in the viewport, not clipped, does not cover its trigger, measured at the viewport-level popover when one is used); `nowrap` headers with absolutely positioned help markers added to the known causes; narrow tables become compact labelled grid cards instead of one value per line.
+
 ### Added — `skills/wp-compliance` (Rule 40, from a responsive audit)
 
 - **Rule 40 — no visual breakage and no horizontal scrollbar at any viewport width:** width ladder 1920→360 with realistic long data; four automated checks (page overflow, element past its container, inner horizontal scroll, clipped button labels) plus a look at the screenshots; unreachable states must fail the audit; known causes (fixed table `min-width`, `nowrap` + fixed-width buttons, desktop nudges on phones, two-column grids with more children, window breakpoints for sidebar-dependent components → container queries); wide tables become labelled rows with the label in a fixed gutter.
