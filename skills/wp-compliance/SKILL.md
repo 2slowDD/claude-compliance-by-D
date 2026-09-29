@@ -4,7 +4,7 @@ description: WordPress plugin security compliance. Invoke before writing, editin
 type: rigid
 ---
 
-> **[WP Code Compliance applied — 39 rules active]**
+> **[WP Code Compliance applied — 40 rules active]**
 
 This skill is rigid. Follow every rule exactly. Do not skip or relax any item.
 
@@ -46,6 +46,7 @@ Run through this checklist before writing any code:
 - No outbound HTTP request before the user explicitly opts in — not on activation, `admin_init`, page load or cron (Rule 31)
 - One prefix of five or more characters on every global name: namespace, functions, classes, constants, options, transients, hooks, AJAX actions, REST namespace, handles, JS objects, page slugs (Rule 37)
 - `is_plugin_active()`/`get_plugins()`/`get_plugin_data()` and other `wp-admin/includes/` functions: require the include first when the code can run outside wp-admin (Rule 38)
+- Every screen fits every viewport width without a horizontal scrollbar or clipped content; wide tables become labelled rows on narrow cards (Rule 40)
 - Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 Safe order: validate input → sanitize when needed → check capability → verify nonce → perform action safely → escape output late
@@ -74,6 +75,7 @@ Run through this before writing any code. Every item must be addressed:
 - [ ] No outbound HTTP request before an explicit user opt-in (Rule 31)
 - [ ] Every global name uses the plugin's one prefix of five or more characters (Rule 37)
 - [ ] Admin-only functions outside wp-admin are preceded by loading their `wp-admin/includes/` file (Rule 38)
+- [ ] Layouts reflow instead of scrolling sideways: no fixed table `min-width`, no `nowrap` + fixed-width buttons, component breakpoints via container queries (Rule 40)
 - [ ] Release files have consistent line endings (no Plugin Check `Internal.LineEndings.Mixed`)
 
 ---
@@ -556,6 +558,20 @@ Reviewers install the plugin on a clean site with `WP_DEBUG` on and follow the p
 
 Test a copy of the release build, not a directory you rebuild while the site runs: WordPress deactivates a plugin whose main file disappears for a moment, and every later check then passes because the plugin is off. *(flagged 2026-09-29 after a WordPress.org review round)*
 
+
+**40. No visual breakage and no horizontal scrollbar at any viewport width.**
+Every screen the plugin renders, in every state it can be in (empty, typical, long data, results), must fit the viewport without a sideways scrollbar and without clipped or overlapping content. An inner horizontal scroll area is a last resort for data that genuinely cannot reflow; say so in a comment where you use one.
+- **Audit on a width ladder**, not one desktop size: 1920, 1440, 1280, 1024, 900, 782 (the wp-admin breakpoint), 600, 480, 390, 360. Use realistic long data: long domains and URLs, long status text, many rows.
+- **Automate four checks per screen and width:** the page does not scroll horizontally (`scrollWidth <= clientWidth`); no element extends past its card or container; no `overflow-x: auto|scroll` element actually scrolls; no button or link-button has `scrollWidth > clientWidth` (a clipped label is invisible to overflow checks). Then look at the screenshots: checks cannot see a layout that fits but reads wrong.
+- **Make the audit fail loudly.** A state the script could not reach (a results screen that did not restore, a screen behind a login that failed) must count as a failure, not a pass.
+- **Known causes:**
+  - a fixed `min-width` on a table;
+  - `white-space: nowrap` plus a fixed width on buttons;
+  - desktop-only nudges (`position: relative; left: …`, fixed indents) still active on phones;
+  - a two-column CSS grid on an element that can have more than two children, so the extra children wrap into the grid's rows;
+  - component breakpoints keyed to the window when the component's width depends on a sidebar (use a container query on the component instead).
+- **Wide tables:** fit by wrapping first. Below a card-width threshold, switch rows to labelled blocks: `data-label` on every cell, the label in `::before` placed in a fixed gutter (not a grid column), so a cell with any number of children still lays out. A test can assert every cell carries a label. *(flagged 2026-09-29 after a responsive audit of a plugin's admin screens)*
+
 ---
 
 ## Safe Default Order
@@ -596,6 +612,7 @@ Before releasing or committing, confirm you are NOT:
 - [ ] A global name without the plugin's prefix, a prefix of four characters or fewer, or a prefix rename without a migration of stored data and cron events (Rule 37)
 - [ ] Calling an admin-only function on a front-end, REST, cron or token request without loading its include (Rule 38)
 - [ ] Submitting without a WP_DEBUG pass on a clean install of the oldest supported WordPress through every entry point, with an empty plugin section in debug.log (Rule 39)
+- [ ] Submitting without a responsive audit of every screen and state across the width ladder, with automated overflow, inner-scroll and clipped-button checks plus a look at the screenshots (Rule 40)
 
 ---
 

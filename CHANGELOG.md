@@ -15,6 +15,11 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/wp-compliance` (Rule 40, from a responsive audit)
+
+- **Rule 40 — no visual breakage and no horizontal scrollbar at any viewport width:** width ladder 1920→360 with realistic long data; four automated checks (page overflow, element past its container, inner horizontal scroll, clipped button labels) plus a look at the screenshots; unreachable states must fail the audit; known causes (fixed table `min-width`, `nowrap` + fixed-width buttons, desktop nudges on phones, two-column grids with more children, window breakpoints for sidebar-dependent components → container queries); wide tables become labelled rows with the label in a fixed gutter.
+- Pre-code checklist, subagent compliance block and Quick Release Checklist gain the matching items; banner and README now say 40 rules.
+
 ### Added — `skills/wp-compliance` (Rules 37–39, from a WordPress.org review round)
 
 - **Rule 37 — one distinct prefix on every global name,** listing everything reviewers count (namespace, constants, options, transients, cron and custom hooks, AJAX and nonce actions, REST namespace, handles, localized JS objects, page slugs); five characters or more; no `function_exists()` wrappers. Renaming the prefix of a shipped plugin is a data migration: one old↔new name list shared by the migration and uninstall, rename rows in place from an explicit list, re-schedule cron events, keep wire names, check regex-boundary misses and JS↔`wp_ajax_` action parity, point `PrefixAllGlobals` at the new prefix only.
