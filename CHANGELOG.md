@@ -15,6 +15,11 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `claude-rules/post-significant-push-audit.md` (Step 0: plain push summary)
+
+- New Step 0, run after **every** remote push (not gated by significance) and before the doc-debt y/n: a plain-language summary of what was pushed (repo, branch, SHAs, one sentence per change), how it helps the project (tied to the ledger / stated goal, marked measured vs expected), and what to scan / test (post-deploy note when not yet live; scan URLs one bare URL per line in a pasteable block with scanner-added parameters stripped; never invented). The significance gate now governs Steps 1–2 only.
+- Synced the UI / admin-page / observability / telemetry-channel carve-out from the installed copy into the rule and its install block: such pushes skip the Step 2 F-CHECK-EFF sweep (the F-* yardstick is scan-pipeline-scoped); Step 1 still fires.
+
 ### Changed — `skills/wp-compliance` (Rule 40: layout stability)
 
 - New check: record each component's layout mode per width and fail on more than one switch as the window narrows; test both sides of every wp-admin width jump (admin menu fold at 960px, removal at 782px, plugin sidebars). Breakpoints go at the component's measured minimum; sidebars move by available width via a container query on the parent.
