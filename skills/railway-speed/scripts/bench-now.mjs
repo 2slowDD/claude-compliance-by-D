@@ -17,17 +17,7 @@ const note = noteIdx > 0 ? process.argv[noteIdx + 1] : '';
 // `railway` may be an npm shim (railway.cmd) ⇒ needs the shell; one command STRING (no args array) avoids DEP0190.
 const rw = (args, input) => spawnSync(['railway', ...args].join(' '), { cwd: CFG.linked_dir, input, encoding: 'utf8', shell: true, maxBuffer: 64 << 20 });
 
-// Verdict rule: no fixed bar. With >= min_deployments_for_median distinct deployments sampled, FAST = at or below the
-// median of the per-deployment best scores ("the better half suffices"); with fewer, CALIBRATING.
-function verdictFor(benchMs, samples) {
-  const best = new Map();
-  for (const s of samples) if (s.deployment_id) best.set(s.deployment_id, Math.min(best.get(s.deployment_id) ?? Infinity, s.bench_min_ms));
-  const v = [...best.values()].sort((a, b) => a - b);
-  const min = CFG.min_deployments_for_median ?? 4;
-  if (v.length < min) return { verdict: 'CALIBRATING', threshold_ms: null, rule: `${v.length}/${min} deployments sampled` };
-  const med = v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
-  return { verdict: benchMs <= med ? 'FAST' : 'SLOW', threshold_ms: med, rule: `median of ${v.length} deployments' best = ${med} ms` };
-}
+import { verdictFor } from './verdict.mjs'; // CPU-model rule first (slow_cpu_models), then the relative median rule
 
 // 1. current deployment (newest SUCCESS/BUILDING/DEPLOYING row)
 const dl = rw(['deployment', 'list', '--service', CFG.service]);
@@ -49,7 +39,7 @@ const line = (bench.stdout || '').split(/\r?\n/).find((l) => l.includes('"host_b
 if (!line) { console.error('bench failed:\n' + (bench.stdout || '') + (bench.stderr || '')); process.exit(2); }
 const b = JSON.parse(line);
 
-const vd = verdictFor(b.cpu_loop_ms_min, arr.concat([{ deployment_id, bench_min_ms: b.cpu_loop_ms_min }]));
+const vd = verdictFor(b.cpu_loop_ms_min, b.model, arr.concat([{ deployment_id, bench_min_ms: b.cpu_loop_ms_min }]), CFG);
 const sample = {
   ts: new Date().toISOString(), deployment_id, deployment_status, deployed_at, commit_short,
   bench_min_ms: b.cpu_loop_ms_min, bench_runs_ms: b.cpu_loop_ms, mem_scan_ms: b.mem_scan_ms,

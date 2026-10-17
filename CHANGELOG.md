@@ -15,6 +15,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — `skills/railway-speed` (instant SLOW verdict by CPU model)
+
+- New `slow_cpu_models` config list (default `["Icelake"]`, case-insensitive substring), checked before the median rule: a matching CPU string is SLOW whatever the score, so the gate redeploys such a box at once instead of waiting for enough deployments to rank it. "Intel Xeon Processor (Icelake)" is the generic hypervisor string of rented cloud-burst capacity; measured 1.5× slower than the platform's own AMD EPYC hosts (1110–1201 vs 775–830 ms, even on a quiet box), and a public forum report saw ~2.5×. `[]` disables the rule. Verdict logic moved into `scripts/verdict.mjs` so it can be tested on its own.
+
 ### Added — `skills/railway-speed` (host-speed check + redeploy gate for a Railway worker)
 
 - **`/railway-speed`:** benches the live container's host over `railway ssh` (3 × a fixed single-thread loop, min of 3; plus the box's 1-min load and CPU model), appends the sample to a machine record and a human log table, and replies with one fixed line + the verdict rule. Verdict is relative, not a fixed bar: FAST = at or below the median of per-deployment best scores once ≥ 4 deployments are sampled, CALIBRATING before. Cadence: after every real deployment, once every 24 h, on demand; a slow host seen in a normal scan read is flagged in the read's first line.

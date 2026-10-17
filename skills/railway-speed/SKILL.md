@@ -45,7 +45,7 @@ It waits while a job is in flight, benches, and while the verdict is not FAST ru
 |---|---|
 | `CPU loop N ms` | min of 3 single-thread loops; lower = faster; same-host noise ≈ 2 % |
 | `load L on C cores` | the box's 1-min load average — how crowded the host is |
-| verdict | FAST = at or below the median of per-deployment best scores (needs `min_deployments_for_median` deployments); SLOW above; CALIBRATING before |
+| verdict | a CPU model matching `slow_cpu_models` (default `["Icelake"]` — the generic hypervisor string of rented cloud-burst capacity) is SLOW whatever the score; otherwise FAST = at or below the median of per-deployment best scores (needs `min_deployments_for_median` deployments), SLOW above, CALIBRATING before |
 | `capture_ms_per_kpx` | fill by hand from a real scan's unchanged-code capture clocks per 1 000 px, one pair per accepted host — the pairs make the bench trustworthy |
 
 ## Common mistakes

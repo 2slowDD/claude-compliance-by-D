@@ -7,5 +7,6 @@
   "gate_runs_md": "C:\\path\\to\\host-speed\\gate-runs.md",
   "slow_ref_ms": 1203,
   "min_deployments_for_median": 4,
+  "slow_cpu_models": ["Icelake"],
   "max_redeploys_per_run": 5
 }
