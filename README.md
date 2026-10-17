@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Seventeen tools are included:
+Eighteen tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -14,6 +14,7 @@ Seventeen tools are included:
 | `skills/d-test-assumptions` | Claude Code skill | Drives assumption-based reasoning to a tested 🟢 CONFIRMED / 🔴 REFUTED verdict before an approach locks in, and quick-tests easily-verifiable code segments against spec after implementation |
 | `skills/railway-speed` | Claude Code skill | `/railway-speed` benches the live Railway worker's host from inside the container (10 s, read-only) and logs it; `/railway-speed gate` redeploys the same build until the box is fast — answers "is it the code or the host?" before a scan is read |
 | `skills/show-host` | Claude Code skill | `/show host` — a table of the Railway worker's current box (deployment, build, CPU model, cores, load, speed, verdict) plus the last three samples; the read-out companion of `railway-speed` |
+| `claude-rules/railway-host-speed.md` | CLAUDE.md rule | Bench the Railway worker's host after every deployment and daily, flag a slow host in the first line of any scan read that shows one, and pre-authorize only same-build redeploys through the `railway-speed` gate |
 | `claude-rules/d-focus-tasks.md` | AGENTS.md / CLAUDE.md rule | Makes task-ledger updates mandatory without manual skill invocation |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
@@ -511,6 +512,18 @@ Copy-Item "skills\show-host\SKILL.md" "$env:USERPROFILE\.claude\skills\show-host
 ```
 
 Verify: in a new session say *"/show host"*; Claude should reply with the table and nothing before it.
+
+---
+
+## 19 — Railway Host Speed Rule
+
+A CLAUDE.md instruction that pairs with the two skills above: bench the worker's host after every deployment and once every 24 h, flag a slow host in the first line of any scan read that shows one, and pre-authorize exactly one remedy — same-build redeploys through `/railway-speed gate`, max 5 tries per run — while every other Railway write stays confirm-gated. The verdict is relative ("better half of the deployments seen so far"), because "slow" is only known from data.
+
+See [`claude-rules/railway-host-speed.md`](claude-rules/railway-host-speed.md) for the full rule text and install block.
+
+### Quick install
+
+Install `skills/railway-speed` and `skills/show-host`, then open `~/.claude/CLAUDE.md` and add the block from `claude-rules/railway-host-speed.md`.
 
 ---
 

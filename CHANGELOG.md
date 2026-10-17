@@ -21,6 +21,10 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 - **`/railway-speed gate`:** under the operator's explicit standing authorization only — waits while a job is in flight, benches, and while not FAST runs `railway redeploy -y` (same build; the build stamp is read back and a change aborts), up to `max_redeploys_per_run` (default 5) tries; prints an attempt table and which attempt satisfied; none ⇒ stays on the last host and prints the retry due time.
 - Scripts read a local `scripts/config.json` (linked repo dir, service, record paths — `config.example.json` ships; the real file is git-ignored). Born from a day where a slow shared host (captures ×2, bisect starved at 0 rounds) looked like a failed bake; four same-build redeploys in four minutes landed four different boxes (1201 → 1110 → 830 → 815 ms).
 
+### Added — `claude-rules/railway-host-speed.md`
+
+- CLAUDE.md rule for the two skills: bench after every deployment and once every 24 h, flag a slow host in the first line of any scan read that shows one, pre-authorize same-build redeploys through the gate only (max 5 tries per run; a real deployment resets the daily clock), every other Railway write stays confirm-gated; the retry time is written into the record because session timers die with the session.
+
 ### Added — `skills/show-host` (`/show host`)
 
 - Read-out companion of `railway-speed`: runs the same bench and replies with one table (deployment, build, CPU model + cores, 1-min load graded quiet / busy / crowded, CPU-loop speed, verdict) plus the last three samples for drift. No gate, no cadence, no redeploys.
