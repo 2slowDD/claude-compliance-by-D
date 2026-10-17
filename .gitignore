@@ -16,5 +16,8 @@ Thumbs.db
 # Local scratch (reports, notes, drafts — not part of the distributed content)
 tasks/
 
-# Node (defensive — no JS in repo today)
+# Node
 node_modules/
+
+# railway-speed skill: machine-local config (paths, service name) — ship config.example.json only
+skills/railway-speed/scripts/config.json

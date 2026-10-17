@@ -15,6 +15,16 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Added — `skills/railway-speed` (host-speed check + redeploy gate for a Railway worker)
+
+- **`/railway-speed`:** benches the live container's host over `railway ssh` (3 × a fixed single-thread loop, min of 3; plus the box's 1-min load and CPU model), appends the sample to a machine record and a human log table, and replies with one fixed line + the verdict rule. Verdict is relative, not a fixed bar: FAST = at or below the median of per-deployment best scores once ≥ 4 deployments are sampled, CALIBRATING before. Cadence: after every real deployment, once every 24 h, on demand; a slow host seen in a normal scan read is flagged in the read's first line.
+- **`/railway-speed gate`:** under the operator's explicit standing authorization only — waits while a job is in flight, benches, and while not FAST runs `railway redeploy -y` (same build; the build stamp is read back and a change aborts), up to `max_redeploys_per_run` (default 5) tries; prints an attempt table and which attempt satisfied; none ⇒ stays on the last host and prints the retry due time.
+- Scripts read a local `scripts/config.json` (linked repo dir, service, record paths — `config.example.json` ships; the real file is git-ignored). Born from a day where a slow shared host (captures ×2, bisect starved at 0 rounds) looked like a failed bake; four same-build redeploys in four minutes landed four different boxes (1201 → 1110 → 830 → 815 ms).
+
+### Added — `skills/show-host` (`/show host`)
+
+- Read-out companion of `railway-speed`: runs the same bench and replies with one table (deployment, build, CPU model + cores, 1-min load graded quiet / busy / crowded, CPU-loop speed, verdict) plus the last three samples for drift. No gate, no cadence, no redeploys.
+
 ### Added — `claude-rules/post-significant-push-audit.md` (Step 0: plain push summary)
 
 - New Step 0, run after **every** remote push (not gated by significance) and before the doc-debt y/n: a plain-language summary of what was pushed (repo, branch, SHAs, one sentence per change), how it helps the project (tied to the ledger / stated goal, marked measured vs expected), and what to scan / test (post-deploy note when not yet live; scan URLs one bare URL per line in a pasteable block with scanner-added parameters stripped; never invented). The significance gate now governs Steps 1–2 only.

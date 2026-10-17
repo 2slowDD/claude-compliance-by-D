@@ -2,7 +2,7 @@
 
 Personal Codex / Claude Code compliance rules and skills for WordPress plugin development, local-first workflows, and safe AI-assisted coding.
 
-Fifteen tools are included:
+Seventeen tools are included:
 
 | Item | Type | Purpose |
 |------|------|---------|
@@ -12,6 +12,8 @@ Fifteen tools are included:
 | `skills/d-focus-tasks` | Codex / Claude Code skill | Keeps a lightweight project task ledger current across commits, handovers, plans, specs, and followups |
 | `skills/d-handover` | Claude Code skill | Builds a copy/paste-ready handover prompt for a fresh agent — read-first sequence, F-* metrics, hard constraints, do-NOT list, closed-items ledger, environment preconditions, specific next action — with pre-emit tree-identity resolution (the working tree proven by content probe, decoy checkouts named), state verification (P16), a live-background-work halt, a six-source FU census ordered for the receiving task, and ledger updates via `d-focus-tasks` before emitting |
 | `skills/d-test-assumptions` | Claude Code skill | Drives assumption-based reasoning to a tested 🟢 CONFIRMED / 🔴 REFUTED verdict before an approach locks in, and quick-tests easily-verifiable code segments against spec after implementation |
+| `skills/railway-speed` | Claude Code skill | `/railway-speed` benches the live Railway worker's host from inside the container (10 s, read-only) and logs it; `/railway-speed gate` redeploys the same build until the box is fast — answers "is it the code or the host?" before a scan is read |
+| `skills/show-host` | Claude Code skill | `/show host` — a table of the Railway worker's current box (deployment, build, CPU model, cores, load, speed, verdict) plus the last three samples; the read-out companion of `railway-speed` |
 | `claude-rules/d-focus-tasks.md` | AGENTS.md / CLAUDE.md rule | Makes task-ledger updates mandatory without manual skill invocation |
 | `claude-rules/github-push-warning.md` | CLAUDE.md rule | Forces explicit confirmation before any push to your private GitHub repos |
 | `claude-rules/deploy-reminder.md` | CLAUDE.md rule | Forces Claude to list deployable files after code changes that need manual server deployment |
@@ -451,6 +453,64 @@ See [`claude-rules/graded-decision-rubric.md`](claude-rules/graded-decision-rubr
 ### Quick install
 
 Open `~/.claude/CLAUDE.md` and add the block from `claude-rules/graded-decision-rubric.md`.
+
+---
+
+## 17 — Railway-speed Skill
+
+A Claude Code skill for a worker that runs on Railway's shared hosts, where CPU speed differs ×2–3 between deployments and degrades within one. `/railway-speed` benches the live container over `railway ssh` (a fixed single-thread loop, min of 3, plus the box's load and CPU model), appends the sample to a machine record and a human log table, and replies with one fixed line plus the verdict rule. The verdict is relative — FAST means at or below the median of the per-deployment best scores once four deployments are sampled, CALIBRATING before that — because "slow" is only known once the data is in.
+
+`/railway-speed gate` is the remedy: under the operator's explicit standing authorization it waits for any in-flight job to finish, then redeploys the same build and benches again until a FAST box is landed, up to a configured number of tries (default 5), reporting which attempt satisfied. It cannot return to an earlier box, so it stops at the first FAST host; if none satisfies, it stays on the last one and prints the retry due time.
+
+**What it does NOT do:** change code or any variable, redeploy outside the gate, or treat a slow bench as a code regression (that still needs a local interleaved A/B).
+
+### Install
+
+**Step 1 — Copy the skill files**
+
+```bash
+mkdir -p ~/.claude/skills/railway-speed/scripts
+cp skills/railway-speed/SKILL.md ~/.claude/skills/railway-speed/SKILL.md
+cp skills/railway-speed/scripts/*.mjs skills/railway-speed/scripts/*.js ~/.claude/skills/railway-speed/scripts/
+cp skills/railway-speed/scripts/config.example.json ~/.claude/skills/railway-speed/scripts/config.json
+```
+
+On Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\railway-speed\scripts"
+Copy-Item "skills\railway-speed\SKILL.md" "$env:USERPROFILE\.claude\skills\railway-speed\SKILL.md"
+Copy-Item "skills\railway-speed\scripts\*.mjs","skills\railway-speed\scripts\*.js" "$env:USERPROFILE\.claude\skills\railway-speed\scripts\"
+Copy-Item "skills\railway-speed\scripts\config.example.json" "$env:USERPROFILE\.claude\skills\railway-speed\scripts\config.json"
+```
+
+**Step 2 — Configure**
+
+Edit `~/.claude/skills/railway-speed/scripts/config.json`: the directory your Railway project is linked in (`railway logs` only works there), the service name, and where the sample record and the human log should live. Needs Node ≥ 18 and a logged-in Railway CLI with `railway ssh` available for the service. `config.json` is machine-local and git-ignored in this repo.
+
+**Step 3 — Verify**
+
+Start a new Claude Code session and say *"/railway-speed"*. Claude should run the bench and reply with a single `host bench — …` line followed by the verdict rule. Do not run the gate until you have granted it explicitly — it redeploys production.
+
+---
+
+## 18 — Show-host Skill
+
+The read-out companion of `railway-speed`: `/show host` runs the same 10-second bench and answers with one table — deployment, build, CPU model and cores, 1-minute load (quiet / busy / crowded), CPU-loop speed, verdict — followed by the last three samples so a drift within the deployment is visible. No gate, no cadence rules, no redeploys. Requires `railway-speed` installed and configured.
+
+### Install
+
+```bash
+mkdir -p ~/.claude/skills/show-host
+cp skills/show-host/SKILL.md ~/.claude/skills/show-host/SKILL.md
+```
+
+On Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\show-host"
+Copy-Item "skills\show-host\SKILL.md" "$env:USERPROFILE\.claude\skills\show-host\SKILL.md"
+```
+
+Verify: in a new session say *"/show host"*; Claude should reply with the table and nothing before it.
 
 ---
 

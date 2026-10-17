@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy to config.json beside the scripts and fill in for your machine. config.json is local and must not be committed.",
+  "linked_dir": "C:\\path\\to\\the\\repo\\dir\\that\\is\\railway-linked",
+  "service": "your-railway-service-name",
+  "samples_json": "C:\\path\\to\\host-speed\\samples.json",
+  "log_md": "C:\\path\\to\\docs\\railway-host-speed-log.md",
+  "gate_runs_md": "C:\\path\\to\\host-speed\\gate-runs.md",
+  "slow_ref_ms": 1203,
+  "min_deployments_for_median": 4,
+  "max_redeploys_per_run": 5
+}
