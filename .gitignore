@@ -19,5 +19,5 @@ tasks/
 # Node
 node_modules/
 
-# railway-speed skill: machine-local config (paths, service name) — ship config.example.json only
-skills/railway-speed/scripts/config.json
+# d-railway-speed skill: machine-local config (paths, service name) — ship config.example.json only
+skills/d-railway-speed/scripts/config.json

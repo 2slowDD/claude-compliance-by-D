@@ -15,6 +15,11 @@ Dates are YYYY-MM-DD. Pre-1.0 — breaking changes may still ship in MINOR relea
 
 ## [Unreleased]
 
+### Changed — renamed `skills/railway-speed` → `skills/d-railway-speed` and `skills/show-host` → `skills/d-show-host` (breaking: slash commands renamed)
+
+- The two skills now carry the `d-` prefix used by this repo's other operator skills. Invoke them as `/d-railway-speed`, `/d-railway-speed gate` and `/d-show-host`; the old `/railway-speed` and `/show-host` names no longer resolve. Behaviour, scripts and config format are unchanged — the scripts find `config.json` beside themselves, so only the install folder moves.
+- **Upgrading an existing install:** rename `~/.claude/skills/railway-speed` → `~/.claude/skills/d-railway-speed` and `~/.claude/skills/show-host` → `~/.claude/skills/d-show-host` (your `scripts/config.json` moves with the folder), replace both `SKILL.md` files, and update any `/railway-speed` mentions in your `~/.claude/CLAUDE.md` (see `claude-rules/railway-host-speed.md`).
+
 ### Changed — `skills/railway-speed` (instant SLOW verdict by CPU model)
 
 - New `slow_cpu_models` config list (default `["Icelake"]`, case-insensitive substring), checked before the median rule: a matching CPU string is SLOW whatever the score, so the gate redeploys such a box at once instead of waiting for enough deployments to rank it. "Intel Xeon Processor (Icelake)" is the generic hypervisor string of rented cloud-burst capacity; measured 1.5× slower than the platform's own AMD EPYC hosts (1110–1201 vs 775–830 ms, even on a quiet box), and a public forum report saw ~2.5×. `[]` disables the rule. Verdict logic moved into `scripts/verdict.mjs` so it can be tested on its own.

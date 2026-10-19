@@ -1,6 +1,6 @@
 ---
-name: railway-speed
-description: Use when the operator asks how fast or slow the Railway worker's host is, right after any Railway deployment or redeploy of the worker, when scan timings look slower than usual (long captures, bisect starved at its deadline, "is it the code or the host?"), on the daily host check, or when `/railway-speed` is invoked.
+name: d-railway-speed
+description: Use when the operator asks how fast or slow the Railway worker's host is, right after any Railway deployment or redeploy of the worker, when scan timings look slower than usual (long captures, bisect starved at its deadline, "is it the code or the host?"), on the daily host check, or when `/d-railway-speed` is invoked.
 ---
 
 # Railway host speed
@@ -13,7 +13,7 @@ Shared Railway hosts differ ×2–3 in CPU speed between deployments and degrade
 
 Railway CLI logged in and `railway ssh` working for the service. Copy `scripts/config.example.json` to `scripts/config.json` and fill in the linked repo dir, service name and record paths. `config.json` is local — never commit it.
 
-## `/railway-speed` — the check (read-only on Railway)
+## `/d-railway-speed` — the check (read-only on Railway)
 
 ```
 node "<this skill dir>/scripts/bench-now.mjs" --note "<trigger: after deploy <id> | daily check | operator on-demand | scan <id> looked slow>"
@@ -23,13 +23,13 @@ node "<this skill dir>/scripts/bench-now.mjs" --note "<trigger: after deploy <id
 
 1. If the verdict is SLOW and the operator is running scans (ask, or read the log tail: last `job_start` newer than last `job.summary`): one line `⚠️ SLOW HOST — ` then the printed `host bench — …` line verbatim. Otherwise the `host bench — …` line verbatim is line 1.
 2. One sentence naming the rule from the final parentheses after `⇒`. `slow ref N ms` there is the historical slowest-host anchor for scale, not a threshold.
-3. On SLOW: offer `/railway-speed gate`. On CALIBRATING: say how many deployments are sampled and that no verdict exists yet. On a script failure: paste its error line and stop — no verdict.
+3. On SLOW: offer `/d-railway-speed gate`. On CALIBRATING: say how many deployments are sampled and that no verdict exists yet. On a script failure: paste its error line and stop — no verdict.
 
 The script appends the sample to the machine record and the human log; that append is the record, nothing else to write.
 
 **Cadence:** after every real deployment (right after the build-stamp read-back), once every 24 h, and on demand. When a scan read itself shows a slow host (unchanged-code capture clocks ×2 per 1 000 px, bisect ending at `worker_deadline_imminent` with 0 rounds), say so in that read's first line, bench or not.
 
-## `/railway-speed gate` — redeploy until fast (production writes)
+## `/d-railway-speed gate` — redeploy until fast (production writes)
 
 Only under the operator's explicit standing authorization for this gate. Redeploys interrupt a running job; everything on Railway outside this gate stays confirm-gated.
 

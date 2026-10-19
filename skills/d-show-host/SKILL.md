@@ -1,20 +1,20 @@
 ---
-name: show-host
-description: Use when the operator invokes `/show host` or `/show-host`, or asks to see the current Railway worker host (CPU model, cores, load, speed) without a verdict discussion — a read-out of where the worker is running right now.
+name: d-show-host
+description: Use when the operator invokes `/d-show-host`, or asks to see the current Railway worker host (CPU model, cores, load, speed) without a verdict discussion — a read-out of where the worker is running right now.
 ---
 
 # Show host
 
 ## Overview
 
-A read-out of the Railway worker's current box: which deployment, which CPU, how crowded, how fast. It runs the `railway-speed` bench (10 s, read-only on Railway) so the numbers are current, then shows them as a table with the recent trend. No gate, no redeploy, no cadence rules — those live in `railway-speed`.
+A read-out of the Railway worker's current box: which deployment, which CPU, how crowded, how fast. It runs the `d-railway-speed` bench (10 s, read-only on Railway) so the numbers are current, then shows them as a table with the recent trend. No gate, no redeploy, no cadence rules — those live in `d-railway-speed`.
 
-**REQUIRED:** the `railway-speed` skill installed and configured (`scripts/config.json`).
+**REQUIRED:** the `d-railway-speed` skill installed and configured (`scripts/config.json`).
 
 ## Command
 
 ```
-node "<railway-speed skill dir>/scripts/bench-now.mjs" --note "operator /show host"
+node "<d-railway-speed skill dir>/scripts/bench-now.mjs" --note "operator /d-show-host"
 ```
 
 Then read the samples file named in `config.json` (`samples_json`): a flat JSON array, one object per bench, `ts` in UTC (`deployed_at` carries its own offset).
